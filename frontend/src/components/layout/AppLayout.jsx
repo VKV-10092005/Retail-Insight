@@ -225,7 +225,7 @@ export default function AppLayout(){
             total={pageTour.steps.length}
             message={pageTour.steps[pageTour.stage-1].message}
             continueLabel={pageTour.stage<pageTour.steps.length?'Tiếp tục':'Đã hiểu'}
-            onContinue={finishPageTour}
+            onContinue={()=>pageTour.stage<pageTour.steps.length?setPageTour(current=>current?({...current,stage:current.stage+1}):current):finishPageTour()}
             onSkip={finishPageTour}
           />
         )}

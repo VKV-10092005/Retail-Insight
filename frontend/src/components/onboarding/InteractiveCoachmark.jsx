@@ -106,7 +106,7 @@ export default function InteractiveCoachmark({target,step=1,total=1,message,onCo
   }
   const cardLeft=Math.min(Math.max(16,rect.left),window.innerWidth-340);
 
-  return <div className="interactive-tour-layer" role="region" aria-live="polite" aria-label="Hướng dẫn thao tác">
+  return <div className="interactive-tour-layer" role="region" aria-live="polite" aria-label="Hướng dẫn thao tác" onClick={event=>{if(event.target===event.currentTarget)onContinue?.();}}>
     <div className="interactive-tour-target" style={{top:rect.top-5,left:rect.left-5,width:rect.width+10,height:rect.height+10}}/>
     <div className="interactive-tour-click-ripple" style={{top:rect.top+rect.height-7,left:rect.left+rect.width-7}} aria-hidden="true"/>
     <span className="interactive-tour-pointer-badge" style={{top:rect.top+rect.height-18,left:rect.left+rect.width-18}} aria-hidden="true"><MousePointerClick size={22} strokeWidth={2.5}/></span>

@@ -74,6 +74,7 @@ function AgencyPromoVideoPlayer({onConsult}){
   if(!voiceEnabled){startSilentScene();return()=>{active=false;cancelAnimationFrame(frameRef.current);};}
   const audio=audioRef.current;
   if(!audio){startSilentScene();return()=>{active=false;cancelAnimationFrame(frameRef.current);};}
+  audio.crossOrigin='use-credentials';
   audio.src=apiUrl(`/tts/speak?text=${encodeURIComponent(scene.narration)}`);
   audio.preload='auto';
   audio.onloadedmetadata=()=>{if(!active)return;const resumeAt=Math.min(audioTimeRef.current,Math.max(0,(audio.duration||0)-.1));if(resumeAt>0)audio.currentTime=resumeAt;};
