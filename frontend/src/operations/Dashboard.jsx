@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, ComposedChart, LineChart, BarChart, Bar, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, PieChart, Pie, Cell } from 'recharts';
 import { useAuth } from '../auth/AuthContext';
+import {completeTour,getTourState,markTourShown} from '../components/onboarding/tourState';
 import { useBranch } from '../branches/BranchContext';
 import { Card, PageHeader } from '../components/ui/Elements';
 import { useResource, State, Table, params, money, number } from './shared';
@@ -138,25 +139,32 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isOwner || storeInfo.loading || !storeInfo.data) return;
     const storageKey = `ri_welcome_seen_${user?.id}`;
-    const alreadySeen = localStorage.getItem(storageKey);
+    const tourState=getTourState(user?.id);
+    let alreadySeen=false;try{alreadySeen=localStorage.getItem(storageKey)==='true';}catch{}
     const ob = storeInfo.data?.onboarding;
     const isCompleted = ob?.has_receipts && ob?.has_payment_settings && ob?.has_sales;
 
-    if (!alreadySeen && !isCompleted) {
+    if((alreadySeen||isCompleted)&&tourState.pending&&!tourState.completed){completeTour(user?.id);return;}
+    if(tourState.pending&&!tourState.completed&&!tourState.shown&&!alreadySeen&&!isCompleted){
+      markTourShown(user?.id);
       setShowWelcomeModal(true);
     }
   }, [isOwner, user?.id, storeInfo.data, storeInfo.loading]);
 
   // Lắng nghe sự kiện mở modal onboarding từ menu hoặc nút khác
   useEffect(() => {
-    const handleOpenWelcome = () => setShowWelcomeModal(true);
+    const handleOpenWelcome=()=>{
+      const state=getTourState(user?.id);
+      if(state.pending&&!state.completed&&!state.shown){markTourShown(user?.id);setShowWelcomeModal(true);}
+    };
     window.addEventListener('retail-open-welcome', handleOpenWelcome);
     return () => window.removeEventListener('retail-open-welcome', handleOpenWelcome);
-  }, []);
+  },[user?.id]);
 
   const dismissWelcomeModal = () => {
     if (user?.id) {
-      localStorage.setItem(`ri_welcome_seen_${user?.id}`, 'true');
+      try{localStorage.setItem(`ri_welcome_seen_${user?.id}`, 'true');}catch{}
+      completeTour(user.id);
     }
     setShowWelcomeModal(false);
   };

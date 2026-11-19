@@ -13,6 +13,7 @@ import NotificationBell from './NotificationBell';
 import useAppSettings from '../../hooks/useAppSettings';
 import UserAvatar from '../common/UserAvatar';
 import InteractiveCoachmark,{EXCLUDED_COACHMARK_PATHS,getPageTourScenario} from '../onboarding/InteractiveCoachmark';
+import {completeTour,getTourState,markTourShown} from '../onboarding/tourState';
 
 const titleMap = {
   '/': 'Tổng quan',
@@ -61,6 +62,7 @@ export default function AppLayout(){
     try{return clampSidebarWidth(localStorage.getItem(SIDEBAR_WIDTH_KEY));}catch{return 256;}
   });
   const [pageTour,setPageTour]=useState(null);
+  const [tourState,setTourState]=useState({userId:null,pending:false,completed:false,shown:false});
   const [celebration,setCelebration]=useState(false);
   const [clickedNavItems,setClickedNavItems]=useState([]);
   const location=useLocation();
@@ -77,7 +79,28 @@ export default function AppLayout(){
       setClickedNavItems(Array.isArray(stored)?stored:[]);
     }catch{setClickedNavItems([]);}
   },[user?.id]);
+  useEffect(()=>{
+    if(!user?.id){setPageTour(null);setTourState({userId:null,pending:false,completed:false,shown:false});return;}
+    setPageTour(null);
+    setTourState({userId:String(user.id),...getTourState(user.id)});
+  },[user?.id]);
+  useEffect(()=>{
+    const onTourCompleted=event=>{
+      if(String(event.detail?.userId)!==String(user?.id))return;
+      setTourState({userId:String(user.id),pending:false,completed:true,shown:true});
+      setPageTour(null);
+    };
+    window.addEventListener('retail-tour-completed',onTourCompleted);
+    return()=>window.removeEventListener('retail-tour-completed',onTourCompleted);
+  },[user?.id]);
+  const completeUserTour=()=>{
+    if(!user?.id)return;
+    completeTour(user.id);
+    setTourState({userId:String(user.id),pending:false,completed:true,shown:true});
+    setPageTour(null);
+  };
   const markNavClicked=key=>{
+    completeUserTour();
     setClickedNavItems(current=>{
       if(current.includes(key))return current;
       const next=[...current,key];
@@ -85,24 +108,6 @@ export default function AppLayout(){
       return next;
     });
   };
-
-  const markTourDone = (userId) => {
-    if (!userId) return;
-    try {
-      localStorage.setItem(`retail_onboarding_tour_done_${userId}`, 'true');
-      localStorage.setItem(`onboarding_main_done_${userId}`, 'true');
-      localStorage.setItem(`onboarding_main_completed_${userId}`, 'true');
-      localStorage.removeItem(`onboarding_main_pending_${userId}`);
-      localStorage.removeItem(`onboarding_main_step_${userId}`);
-    } catch {}
-  };
-
-  // Khóa tour hướng dẫn menu cũ nếu còn sót cờ
-  useEffect(() => {
-    if (user?.id) {
-      markTourDone(user.id);
-    }
-  }, [user?.id]);
 
   // Lắng nghe sự kiện hoàn tất đơn hàng để hiển thị chúc mừng
   useEffect(() => {
@@ -118,12 +123,9 @@ export default function AppLayout(){
 
   useEffect(() => {
     setPageTour(null);
-    if (!user?.id) return;
+    if (!user?.id||tourState.userId!==String(user.id)||!tourState.pending||tourState.completed||tourState.shown) return;
     const scenario = getPageTourScenario(location.pathname);
     if (!scenario) return;
-    const routeKey = location.pathname.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '') || 'home';
-    const visitedKey = `tour_visited_${user.id}_${routeKey}`;
-    try { if (localStorage.getItem(visitedKey) === 'true') return; } catch {}
     const assigned = [];
     const timer = setTimeout(() => {
       const steps = scenario.map(item => {
@@ -134,7 +136,11 @@ export default function AppLayout(){
         assigned.push({ node, previous, id: item.id });
         return { ...item, target: `[data-tour="${item.id}"]` };
       });
-      if (steps.every(Boolean)) setPageTour({ routeKey, stage: 1, steps });
+      if(steps.every(Boolean)){
+        markTourShown(user.id);
+        setTourState(current=>({...current,shown:true}));
+        setPageTour({stage:1,steps});
+      }
     }, 900);
     return () => {
       clearTimeout(timer);
@@ -143,9 +149,19 @@ export default function AppLayout(){
         if (previous == null) node.removeAttribute('data-tour'); else node.setAttribute('data-tour', previous);
       });
     };
-  }, [user?.id, location.pathname]);
+  },[user?.id,location.pathname,tourState.userId,tourState.pending,tourState.completed]);
 
-  const finishPageTour = () => { if (user?.id && pageTour) try { localStorage.setItem(`tour_visited_${user.id}_${pageTour.routeKey}`, 'true'); } catch {} setPageTour(null); };
+  const finishPageTour=()=>completeUserTour();
+
+  useEffect(()=>{
+    if(!pageTour)return undefined;
+    const target=pageTour.steps[pageTour.stage-1]?.target;
+    const handleTargetClick=event=>{
+      if(event.target instanceof Element&&event.target.closest(target))finishPageTour();
+    };
+    document.addEventListener('click',handleTargetClick,true);
+    return()=>document.removeEventListener('click',handleTargetClick,true);
+  },[pageTour]);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(()=>{
@@ -203,13 +219,13 @@ export default function AppLayout(){
       <div className="content-shell">
         {!EXCLUDED_COACHMARK_PATHS.has(location.pathname)&&pageTour&&(
           <InteractiveCoachmark
-            key={`${pageTour.routeKey}-${pageTour.stage}`}
+            key={pageTour.stage}
             target={pageTour.steps[pageTour.stage-1].target}
             step={pageTour.stage}
             total={pageTour.steps.length}
             message={pageTour.steps[pageTour.stage-1].message}
             continueLabel={pageTour.stage<pageTour.steps.length?'Tiếp tục':'Đã hiểu'}
-            onContinue={()=>pageTour.stage<pageTour.steps.length?setPageTour({...pageTour,stage:pageTour.stage+1}):finishPageTour()}
+            onContinue={finishPageTour}
             onSkip={finishPageTour}
           />
         )}
