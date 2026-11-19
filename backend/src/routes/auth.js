@@ -13,8 +13,8 @@ import { canExposeDevOtp } from '../utils/otp-security.js';
 
 const router = Router();
 router.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
+  windowMs: 60 * 1000,
+  limit: 5,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skip: req => req.method !== 'POST' || !['/login', '/request-unlock', '/register', '/google', '/forgot-password/send-otp', '/forgot-password/verify-otp', '/forgot-password/reset', '/send-register-otp', '/verify-register-otp'].includes(req.path),
@@ -452,6 +452,8 @@ router.post('/change-password', authenticate, asyncRoute(async (req, res) => {
 
   const hash = await bcrypt.hash(data.new_password, 12);
   await pool.execute('UPDATE users SET password_hash=? WHERE id=?', [hash, req.user.id]);
+  await pool.execute('UPDATE auth_sessions SET revoked_at=UTC_TIMESTAMP() WHERE user_id=? AND revoked_at IS NULL',[req.user.id]);
+  await session(res,req.user);
   res.json({ message: 'Đã đổi mật khẩu thành công' });
 }));
 

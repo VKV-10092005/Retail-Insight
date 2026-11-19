@@ -2,6 +2,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
+import hpp from 'hpp';
+import {rateLimit} from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -34,6 +36,7 @@ const app=express();
 const __filename=fileURLToPath(import.meta.url);
 const __dirname=dirname(__filename);
 const frontendDist=join(__dirname,'..','..','frontend','dist');
+const apiLimiter=rateLimit({windowMs:60_000,limit:120,standardHeaders:'draft-7',legacyHeaders:false,skip:req=>req.method==='OPTIONS',message:{message:'Quá nhiều yêu cầu. Vui lòng thử lại sau.'}});
 const isPrivateDevelopmentOrigin=origin=>{
  if(!origin)return true;
  if(config.origins.includes(origin))return true;
@@ -57,13 +60,19 @@ const corsOptions={
  credentials:true
 };
 app.disable('x-powered-by');
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+ contentSecurityPolicy:{directives:{defaultSrc:["'self'"],baseUri:["'self'"],objectSrc:["'none'"],frameAncestors:["'none'"],formAction:["'self'",'https://accounts.google.com'],scriptSrc:["'self'",'https://accounts.google.com'],styleSrc:["'self'","'unsafe-inline'",'https://fonts.googleapis.com'],imgSrc:["'self'",'data:','blob:','https:'],fontSrc:["'self'",'data:','https://fonts.gstatic.com'],connectSrc:["'self'",'https:','wss:'],frameSrc:['https://accounts.google.com']},reportOnly:false},
+ frameguard:{action:'deny'},noSniff:true,
+ hsts:config.production?{maxAge:15_552_000,includeSubDomains:false}:false,
+ referrerPolicy:{policy:'strict-origin-when-cross-origin'}
+}));
 app.set('trust proxy',process.env.TRUST_PROXY==='1'?1:false);
 app.use((req,res,next)=>{const started=Date.now(),requestPath=req.path;res.on('finish',()=>console.log(JSON.stringify({method:req.method,path:requestPath,status:res.statusCode,elapsed_ms:Date.now()-started})));next();});
 app.use(cors(corsOptions));
 app.use(compression());
-app.use(express.json({limit:'5mb'}));
-app.use(express.urlencoded({limit:'5mb',extended:true}));
+app.use(express.json({limit:'1mb'}));
+app.use(express.urlencoded({limit:'1mb',extended:true}));
+app.use(hpp());
 app.use(cookieParser());
 app.use('/api', (req,res,next)=>{
  res.set('Cache-Control','no-store');
@@ -73,13 +82,14 @@ app.use('/api', (req,res,next)=>{
  }
  next();
 });
-app.use('/api',invalidateReadCache);
+app.use('/api/v1',apiLimiter);
 app.get('/api/health',asyncRoute(async(req,res)=>{await verifyDatabase();res.json({status:'ok',database:'retail_app'});}));
 app.use('/api/v1/auth',auth);
 app.use('/api/v1',authenticate,asyncRoute(async(req,res,next)=>{
  const config=await getPlatformSettings();if(config.maintenance&&req.user?.role!=='PLATFORM_ADMIN')return res.status(503).json({message:'Hệ thống đang bảo trì. Vui lòng thử lại sau.'});next();
 }));
 app.use('/api/v1',tenantScope);
+app.use('/api/v1',invalidateReadCache);
 app.use('/api/v1',cacheReadResponses);
 app.use('/api/v1/platform',platform);
 app.use('/api/v1/tts',tts);

@@ -1,5 +1,7 @@
 const unavailableMessage='Máy chủ đang khởi động, vui lòng đợi vài giây và thử lại';
 const retryStatuses=new Set([502,503,504]);
+const inflightGets=new Map();let requestEpoch=0;
+function invalidateClientCache(){requestEpoch++;if(typeof window!=='undefined')window.dispatchEvent(new Event('api-cache-invalidate'));}
 
 function wait(ms,signal){
   return new Promise((resolve,reject)=>{
@@ -10,8 +12,7 @@ function wait(ms,signal){
   });
 }
 
-export async function fetchWithRetry(input,options={}){
-  if(options.method&&options.method.toUpperCase()!=='GET')window.dispatchEvent(new Event('api-cache-invalidate'));
+async function performFetchWithRetry(input,options={}){
   const signal=options.signal;
   for(let attempt=0;attempt<=2;attempt++){
     try{
@@ -30,4 +31,20 @@ export async function fetchWithRetry(input,options={}){
     }
     await wait(800,signal);
   }
+}
+
+export async function fetchWithRetry(input,options={}){
+  const method=String(options.method||input?.method||'GET').toUpperCase();
+  if(method!=='GET'){
+    invalidateClientCache();
+    return performFetchWithRetry(input,options).then(response=>{if(response.ok)invalidateClientCache();return response;});
+  }
+  if(options.signal)return performFetchWithRetry(input,options);
+  const url=typeof input==='string'?input:input.url;
+  const headers=[...new Headers(options.headers||input?.headers||{}).entries()].sort(([a],[b])=>a.localeCompare(b));
+  const key=JSON.stringify([requestEpoch,url,options.credentials||'same-origin',headers]);
+  const existing=inflightGets.get(key);if(existing)return existing;
+  const shared=performFetchWithRetry(input,options);
+  inflightGets.set(key,shared);
+  try{return await shared;}finally{if(inflightGets.get(key)===shared)inflightGets.delete(key);}
 }

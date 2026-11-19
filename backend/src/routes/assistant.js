@@ -523,7 +523,7 @@ async function generateWithGemini(message, history, context, user) {
             maxOutputTokens: 1500,
           },
         }),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (res.ok) {
@@ -591,7 +591,7 @@ async function generateWithGroq(message, history, context, user) {
         temperature: 0.35,
         max_tokens: 1500,
       }),
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (res.ok) {

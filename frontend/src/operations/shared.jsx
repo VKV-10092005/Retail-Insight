@@ -28,11 +28,18 @@ export async function request(path,{method='GET',body,signal}={}){
   return data;
 }
 
+const RESOURCE_CACHE_PREFIX='retail_api_swr_';
+function cachedResource(userId,path){try{const entry=JSON.parse(sessionStorage.getItem(`${RESOURCE_CACHE_PREFIX}${userId}_${path}`)||'null');return entry?.savedAt&&Date.now()-entry.savedAt<5*60_000?entry.data:null;}catch{return null;}}
+function saveResource(userId,path,data){try{sessionStorage.setItem(`${RESOURCE_CACHE_PREFIX}${userId}_${path}`,JSON.stringify({savedAt:Date.now(),data}));}catch{}}
+function clearResourceCache(){try{for(let index=sessionStorage.length-1;index>=0;index--){const key=sessionStorage.key(index);if(key?.startsWith(RESOURCE_CACHE_PREFIX))sessionStorage.removeItem(key);}}catch{}}
+if(typeof window!=='undefined'){window.addEventListener('api-cache-invalidate',clearResourceCache);window.addEventListener('auth-expired',clearResourceCache);}
+
 export function useResource(path){
   const [data,setData]=useState(null),
         [error,setError]=useState(''),
         [loading,setLoading]=useState(Boolean(path)),
         [tick,setTick]=useState(0);
+  const {user}=useAuth();
 
   useEffect(()=>{
     if(!path){
@@ -42,10 +49,17 @@ export function useResource(path){
       return;
     }
     const c=new AbortController();
+    const cached=user?.id?cachedResource(user.id,path):null;
+    if(cached!==null){
+      setData(cached);setError('');setLoading(false);
+      request(path,{signal:c.signal}).then(data=>{if(!c.signal.aborted){if(user?.id)saveResource(user.id,path,data);setData(data);}}).catch(()=>{});
+      return()=>c.abort();
+    }
     setLoading(true);
     setError('');
     request(path,{signal:c.signal})
       .then(d=>{
+        if(user?.id)saveResource(user.id,path,d);
         setData(d);
         setError('');
       })
@@ -59,7 +73,7 @@ export function useResource(path){
         if(!c.signal.aborted)setLoading(false);
       });
     return()=>c.abort();
-  },[path,tick]);
+  },[path,tick,user?.id]);
 
   return {
     data,

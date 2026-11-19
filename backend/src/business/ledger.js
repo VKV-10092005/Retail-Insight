@@ -644,7 +644,7 @@ router.get('/inventory',requireRoles('OWNER','MANAGER','INVENTORY'),asyncRoute(a
   getSettings('USER',req.user.id)
  ]);
  const threshold=Number(settings.operations?.lowStockThreshold??10);
- const limitClause=q.all?'':`LIMIT ${q.limit} OFFSET ${(q.page-1)*q.limit}`;
+ const limitClause=`LIMIT ${q.limit} OFFSET ${(q.page-1)*q.limit}`;
  const [items]=await pool.execute(`SELECT i.*,p.sku,p.name,b.name branch_name,p.category_id,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS min_stock,COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS DECIMAL(14,2)),?) AS alert_threshold ${from} WHERE ${where} ORDER BY i.quantity ASC,p.id ${limitClause}`,[threshold,...args]);
  res.json({items,total:count.total,page:q.page,source:'OPERATIONAL',as_of:new Date().toISOString(),calendar:calendarMetadata({},'inventory_balances.updated_at'),valuation:{value:null,reason:'Chưa có phương pháp định giá tồn kho đã xác nhận'}});
 }));

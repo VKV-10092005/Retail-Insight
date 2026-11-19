@@ -5,7 +5,7 @@ import {requireRoles} from '../middlewares/auth.js';
 import {asyncRoute} from '../utils/http.js';
 
 const router=Router();
-const query=z.object({q:z.string().max(100).default(''),category_id:z.coerce.number().int().positive().optional(),sort:z.enum(['margin_asc','margin_desc','name']).default('name'),page:z.coerce.number().int().min(1).max(10000).default(1),limit:z.coerce.number().int().min(1).max(200).default(200)});
+const query=z.object({q:z.string().max(100).default(''),category_id:z.coerce.number().int().positive().optional(),sort:z.enum(['margin_asc','margin_desc','name']).default('name'),page:z.coerce.number().int().min(1).max(10000).default(1),limit:z.coerce.number().int().min(1).max(100).default(100)});
 
 router.get('/market/price-comparison',requireRoles('OWNER','MANAGER'),asyncRoute(async(req,res)=>{
  const q=query.parse(req.query),args=[req.organizationId],where=["p.organization_id=?","p.status='ACTIVE'"];
