@@ -107,6 +107,19 @@ export default function Dashboard() {
   // Trạng thái modal Onboarding lần đầu
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [paymentSettingsOpen,setPaymentSettingsOpen]=useState(false);
+  const setupOrganizationId=storeInfo.data?.organization?.id||user?.tenantId;
+  const setupRoadmapKey=`retail_insight_setup_roadmap_hidden_${setupOrganizationId||'unknown'}_${user?.id||'unknown'}`;
+  const [registrationTourPending,setRegistrationTourPending]=useState(false);
+  const [setupRoadmapHidden,setSetupRoadmapHidden]=useState(false);
+  useEffect(()=>{
+    setRegistrationTourPending(getTourState(user?.id).pending);
+    let hidden=false;try{hidden=localStorage.getItem(setupRoadmapKey)==='true';}catch{}
+    setSetupRoadmapHidden(hidden);
+    const completed=event=>{if(String(event.detail?.userId)===String(user?.id))setRegistrationTourPending(false);};
+    window.addEventListener('retail-tour-completed',completed);
+    return()=>window.removeEventListener('retail-tour-completed',completed);
+  },[setupRoadmapKey,user?.id]);
+  const hideSetupRoadmap=()=>{setSetupRoadmapHidden(true);try{localStorage.setItem(setupRoadmapKey,'true');}catch{}};
   const paymentBranchId=activeBranchId;
 
   const dateFilter = useMemo(() => {
@@ -216,6 +229,8 @@ export default function Dashboard() {
   const completedStepsCount = checklistSteps.filter(s => s.done).length;
   const progressPercent = Math.round((completedStepsCount / checklistSteps.length) * 100);
   const onboardingComplete = onboarding.has_receipts && onboarding.has_payment_settings && onboarding.has_sales;
+  const hasStoreActivity=Boolean(onboarding.has_products||onboarding.has_receipts||onboarding.has_sales||Number(onboarding.product_count)>0||Number(onboarding.receipt_count)>0||Number(onboarding.sale_count)>0||Number(onboarding.total_revenue)>0);
+  const showSetupRoadmap=isOwner&&registrationTourPending&&!setupRoadmapHidden&&!hasStoreActivity&&!storeInfo.loading&&Boolean(storeInfo.data?.onboarding)&&!onboardingComplete;
 
   return (
     <div className="dashboard-container">
@@ -270,7 +285,7 @@ export default function Dashboard() {
       </Card>
 
       {/* 2. CHECKLIST 4 BƯỚC KHỞI TẠO CỬA HÀNG DÀNH CHO OWNER (DỰA TRÊN DỮ LIỆU THẬT 100%) */}
-      {isOwner && !storeInfo.loading && storeInfo.data?.onboarding && !onboardingComplete && (
+      {showSetupRoadmap && (
         <Card style={{ marginBottom: '24px', background: 'var(--ri-surface)', border: '1px solid var(--ri-border)' }}>
           <div style={{ padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
@@ -287,7 +302,8 @@ export default function Dashboard() {
               </div>
 
               {/* Huy hiệu tiến độ */}
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ display:'flex',alignItems:'flex-start',gap:'10px',textAlign: 'right' }}>
+                <div>
                 <div style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -312,6 +328,8 @@ export default function Dashboard() {
                     transition: 'width 0.4s ease'
                   }} />
                 </div>
+                </div>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={hideSetupRoadmap} aria-label="Ẩn lộ trình khởi tạo" title="Ẩn lộ trình khởi tạo" style={{padding:'6px',lineHeight:0}}><X size={16}/></button>
               </div>
             </div>
 

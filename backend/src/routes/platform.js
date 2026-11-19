@@ -214,8 +214,8 @@ router.get('/security/stats', asyncRoute(async (req, res) => {
 router.get('/security/logs', asyncRoute(async (req, res) => {
   const requestedPage=Number(req.query.page),requestedLimit=Number(req.query.limit);
   const page=Math.min(1_000_000,Number.isSafeInteger(requestedPage)&&requestedPage>0?requestedPage:1);
-  const limit=Math.min(100,Math.max(10,Number.isSafeInteger(requestedLimit)&&requestedLimit>0?requestedLimit:20));
-  const offset = (page - 1) * limit;
+  const safeLimit=Math.min(100,Math.max(10,Number.isSafeInteger(requestedLimit)&&requestedLimit>0?requestedLimit:20));
+  const safeOffset=(page-1)*safeLimit;
 
   const { search, severity, status } = req.query;
 
@@ -240,29 +240,33 @@ router.get('/security/logs', asyncRoute(async (req, res) => {
 
   const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-  const [[[countRow]],[rows]] = await Promise.all([
-   pool.execute(`SELECT COUNT(*) AS total FROM audit_logs a ${whereSql}`, params),
-   pool.execute(
-    `SELECT a.*, u.is_locked, u.locked_at, u.unlock_request_note, u.unlock_requested_at, u.locked_until, u.lock_reason, o.name AS organization_name, b.name AS branch_name
+  const rowsSql=`SELECT a.*, u.is_locked, u.locked_at, u.unlock_request_note, u.unlock_requested_at, u.locked_until, u.lock_reason, o.name AS organization_name, b.name AS branch_name
      FROM audit_logs a
      LEFT JOIN users u ON u.id = a.user_id
      LEFT JOIN organizations o ON o.id = a.organization_id
      LEFT JOIN branches b ON b.id = a.branch_id
      ${whereSql}
      ORDER BY a.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [...params, Number(limit), Number(offset)]
-   )
-  ]);
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`;
+  let countRow,rows;
+  try{
+   [[[countRow]],[rows]]=await Promise.all([
+    pool.execute(`SELECT COUNT(*) AS total FROM audit_logs a ${whereSql}`,params),
+    pool.query(rowsSql,params)
+   ]);
+  }catch(error){
+   console.error('[platform/security/logs] SQL query failed:',{code:error.code,sqlState:error.sqlState,message:error.message,sql:rowsSql,stack:error.stack});
+   throw error;
+  }
   const total = Number(countRow?.total || 0);
 
   res.json({
     logs: rows,
     pagination: {
       page,
-      limit,
+      limit:safeLimit,
       total,
-      totalPages: Math.ceil(total / limit) || 1,
+      totalPages: Math.ceil(total / safeLimit) || 1,
     },
   });
 }));
