@@ -89,16 +89,16 @@ export default function AdminSecurity() {
       if (severityFilter) params.append('severity', severityFilter);
       if (statusFilter) params.append('status', statusFilter);
 
-      const [statsData, logsData, notifsData] = await Promise.all([
+      const results = await Promise.allSettled([
         request('/platform/security/stats'),
         request(`/platform/security/logs?${params.toString()}`),
         request('/platform/security/notifications'),
       ]);
-
-      setStats(statsData);
-      setLogs(logsData.logs || []);
-      setPagination(logsData.pagination || { page: 1, limit: 15, total: 0, totalPages: 1 });
-      setNotifications(notifsData.notifications || []);
+      const [statsData,logsData,notifsData]=results;
+      if(statsData.status==='fulfilled')setStats(statsData.value);
+      if(logsData.status==='fulfilled'){setLogs(logsData.value.logs||[]);setPagination(logsData.value.pagination||{page:1,limit:15,total:0,totalPages:1});}
+      if(notifsData.status==='fulfilled')setNotifications(notifsData.value.notifications||[]);
+      const failed=results.find(result=>result.status==='rejected');if(failed)throw failed.reason;
     } catch (e) {
       setErr(e.message);
     } finally {

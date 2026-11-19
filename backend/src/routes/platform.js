@@ -24,10 +24,12 @@ router.put('/settings',asyncRoute(async(req,res)=>{
  res.json(await saveSettings('PLATFORM','global',{...current,...input}));
 }));
 router.get('/dashboard',asyncRoute(async(req,res)=>{
-  const [[organizations]]=await pool.execute("SELECT COUNT(*) total,SUM(status='ACTIVE') active,SUM(status='DISABLED') disabled FROM organizations");
-  const [users]=await pool.execute("SELECT role,COUNT(*) total FROM users WHERE role IN ('OWNER','MANAGER','CASHIER') GROUP BY role");
-  const [[products]]=await pool.execute("SELECT COUNT(*) total FROM products WHERE status='ACTIVE'");
-  const [[documents]]=await pool.execute("SELECT COUNT(*) invoices,COALESCE(SUM(total),0) revenue FROM stock_documents WHERE type='SALE'");
+  const [[[organizations]],[users],[[products]],[[documents]]]=await Promise.all([
+   pool.execute("SELECT COUNT(*) total,SUM(status='ACTIVE') active,SUM(status='DISABLED') disabled FROM organizations"),
+   pool.execute("SELECT role,COUNT(*) total FROM users WHERE role IN ('OWNER','MANAGER','CASHIER') GROUP BY role"),
+   pool.execute("SELECT COUNT(*) total FROM products WHERE status='ACTIVE'"),
+   pool.execute("SELECT COUNT(*) invoices,COALESCE(SUM(total),0) revenue FROM stock_documents WHERE type='SALE'")
+  ]);
   const userCounts=Object.fromEntries(users.map(row=>[row.role,Number(row.total)]));
   res.json({organizations:{total:Number(organizations.total||0),active:Number(organizations.active||0),disabled:Number(organizations.disabled||0)},users:{total:Object.values(userCounts).reduce((a,b)=>a+b,0),byRole:{OWNER:userCounts.OWNER||0,MANAGER:userCounts.MANAGER||0,CASHIER:userCounts.CASHIER||0}},products:{active:Number(products.total||0)},invoices:{total:Number(documents.invoices||0),revenue:Number(documents.revenue||0)}});
 }));
@@ -159,27 +161,28 @@ router.get('/system-health',asyncRoute(async(req,res)=>{
 
 // 1. Thống kê an ninh tổng thể
 router.get('/security/stats', asyncRoute(async (req, res) => {
-  const [[eventCount]] = await pool.execute('SELECT COUNT(*) AS total FROM audit_logs');
-  const [[lockedCount]] = await pool.execute(
+  const [[[eventCount]],[[lockedCount]],[[criticalCount]],[[highCount]],[[unreadAlerts]],[lockedUsers]] = await Promise.all([
+   pool.execute('SELECT COUNT(*) AS total FROM audit_logs'),
+   pool.execute(
     'SELECT COUNT(*) AS total FROM users WHERE (is_locked=1 AND (locked_until IS NULL OR locked_until > UTC_TIMESTAMP())) OR locked_until > UTC_TIMESTAMP()'
-  );
-  const [[criticalCount]] = await pool.execute(
+   ),
+   pool.execute(
     "SELECT COUNT(*) AS total FROM audit_logs WHERE severity = 'CRITICAL'"
-  );
-  const [[highCount]] = await pool.execute(
+   ),
+   pool.execute(
     "SELECT COUNT(*) AS total FROM audit_logs WHERE severity = 'HIGH'"
-  );
-  const [[unreadAlerts]] = await pool.execute(
+   ),
+   pool.execute(
     'SELECT COUNT(*) AS total FROM security_notifications WHERE is_read = FALSE'
-  );
-
-  const [lockedUsers] = await pool.execute(
+   ),
+   pool.execute(
     `SELECT u.id, u.email, u.full_name, u.role, u.is_locked, u.locked_at, u.unlock_request_note, u.unlock_requested_at, u.locked_until, u.lock_reason, o.name AS organization_name
      FROM users u
      LEFT JOIN organizations o ON o.id = u.organization_id
      WHERE (u.is_locked=1 AND (u.locked_until IS NULL OR u.locked_until > UTC_TIMESTAMP())) OR u.locked_until > UTC_TIMESTAMP()
      ORDER BY COALESCE(u.locked_at,u.locked_until) DESC`
-  );
+   )
+  ]);
 
   res.json({
     totalEvents: Number(eventCount?.total || 0),
@@ -221,10 +224,9 @@ router.get('/security/logs', asyncRoute(async (req, res) => {
 
   const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-  const [[countRow]] = await pool.execute(`SELECT COUNT(*) AS total FROM audit_logs a ${whereSql}`, params);
-  const total = Number(countRow?.total || 0);
-
-  const [rows] = await pool.execute(
+  const [[[countRow]],[rows]] = await Promise.all([
+   pool.execute(`SELECT COUNT(*) AS total FROM audit_logs a ${whereSql}`, params),
+   pool.execute(
     `SELECT a.*, u.is_locked, u.locked_at, u.unlock_request_note, u.unlock_requested_at, u.locked_until, u.lock_reason, o.name AS organization_name, b.name AS branch_name
      FROM audit_logs a
      LEFT JOIN users u ON u.id = a.user_id
@@ -234,7 +236,9 @@ router.get('/security/logs', asyncRoute(async (req, res) => {
      ORDER BY a.created_at DESC
      LIMIT ? OFFSET ?`,
     [...params, Number(limit), Number(offset)]
-  );
+   )
+  ]);
+  const total = Number(countRow?.total || 0);
 
   res.json({
     logs: rows,

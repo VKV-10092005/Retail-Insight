@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -28,6 +29,7 @@ import notifications from './business/notifications.js';
 import {calendarMetadata} from './business/business-calendar.js';
 import settings from './business/settings.js';
 import {getPlatformSettings} from './services/appSettings.js';
+import {cacheReadResponses,invalidateReadCache} from './middleware/readCache.js';
 const app=express();
 const __filename=fileURLToPath(import.meta.url);
 const __dirname=dirname(__filename);
@@ -59,6 +61,7 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.set('trust proxy',process.env.TRUST_PROXY==='1'?1:false);
 app.use((req,res,next)=>{const started=Date.now(),requestPath=req.path;res.on('finish',()=>console.log(JSON.stringify({method:req.method,path:requestPath,status:res.statusCode,elapsed_ms:Date.now()-started})));next();});
 app.use(cors(corsOptions));
+app.use(compression());
 app.use(express.json({limit:'5mb'}));
 app.use(express.urlencoded({limit:'5mb',extended:true}));
 app.use(cookieParser());
@@ -70,26 +73,30 @@ app.use('/api', (req,res,next)=>{
  }
  next();
 });
+app.use('/api',invalidateReadCache);
 app.get('/api/health',asyncRoute(async(req,res)=>{await verifyDatabase();res.json({status:'ok',database:'retail_app'});}));
 app.use('/api/v1/auth',auth);
 app.use('/api/v1',authenticate,asyncRoute(async(req,res,next)=>{
  const config=await getPlatformSettings();if(config.maintenance&&req.user?.role!=='PLATFORM_ADMIN')return res.status(503).json({message:'Hệ thống đang bảo trì. Vui lòng thử lại sau.'});next();
 }));
-app.use('/api/v1/platform', authenticate, platform);
-app.use('/api/v1',authenticate,tenantScope);
+app.use('/api/v1',tenantScope);
+app.use('/api/v1',cacheReadResponses);
+app.use('/api/v1/platform',platform);
 app.use('/api/v1/tts',tts);
 app.use('/api/v1/categories', categoriesRoute);
 app.use('/api/v1',productImport,receiptImport,catalog,ledger,bi,ai,market,notifications,settings);
 app.use('/api/v1/support', support);
 app.use('/api/v1/assistant', assistant);
 app.get('/api/v1/dashboard/overview',requireRoles('OWNER','MANAGER'),asyncRoute(async(req,res)=>{
- const [[row]]=await pool.execute('SELECT name FROM organizations WHERE id=?',[req.organizationId]);
- const [[counts]]=await pool.execute('SELECT COUNT(*) AS branches FROM branches WHERE organization_id=?',[req.organizationId]);
- const [[catCount]]=await pool.execute('SELECT COUNT(*) AS total FROM categories WHERE organization_id=?',[req.organizationId]);
- const [[prodCount]]=await pool.execute("SELECT COUNT(*) AS total FROM products WHERE organization_id=? AND status='ACTIVE'",[req.organizationId]);
- const [[receiptCount]]=await pool.execute("SELECT COUNT(*) AS total FROM stock_documents WHERE organization_id=? AND type='RECEIPT'",[req.organizationId]);
- const [[saleCount]]=await pool.execute("SELECT COUNT(*) AS total FROM stock_documents WHERE organization_id=? AND type='SALE'",[req.organizationId]);
- const [[paymentCount]]=await pool.execute('SELECT COUNT(*) AS total FROM branches WHERE organization_id=? AND bank_bin IS NOT NULL AND bank_account_number IS NOT NULL',[req.organizationId]);
+ const [[row], [counts], [catCount], [prodCount], [receiptCount], [saleCount], [paymentCount]]=await Promise.all([
+  pool.execute('SELECT name FROM organizations WHERE id=?',[req.organizationId]),
+  pool.execute('SELECT COUNT(*) AS branches FROM branches WHERE organization_id=?',[req.organizationId]),
+  pool.execute('SELECT COUNT(*) AS total FROM categories WHERE organization_id=?',[req.organizationId]),
+  pool.execute("SELECT COUNT(*) AS total FROM products WHERE organization_id=? AND status='ACTIVE'",[req.organizationId]),
+  pool.execute("SELECT COUNT(*) AS total FROM stock_documents WHERE organization_id=? AND type='RECEIPT'",[req.organizationId]),
+  pool.execute("SELECT COUNT(*) AS total FROM stock_documents WHERE organization_id=? AND type='SALE'",[req.organizationId]),
+  pool.execute('SELECT COUNT(*) AS total FROM branches WHERE organization_id=? AND bank_bin IS NOT NULL AND bank_account_number IS NOT NULL',[req.organizationId])
+ ]);
 
  res.json({
   organization:{id:req.organizationId,name:row?.name || ''},

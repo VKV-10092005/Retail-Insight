@@ -639,8 +639,11 @@ router.get('/inventory',requireRoles('OWNER','MANAGER','INVENTORY'),asyncRoute(a
  const q=period.parse(req.query),args=[req.organizationId];let where='i.organization_id=?'+branchClause(req.user,'i',args);
  if(q.branch_id){where+=' AND i.branch_id=?';args.push(q.branch_id);}if(q.category_id){where+=' AND p.category_id=?';args.push(q.category_id);}if(q.product_id){where+=' AND p.id=?';args.push(q.product_id);}if(q.q){where+=' AND (p.sku LIKE ? OR p.name LIKE ?)';args.push('%'+q.q+'%','%'+q.q+'%');}
  const from='FROM inventory_balances i JOIN products p ON p.organization_id=i.organization_id AND p.id=i.product_id JOIN branches b ON b.organization_id=i.organization_id AND b.id=i.branch_id';
- const [[count]]=await pool.execute(`SELECT COUNT(*) total ${from} WHERE ${where}`,args);
- const settings=await getSettings('USER',req.user.id),threshold=Number(settings.operations?.lowStockThreshold??10);
+ const [[[count]],settings]=await Promise.all([
+  pool.execute(`SELECT COUNT(*) total ${from} WHERE ${where}`,args),
+  getSettings('USER',req.user.id)
+ ]);
+ const threshold=Number(settings.operations?.lowStockThreshold??10);
  const limitClause=q.all?'':`LIMIT ${q.limit} OFFSET ${(q.page-1)*q.limit}`;
  const [items]=await pool.execute(`SELECT i.*,p.sku,p.name,b.name branch_name,p.category_id,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS min_stock,COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS DECIMAL(14,2)),?) AS alert_threshold ${from} WHERE ${where} ORDER BY i.quantity ASC,p.id ${limitClause}`,[threshold,...args]);
  res.json({items,total:count.total,page:q.page,source:'OPERATIONAL',as_of:new Date().toISOString(),calendar:calendarMetadata({},'inventory_balances.updated_at'),valuation:{value:null,reason:'Chưa có phương pháp định giá tồn kho đã xác nhận'}});

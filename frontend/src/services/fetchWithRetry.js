@@ -11,6 +11,7 @@ function wait(ms,signal){
 }
 
 export async function fetchWithRetry(input,options={}){
+  if(options.method&&options.method.toUpperCase()!=='GET')window.dispatchEvent(new Event('api-cache-invalidate'));
   const signal=options.signal;
   for(let attempt=0;attempt<=2;attempt++){
     try{

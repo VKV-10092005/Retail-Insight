@@ -14,7 +14,7 @@ export const connectionOptions = {
   timezone: 'Z',
   multipleStatements: false,
   waitForConnections: true,
-  connectionLimit: 15,
+  connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000

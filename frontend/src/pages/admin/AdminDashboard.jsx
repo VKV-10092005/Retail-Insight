@@ -14,7 +14,7 @@ export default function AdminDashboard(){
   const [orgs,setOrgs]=useState([]),[stats,setStats]=useState(null),[digests,setDigests]=useState([]),[digestBusy,setDigestBusy]=useState(false);
   const [loading,setLoading]=useState(true),[err,setErr]=useState(null),[updating,setUpdating]=useState(null);
   const load=useCallback(async()=>{
-    try{setLoading(true);setErr(null);const [summary,tenants,digestData]=await Promise.all([request('/platform/dashboard'),request('/platform/organizations'),request('/platform/notification-digests')]);setStats(summary);setOrgs(tenants.organizations||[]);setDigests(digestData.items||[]);}
+    try{setLoading(true);setErr(null);const results=await Promise.allSettled([request('/platform/dashboard'),request('/platform/organizations'),request('/platform/notification-digests')]);const [summary,tenants,digestData]=results;setStats(summary.status==='fulfilled'?summary.value:null);setOrgs(tenants.status==='fulfilled'?(tenants.value.organizations||[]):[]);setDigests(digestData.status==='fulfilled'?(digestData.value.items||[]):[]);const failed=results.find(result=>result.status==='rejected');if(failed)throw failed.reason;}
     catch(e){setErr(e.message);}finally{setLoading(false);}
   },[]);
   useEffect(()=>{load();},[load]);

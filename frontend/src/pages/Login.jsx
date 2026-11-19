@@ -8,10 +8,12 @@ import {ThemeToggle} from '../design-system/ThemeProvider.jsx';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import PasswordChecklist, { isPasswordStrong } from '../components/auth/PasswordChecklist';
 import {authRequest} from '../services/auth';
+import {warmApi} from '../services/api';
 import OtpInput from '../components/auth/OtpInput';
 import AuthShowcasePanel from '../components/auth/AuthShowcasePanel';
 
 export default function Login(){
+  useEffect(()=>{warmApi();},[]);
   const {user,loading,login,refresh,error:sessionError}=useAuth();
   const [searchParams]=useSearchParams();
   const navigate=useNavigate();

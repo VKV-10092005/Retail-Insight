@@ -3,6 +3,7 @@ import {Link,Navigate} from 'react-router-dom';
 import {Activity,ArrowRight,BarChart3,BrainCircuit,CheckCircle2,Layers3,PackageCheck,ShieldCheck,ShoppingCart,Store,TrendingUp,Warehouse,Zap} from 'lucide-react';
 import {useAuth} from '../auth/AuthContext';
 import {getDefaultRoute} from '../config/roles';
+import {warmApi} from '../services/api';
 import {ThemeToggle,useTheme} from '../design-system/ThemeProvider.jsx';
 import AiRobotMascot from '../components/welcome/AiRobotMascot';
 import './WelcomePage.css';
@@ -20,6 +21,7 @@ const comparisons=[
  ['Bảo mật & Phân quyền','Khó kiểm soát khi chia sẻ file','Phân quyền theo vai trò, lưu vết hoạt động']
 ];
 export default function WelcomePage(){
+ useEffect(()=>{warmApi();},[]);
  const {user,loading}=useAuth();
  const {setTheme}=useTheme();
  useEffect(()=>{try{if(!localStorage.getItem('ri.theme'))setTheme('dark');}catch{setTheme('dark');}},[setTheme]);
