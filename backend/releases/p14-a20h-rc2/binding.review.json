@@ -1,0 +1,41 @@
+﻿{
+  "documentType": "RC2_BINDING_REVIEW_ONLY",
+  "state": "REVIEW_ONLY",
+  "executionAllowed": false,
+  "provisioningAllowed": false,
+  "nativeVerified": false,
+  "releaseId": "p14-a20h-rc2",
+  "target": {
+    "host": null,
+    "port": null,
+    "schema": null,
+    "serverUuid": null,
+    "forbiddenServerUuids": null,
+    "imageDigest": null,
+    "version": null,
+    "sqlMode": null,
+    "collations": null,
+    "tls": null
+  },
+  "authority": {
+    "stage": "REVIEW_ONLY",
+    "allowNativeWrites": false,
+    "allowProcessLaunch": false,
+    "approvalRef": null,
+    "operatorPublicKey": null
+  },
+  "bindingRequired": [
+    "isolated host provisioning approval",
+    "actual inventory with read-only approval",
+    "exact principal grants and per-phase schema inventories",
+    "rendering tokens and typed parameters",
+    "affected-row contracts and data queries",
+    "baseline and before/after/phase-final hashes",
+    "operator attestation and native permits",
+    "native harness/barriers/fixture and matrix review",
+    "journal ACL/stale-lock recovery and durability policy"
+  ],
+  "nativeTests": "NOT_RUN",
+  "nextStageApproved": false
+}
+

@@ -1,0 +1,11 @@
+SET @has_web_form_submitted = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='retail_app' AND TABLE_NAME='support_threads' AND COLUMN_NAME='web_form_submitted');
+SET @ddl = IF(@has_web_form_submitted=0,'ALTER TABLE support_threads ADD COLUMN web_form_submitted TINYINT(1) NOT NULL DEFAULT 0 AFTER web_request_status','SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+UPDATE support_threads t SET web_form_submitted=1 WHERE t.category='WEB_DESIGN' AND EXISTS(SELECT 1 FROM support_messages m WHERE m.thread_id=t.id AND m.message_type='WEB_INTAKE_SUBMISSION');
+SET @has_web_form_reminder_sent = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='retail_app' AND TABLE_NAME='support_threads' AND COLUMN_NAME='web_form_reminder_sent');
+SET @ddl = IF(@has_web_form_reminder_sent=0,'ALTER TABLE support_threads ADD COLUMN web_form_reminder_sent TINYINT(1) NOT NULL DEFAULT 0 AFTER web_form_submitted','SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

@@ -1,0 +1,31 @@
+﻿CREATE TABLE IF NOT EXISTS organizations (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(160) NOT NULL,
+ slug CHAR(36) NOT NULL UNIQUE, plan VARCHAR(30) NOT NULL DEFAULT 'basic',
+ status ENUM('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE', created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS users (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, organization_id INT UNSIGNED NOT NULL,
+ email VARCHAR(254) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL, full_name VARCHAR(120) NOT NULL,
+ role ENUM('OWNER','MANAGER','INVENTORY','CASHIER') NOT NULL DEFAULT 'CASHIER',
+ status ENUM('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE', last_login_at DATETIME NULL,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ UNIQUE KEY user_tenant (organization_id,id), FOREIGN KEY (organization_id) REFERENCES organizations(id)
+);
+CREATE TABLE IF NOT EXISTS branches (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, organization_id INT UNSIGNED NOT NULL,
+ name VARCHAR(160) NOT NULL, address VARCHAR(500), phone VARCHAR(30),
+ status ENUM('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE',
+ UNIQUE KEY branch_tenant (organization_id,id), FOREIGN KEY (organization_id) REFERENCES organizations(id)
+);
+CREATE TABLE IF NOT EXISTS user_branch_roles (
+ organization_id INT UNSIGNED NOT NULL, user_id INT UNSIGNED NOT NULL, branch_id INT UNSIGNED NOT NULL,
+ role ENUM('OWNER','MANAGER','INVENTORY','CASHIER') NOT NULL,
+ PRIMARY KEY (user_id,branch_id),
+ FOREIGN KEY (organization_id,user_id) REFERENCES users(organization_id,id),
+ FOREIGN KEY (organization_id,branch_id) REFERENCES branches(organization_id,id)
+);
+CREATE TABLE IF NOT EXISTS auth_sessions (
+ id CHAR(36) PRIMARY KEY, organization_id INT UNSIGNED NOT NULL, user_id INT UNSIGNED NOT NULL,
+ expires_at DATETIME NOT NULL, revoked_at DATETIME NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (organization_id,user_id) REFERENCES users(organization_id,id), INDEX (expires_at)
+);

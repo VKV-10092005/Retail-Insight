@@ -1,0 +1,237 @@
+﻿{
+  "documentType": "A2_0_STATIC_REVIEW_PROFILE_NOT_HARNESS_CONFIG",
+  "date": "2026-11-06",
+  "runIdProposal": "a21_run001",
+  "stage": "A2_0_STATIC_ONLY",
+  "approvalRef": null,
+  "allowNativeWrites": false,
+  "allowSqlReads": false,
+  "allowProvisioning": false,
+  "runtimeActivation": false,
+  "targetChoice": null,
+  "resourceProposal": {
+    "mysql": {
+      "vcpus": 2,
+      "memoryMiB": 2048,
+      "bufferPoolMiB": 512,
+      "maxConnections": 80,
+      "diskBudgetGiB": 20,
+      "diskQuotaEnforced": false
+    },
+    "backends": {
+      "processes": 2,
+      "memoryMiBEach": 512,
+      "poolLimitEach": 10
+    },
+    "wholeTestHost": {
+      "vcpus": 4,
+      "memoryGiB": 8
+    },
+    "measuredHostRamFreeKiB": 1776908,
+    "localProvisioningReady": false
+  },
+  "configProposal": {
+    "host": "127.0.0.1",
+    "port": 13316,
+    "database": "retail_p14_test_a21_run001",
+    "user": null,
+    "credentialSource": "a2-disposable-secret",
+    "passwordSecretRef": null,
+    "caSecretRef": null,
+    "dateStrings": true,
+    "supportBigNumbers": true,
+    "bigNumberStrings": true,
+    "multipleStatements": false
+  },
+  "permitProposal": {
+    "stage": "A2_0_STATIC_ONLY",
+    "allowNativeWrites": false,
+    "approvalRef": null,
+    "runId": "a21_run001",
+    "schemas": [
+      "retail_p14_test_a21_run001"
+    ],
+    "users": [
+      "p14_test_migrator_run001",
+      "p14_test_backend1_run001",
+      "p14_test_backend2_run001",
+      "p14_test_control_run001",
+      "p14_test_seed_run001",
+      "p14_test_observer_run001"
+    ],
+    "endpoints": [
+      {
+        "host": "127.0.0.1",
+        "port": 13316
+      }
+    ],
+    "serverUuid": null,
+    "forbiddenServerUuids": [],
+    "serverPort": 3306,
+    "version": null,
+    "versionComment": null,
+    "imageDigest": null,
+    "sqlMode": null,
+    "engines": [
+      "InnoDB"
+    ],
+    "tlsFingerprint": null,
+    "isolatedLoopback": false,
+    "fullAccountByRole": null,
+    "sourceInventoryApprovalRef": null,
+    "collationBindings": {
+      "characterSetServer": null,
+      "collationServer": null,
+      "characterSetSchema": null,
+      "collationSchema": null,
+      "characterSetConnection": null,
+      "collationConnection": null,
+      "requestKeyCharset": null,
+      "requestKeyCollation": null,
+      "documentTypeCharset": null,
+      "documentTypeCollation": null,
+      "enumOrder": [
+        "RECEIPT",
+        "SALE"
+      ],
+      "paddingSemantics": null
+    },
+    "initialization": {
+      "lowerCaseTableNames": null,
+      "datadirProvenance": null,
+      "containerId": null,
+      "volumeLabels": null
+    },
+    "expectedSessionTimezone": "+00:00",
+    "expectedActiveWriterIsolation": "READ COMMITTED",
+    "serverDefaultIsolationForNegativeTest": "REPEATABLE READ"
+  },
+  "grantsProposal": {
+    "migration": {
+      "scope": "literal test schema only",
+      "privileges": [
+        "SELECT",
+        "CREATE",
+        "ALTER",
+        "INDEX",
+        "TRIGGER",
+        "REFERENCES",
+        "INSERT",
+        "UPDATE"
+      ],
+      "forbidden": [
+        "GLOBAL",
+        "GRANT OPTION",
+        "FILE",
+        "PROCESS",
+        "DROP",
+        "REPLICATION"
+      ]
+    },
+    "backend": {
+      "scope": "table/column allowlist (not implemented by A1 grant parser)",
+      "select": [
+        "organizations",
+        "users",
+        "auth_sessions",
+        "branches",
+        "user_branch_roles",
+        "business_schema_control",
+        "branch_posting_guards",
+        "business_posting_policies",
+        "business_periods",
+        "products",
+        "stock_documents",
+        "stock_document_items",
+        "document_request_receipts",
+        "document_finalizations",
+        "inventory_balances",
+        "inventory_movements"
+      ],
+      "insert": [
+        "stock_documents",
+        "stock_document_items",
+        "inventory_movements",
+        "document_request_receipts",
+        "business_audit_events",
+        "document_finalizations"
+      ],
+      "updateColumns": {
+        "inventory_balances": [
+          "quantity"
+        ],
+        "branch_posting_guards": [
+          "live_revision"
+        ]
+      },
+      "delete": [],
+      "ddl": []
+    },
+    "observer": {
+      "scope": "test assertions + explicit Performance Schema tables only",
+      "performanceSchemaSelect": [
+        "threads",
+        "events_transactions_current",
+        "data_locks",
+        "data_lock_waits",
+        "events_statements_summary_by_digest"
+      ],
+      "forbidden": [
+        "GLOBAL SELECT",
+        "PROCESS",
+        "WRITE",
+        "GRANT OPTION"
+      ]
+    }
+  },
+  "backendProposal": [
+    {
+      "instance": "A",
+      "bind": "127.0.0.1",
+      "port": 13317,
+      "user": "p14_test_backend1_run001",
+      "poolLimit": 10,
+      "secretRef": null,
+      "testJwtSecretRef": null,
+      "pid": null,
+      "mountInProduction": false
+    },
+    {
+      "instance": "B",
+      "bind": "127.0.0.1",
+      "port": 13318,
+      "user": "p14_test_backend2_run001",
+      "poolLimit": 10,
+      "secretRef": null,
+      "testJwtSecretRef": null,
+      "pid": null,
+      "mountInProduction": false
+    }
+  ],
+  "unboundRequired": [
+    "targetChoice",
+    "approvalRef",
+    "imageDigest",
+    "serverUuid",
+    "forbiddenServerUuids",
+    "exact version and sqlMode",
+    "all actual charset/collation metadata",
+    "full user@host and role grants",
+    "TLS or approved loopback exception",
+    "journal target path/ACL",
+    "typed RC2 fingerprints and data predicates",
+    "native launcher/authentication config"
+  ],
+  "denyDatabaseNames": [
+    "retail_app",
+    "retail_management",
+    "retail_datawarehouse"
+  ],
+  "status": "NO_GO_FOR_CONNECT_PROVISION_OR_EXECUTE",
+  "references": [
+    "ENVIRONMENT_AND_IDENTITY.md",
+    "RELEASE_CHOREOGRAPHY.md",
+    "CONCURRENCY_TEST_MATRIX.md"
+  ]
+}
+

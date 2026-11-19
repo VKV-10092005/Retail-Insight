@@ -1,0 +1,148 @@
+﻿.payment-settings-modal {
+  --payment-border: var(--border, var(--ri-border, #cbd5e1));
+  --payment-surface: var(--bg-surface, var(--ri-surface, #fff));
+  --payment-text: var(--text-primary, var(--ri-text, #0f172a));
+  --payment-focus: var(--accent-primary, var(--ri-focus, #4f46e5));
+}
+
+.payment-settings-modal form#payment-settings-form > label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  color: var(--payment-text);
+  font-weight: 600;
+}
+
+.payment-settings-modal form#payment-settings-form > label > div {
+  width: 100%;
+}
+
+.payment-settings-modal input:not([type="file"]),
+.payment-settings-modal select {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--payment-border);
+  border-radius: 8px;
+  background: var(--payment-surface);
+  color: var(--payment-text);
+  font: inherit;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.payment-settings-modal input::placeholder {
+  color: var(--ri-muted, #64748b);
+  opacity: 1;
+}
+
+.payment-settings-modal input:not([type="file"]):focus,
+.payment-settings-modal select:focus {
+  border-color: var(--payment-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--payment-focus) 22%, transparent);
+}
+
+.payment-settings-modal [role="listbox"] {
+  color: var(--payment-text);
+}
+
+.payment-settings-modal .payment-qr-dropzone {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 165px;
+  border: 1.5px dashed var(--payment-border) !important;
+  border-radius: 12px !important;
+  background: var(--payment-surface);
+  color: var(--payment-text);
+  text-align: center;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.payment-settings-modal .payment-qr-dropzone strong { color: var(--payment-focus); }
+.payment-settings-modal .payment-qr-dropzone span { color: var(--ri-muted, #64748b); font-size: 12px; }
+
+.payment-settings-modal .payment-qr-dropzone:hover,
+.payment-settings-modal .payment-qr-dropzone.is-dragging {
+  border-color: var(--payment-focus) !important;
+  background: var(--ri-elevated, #eef2ff);
+}
+
+.payment-settings-modal .payment-qr-preview {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--payment-border);
+  border-radius: 10px;
+  background: var(--payment-surface);
+}
+
+.payment-settings-modal .payment-qr-preview-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payment-settings-modal .payment-qr-preview img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--payment-border);
+  border-radius: 8px;
+}
+
+@media (max-width: 540px) {
+  .payment-settings-modal [role="tablist"] { flex-wrap: wrap; }
+  .payment-settings-modal [role="tablist"] .btn { flex: 1 1 100%; }
+}
+
+
+
+
+.payment-settings-modal .payment-qr-success {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #166534;
+}
+.payment-ready-notice {
+  position: fixed;
+  z-index: 1500;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  gap: 12px;
+  width: min(440px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 18px 52px 18px 18px;
+  border: 1px solid #86efac;
+  border-radius: 14px;
+  background: #f0fdf4;
+  color: #14532d;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, .2);
+}
+.payment-ready-notice > strong { font-size: 1rem; line-height: 1.45; }
+.payment-ready-notice > .btn { display: inline-flex; justify-self: start; align-items: center; gap: 7px; }
+.payment-ready-dismiss {
+  position: absolute; top: 10px; right: 10px; display: grid; width: 30px; height: 30px; place-items: center;
+  border: 0; border-radius: 7px; background: transparent; color: inherit; cursor: pointer;
+}
+.payment-ready-dismiss:hover { background: rgba(20, 83, 45, .08); }
+@media (max-width: 540px) { .payment-ready-notice { right: 16px; bottom: 16px; } }

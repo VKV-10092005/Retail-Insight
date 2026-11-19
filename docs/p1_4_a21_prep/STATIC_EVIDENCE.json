@@ -1,0 +1,80 @@
+{
+  "documentType": "A2_1_PREP_OFFLINE_EVIDENCE",
+  "date": "2026-11-06",
+  "tests": {
+    "prep": {
+      "pass": 26,
+      "fail": 0
+    },
+    "rc2": {
+      "pass": 87,
+      "fail": 0
+    },
+    "a1": {
+      "pass": 102,
+      "fail": 0
+    },
+    "pureRegression": {
+      "pass": 84,
+      "fail": 0
+    },
+    "sqliteHttpMock": {
+      "pass": 71,
+      "fail": 0
+    },
+    "totalPass": 370,
+    "totalFail": 0
+  },
+  "native": {
+    "mysqlConnections": 0,
+    "mysqlServerStatements": 0,
+    "ddlDmlSeedMigration": "NOT_RUN",
+    "cases15": "NOT_RUN",
+    "recoveryCases8": "NOT_RUN",
+    "load": "NOT_RUN",
+    "backendProcessesStarted": 0,
+    "portsBoundByPrep": 0
+  },
+  "runtimeMounted": false,
+  "productionCredentialsLoaded": false,
+  "aiResearchChanged": false,
+  "resourcesProvisioned": false,
+  "rc3Created": false,
+  "rc2": {
+    "digest": "e3184de4ff673a0351cdf721eeb19df3a837912cfbf7ee9fab3ff2bc49ca5071",
+    "fileSha256": "9c309242ea0ea7d6553242b9c6d79a87f7e7bc5489252de78e4a75ad7f51c042",
+    "state": "CANDIDATE_NOT_EXECUTABLE",
+    "nativeVerified": false,
+    "sourcesVerified": 30
+  },
+  "historicalManifests": [
+    {
+      "path": "docs/p1_4_a0_sql/MANIFEST.md",
+      "entries": 13,
+      "mismatches": 0
+    },
+    {
+      "path": "docs/P1_4_A1_MANIFEST_2026-11-06.md",
+      "entries": 20,
+      "mismatches": 0
+    },
+    {
+      "path": "docs/p1_4_a20/MANIFEST.md",
+      "entries": 8,
+      "mismatches": 0
+    },
+    {
+      "path": "docs/P1_4_A2_0_H_MANIFEST_2026-11-06.md",
+      "entries": 25,
+      "mismatches": 0
+    }
+  ],
+  "hostInventory": "docs/p1_4_a21_prep/HOST_INVENTORY.json",
+  "approval": {
+    "provisioning": false,
+    "inventoryConnection": false,
+    "rehearsal": false,
+    "nativeExecution": false
+  },
+  "decision": "NO_GO_NATIVE_EXECUTION; SOURCE_MOCK_READY_FOR_REVIEW"
+}

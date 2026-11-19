@@ -1,0 +1,418 @@
+﻿/* ====================================================================
+   FIXED VIEWPORT SIDEBAR ARCHITECTURE (Desktop >= 769px)
+   ==================================================================== */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  width: var(--active-sidebar-width, 256px) !important;
+  max-width: 100vw;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  z-index: 30;
+  background: var(--ri-surface, #ffffff);
+  border-right: none !important;
+  box-shadow: 1px 0 6px rgba(0, 0, 0, 0.025);
+  overflow-x: hidden !important;
+  transition: width 0.2s ease;
+}
+
+:root[data-theme="dark"] .sidebar {
+  border-right: none !important;
+  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.22);
+  background: var(--ri-surface, #0f172a);
+}
+
+.sidebar.sidebar-collapsed,
+aside.sidebar-collapsed {
+  width: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+}
+
+/* Khung nội dung chính tự động co giãn theo Sidebar */
+.content-shell {
+  margin-left: var(--active-sidebar-width, 256px);
+  width: calc(100% - var(--active-sidebar-width, 256px));
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: margin-left 0.2s ease, width 0.2s ease;
+}
+
+/* Vô hiệu hóa hiệu ứng chuyển động khi người dùng đang kéo thả resize */
+.sidebar-resizing,
+.sidebar-resizing ~ .content-shell,
+.app-shell:has(.sidebar-resizing) .content-shell {
+  transition: none !important;
+  user-select: none;
+}
+
+/* ====================================================================
+   VÙNG 1: HEADER & LOGO (64px)
+   ==================================================================== */
+.brand {
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 14px 0 17px;
+  gap: 10px;
+  flex-shrink: 0 !important;
+  border-bottom: 1px solid var(--ri-border) !important;
+}
+
+.brand-logo {
+  flex: 0 0 38px;
+}
+
+.brand-name {
+  display: flex !important;
+  align-items: center;
+  min-width: 0;
+  font-size: 18px !important;
+  letter-spacing: -0.65px !important;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.brand-name > span {
+  color: var(--ri-text) !important;
+}
+
+.brand-name > em {
+  color: var(--ri-primary);
+  font-style: normal;
+}
+
+.sidebar-collapsed .brand {
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  position: relative;
+  width: 68px !important;
+  overflow: hidden;
+  border-bottom: 1px solid var(--ri-border) !important;
+}
+
+.sidebar-collapsed .brand-name,
+.sidebar-collapsed .nav-label,
+.sidebar-collapsed .nav-item span,
+.sidebar-collapsed .sidebar-role-badge > span:not(.research-dot),
+.sidebar-collapsed .sidebar-footer {
+  display: none !important;
+}
+
+.sidebar-collapsed .brand-logo {
+  width: 38px;
+  flex-basis: 38px;
+  margin: 0 auto;
+}
+
+/* ====================================================================
+   TOPBAR VÀ NÚT BẬT/TẮT SIDEBAR
+   ==================================================================== */
+.topbar {
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--ri-border) !important;
+}
+
+.sidebar-collapse-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  border: 1px solid var(--ri-border);
+  border-radius: 8px;
+  background: var(--ri-surface);
+  color: var(--ri-muted);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-collapse-btn:hover {
+  color: var(--ri-primary);
+  background: var(--ri-elevated);
+  border-color: var(--ri-primary);
+}
+
+:root[data-theme="dark"] .sidebar-collapse-btn {
+  background: var(--ri-surface);
+  border-color: var(--ri-border);
+  color: var(--ri-muted);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .sidebar-collapse-btn:hover {
+  background: var(--ri-elevated);
+  color: var(--ri-primary);
+  border-color: var(--ri-primary);
+}
+
+/* ====================================================================
+   RESIZE HANDLE
+   ==================================================================== */
+.sidebar-resize-handle {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  right: -2px;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar-resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0 1px;
+  background: transparent;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sidebar-resize-handle:hover::after,
+.sidebar-resizing .sidebar-resize-handle::after {
+  background: var(--ri-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ri-primary) 45%, transparent);
+}
+
+/* ====================================================================
+   VÙNG 2: DANH SÁCH MENU ĐIỀU HƯỚNG (.nav)
+   ==================================================================== */
+.nav,
+.sidebar .nav {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0 !important;
+  padding: 14px 12px;
+}
+
+.sidebar-collapsed .nav {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0 !important;
+  padding: 14px 8px !important;
+}
+
+.sidebar-collapsed .nav-group {
+  margin-bottom: 6px;
+  position: relative;
+}
+
+/* Đường kẻ phân cách ngang mảnh giữa các nhóm chức năng khi Sidebar thu gọn */
+.sidebar-collapsed .nav-group + .nav-group::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--ri-border);
+  margin: 8px auto 10px auto;
+}
+
+/* Nav Item khi thu gọn */
+.sidebar-collapsed .nav-item {
+  height: 42px;
+  width: 42px;
+  margin: 4px auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  position: relative;
+  transition: all 0.18s ease;
+}
+
+.sidebar-collapsed .nav-item:hover {
+  background: var(--ri-elevated);
+  color: var(--ri-primary);
+}
+
+/* Highlight icon đang hoạt động (active) */
+.sidebar-collapsed .nav-item.active {
+  background: rgba(99, 102, 241, 0.12) !important;
+  color: var(--ri-primary) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+:root[data-theme="dark"] .sidebar-collapsed .nav-item.active {
+  background: rgba(99, 102, 241, 0.18) !important;
+  color: var(--ri-primary) !important;
+}
+
+.sidebar-collapsed .nav-item.active svg {
+  color: var(--ri-primary) !important;
+  stroke-width: 2.3;
+}
+
+.sidebar-collapsed .nav-item svg {
+  flex: 0 0 auto;
+}
+
+/* ====================================================================
+   VÙNG 3: CHÂN TRANG SIDEBAR (.sidebar-bottom)
+   ==================================================================== */
+.sidebar-bottom {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+  padding: 10px 15px 19px;
+  background: inherit;
+}
+
+.sidebar-role-badge {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid var(--ri-border);
+  border-radius: 999px;
+  background: var(--ri-elevated);
+  color: var(--ri-text);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-role-badge .research-dot {
+  margin: 0;
+  flex: 0 0 7px;
+}
+
+.sidebar-collapsed .sidebar-bottom {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+  padding: 8px 13px 17px;
+  width: 68px;
+  overflow: hidden;
+}
+
+.sidebar-collapsed .sidebar-role-badge {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+  margin: 0 auto;
+  position: relative;
+  cursor: pointer;
+}
+
+/* ====================================================================
+   MOBILE RESPONSIVENESS (<= 768px): OFF-CANVAS DRAWER
+   ==================================================================== */
+@media (max-width: 768px) {
+  .sidebar,
+  .sidebar.sidebar-collapsed,
+  aside.sidebar-collapsed {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 265px !important;
+    min-width: 265px !important;
+    max-width: 265px !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    transform: translateX(-102%) !important;
+    transition: transform 0.25s ease !important;
+    z-index: 40 !important;
+    box-shadow: 0 10px 45px rgba(26, 39, 66, 0.18) !important;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0) !important;
+  }
+
+  .content-shell {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .sidebar-collapsed .brand {
+    padding: 0 14px 0 17px !important;
+    justify-content: flex-start !important;
+    width: auto !important;
+  }
+
+  .sidebar-collapsed .brand-name,
+  .sidebar-collapsed .nav-label,
+  .sidebar-collapsed .nav-item span,
+  .sidebar-collapsed .sidebar-role-badge > span:not(.research-dot),
+  .sidebar-collapsed .sidebar-footer {
+    display: flex !important;
+  }
+
+  .sidebar-collapsed .nav-label,
+  .sidebar-collapsed .sidebar-footer {
+    display: block !important;
+  }
+
+  .sidebar-collapsed .nav {
+    padding: 17px 12px !important;
+  }
+
+  .sidebar-collapsed .nav-group {
+    margin-bottom: 16px !important;
+  }
+
+  .sidebar-collapsed .nav-group + .nav-group::before {
+    display: none !important;
+  }
+
+  .sidebar-collapsed .nav-item {
+    height: auto !important;
+    width: auto !important;
+    margin: 2px 0 !important;
+    padding: 12px 13px !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .sidebar-collapsed .sidebar-bottom {
+    padding: 10px 15px 19px !important;
+    width: auto !important;
+  }
+
+  .sidebar-collapsed .sidebar-role-badge {
+    width: auto !important;
+    padding: 7px 10px !important;
+  }
+
+  .sidebar-resize-handle {
+    display: none !important;
+  }
+}
+
+
+
+
+.sidebar-menu-tooltip{position:fixed;z-index:10000;transform:translateY(-50%);width:220px;padding:10px 12px;border:1px solid rgba(99,102,241,.55);border-radius:10px;background:#fff;color:#1e293b;box-shadow:0 10px 28px rgba(15,23,42,.2);font-size:12px;line-height:1.45;pointer-events:none;animation:menuTooltipIn .14s ease-out}
+@keyframes menuTooltipIn{from{opacity:0;translate:-4px 0}to{opacity:1;translate:0 0}}

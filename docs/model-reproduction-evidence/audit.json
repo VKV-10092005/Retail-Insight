@@ -1,0 +1,245 @@
+{
+  "status": "AWAITING_REPRODUCTION_APPROVAL",
+  "training_executed": false,
+  "model_activated": false,
+  "notebook": {
+    "name": "Retail_FP_Demand_Forecasting (4).ipynb",
+    "sha256": "43e7489556309d80adeee53be565ceec0df7018fffcbe3c76ef066799bf75c8c"
+  },
+  "provided_model": {
+    "name": "LightGBM_V3_Best_Model.joblib",
+    "sha256": "43536c2863bea0e00f7f22fb8f0c2c3542fd40bf3ff599aac44f6421fadde2f8",
+    "bytes": 545316,
+    "type": "LGBMRegressor",
+    "feature_order": [
+      "group_id",
+      "brand_id",
+      "gender",
+      "size",
+      "color_group",
+      "listing_price",
+      "lag_1",
+      "lag_2",
+      "lag_3",
+      "rolling_mean_3",
+      "observed_months_last_3",
+      "group_lag_1",
+      "brand_lag_1",
+      "price_lag_1",
+      "price_last_known",
+      "price_mean_prev_3m",
+      "price_mean_prev_6m",
+      "months_since_last_price",
+      "has_historical_price",
+      "last_price_to_listing_ratio"
+    ],
+    "categorical_features": [
+      "group_id",
+      "brand_id",
+      "gender",
+      "size",
+      "color_group"
+    ],
+    "category_levels": {
+      "group_id": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "brand_id": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "gender": [
+        "BOY",
+        "GIR",
+        "MEN",
+        "WOM"
+      ],
+      "size": [
+        "0.0",
+        "18.0",
+        "19.0",
+        "20.0",
+        "21.0",
+        "22.0",
+        "23.0",
+        "24.0",
+        "25.0",
+        "26.0",
+        "27.0",
+        "28.0",
+        "29.0",
+        "30.0",
+        "31.0",
+        "32.0",
+        "33.0",
+        "34.0",
+        "35.0",
+        "36.0",
+        "37.0",
+        "38.0",
+        "39.0",
+        "40.0",
+        "41.0",
+        "42.0",
+        "43.0",
+        "44.0",
+        "45.0",
+        "46.0",
+        "UNKNOWN"
+      ],
+      "color_group": [
+        "KHÁC",
+        "NHIỀU MÀU",
+        "SÁNG",
+        "TRẮNG",
+        "TỐI",
+        "ĐEN",
+        "ĐEN "
+      ]
+    },
+    "target_metadata": "observed_net_quantity",
+    "params": {
+      "boosting_type": "gbdt",
+      "class_weight": null,
+      "colsample_bytree": 0.8,
+      "importance_type": "split",
+      "learning_rate": 0.03,
+      "max_depth": -1,
+      "min_child_samples": 100,
+      "min_child_weight": 0.001,
+      "min_split_gain": 0.0,
+      "n_estimators": 500,
+      "n_jobs": -1,
+      "num_leaves": 31,
+      "objective": "regression",
+      "random_state": 42,
+      "reg_alpha": 0.0,
+      "reg_lambda": 0.0,
+      "subsample": 0.8,
+      "subsample_for_bin": 200000,
+      "subsample_freq": 1,
+      "verbosity": -1
+    },
+    "n_features": 20,
+    "n_trees": 500,
+    "validation_results": [
+      {
+        "Model": "LGBM_2",
+        "Validation_MAE": 0.8099218152313452,
+        "Validation_RMSE": 2.325075155211374,
+        "Validation_WAPE": 99.67270862740637
+      },
+      {
+        "Model": "LGBM_1",
+        "Validation_MAE": 0.8104979381443858,
+        "Validation_RMSE": 2.2943726869887255,
+        "Validation_WAPE": 99.74360896638373
+      }
+    ],
+    "test_results": [
+      {
+        "Model": "LGBM_2",
+        "Train_rows": 356343,
+        "Validation_rows": 82233,
+        "Test_rows": 82233,
+        "Test_MAE": 0.7892313086504927,
+        "Test_RMSE": 2.0486360880648777,
+        "Test_WAPE": 86.41925193642605,
+        "Actual_total": 75100.0,
+        "Predicted_total": 85949.97090177632
+      }
+    ],
+    "training_environment": "NOT_RECORDED_IN_BUNDLE"
+  },
+  "test_results": {
+    "name": "LightGBM_V3_Test_Results.csv",
+    "sha256": "702bee4ee2489a51ab6e64f88a4ed644d69c908ff6e01d6713567c755b0079af",
+    "rows": [
+      {
+        "Model": "LGBM_2",
+        "Train_rows": "356343",
+        "Validation_rows": "82233",
+        "Test_rows": "82233",
+        "Test_MAE": "0.7892313086504927",
+        "Test_RMSE": "2.0486360880648777",
+        "Test_WAPE": "86.41925193642605",
+        "Actual_total": "75100.0",
+        "Predicted_total": "85949.97090177632"
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "name": "retail_ai_training_v3.csv",
+      "sha256": "87f9f97bfb3179c2c47b8adda67e22f295ddd89a956681debb1456bcce179773",
+      "rows": 520809,
+      "columns": [
+        "product_id",
+        "sale_month",
+        "group_id",
+        "brand_id",
+        "gender",
+        "size",
+        "color_group",
+        "listing_price",
+        "observed_gross_quantity",
+        "observed_negative_quantity",
+        "observed_net_quantity",
+        "has_sales_record",
+        "lag_1",
+        "lag_2",
+        "lag_3",
+        "rolling_mean_3",
+        "observed_months_last_3",
+        "group_lag_1",
+        "brand_lag_1",
+        "price_lag_1",
+        "price_last_known",
+        "price_mean_prev_3m",
+        "price_mean_prev_6m",
+        "months_since_last_price",
+        "has_historical_price",
+        "last_price_to_listing_ratio"
+      ]
+    },
+    {
+      "name": "product_features.csv",
+      "sha256": "0c998da51c297339c2afc1fe379a61e36b710b398a6a517fbe67bce2228119b4",
+      "rows": 94867,
+      "columns": [
+        "product_id",
+        "style_code",
+        "style_color",
+        "age_group",
+        "activity_group",
+        "lifestyle_group",
+        "launch_season",
+        "launch_year",
+        "launch_code"
+      ]
+    },
+    {
+      "name": "stock_dec2022.csv",
+      "sha256": "e5dabed14b28906cdbd13609e86ec1ece8e0dc182f5ef12f838fa51a9f8b8d8b",
+      "rows": 12684,
+      "columns": [
+        "product_id",
+        "stock_units"
+      ]
+    }
+  ],
+  "missing_dependency": "hybrid_forecast_jan2023.csv / original split key lists / original full-precision OOF threshold and training environment must be verified",
+  "inspection_environment": {
+    "lightgbm": "4.7.0",
+    "pandas": "3.0.2",
+    "numpy": "2.2.6",
+    "joblib": "1.5.3",
+    "scikit-learn": "1.9.0"
+  }
+}

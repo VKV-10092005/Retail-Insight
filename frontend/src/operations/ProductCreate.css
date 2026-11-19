@@ -1,0 +1,79 @@
+.product-create-container .ri-tab-list {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ri-border, var(--border, #cbd5e1));
+  border-radius: 10px;
+  background: var(--ri-elevated, var(--bg-subtle, #f1f5f9));
+}
+
+.product-create-container .ri-tab-list button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ri-text, #1e293b);
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.product-create-container .ri-tab-list button:hover:not(:disabled):not([aria-selected="true"]) {
+  background: var(--ri-surface, #fff);
+  border-color: var(--ri-border, #cbd5e1);
+}
+
+.product-create-container .ri-tab-list button[aria-selected="true"] {
+  background: var(--ri-surface, #fff);
+  border-color: var(--ri-border, #cbd5e1);
+  color: var(--ri-text, #0f172a);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.product-create-container .ri-tab-list button:focus-visible {
+  outline-offset: 2px;
+}
+
+.product-action-edit {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 !important;
+}
+
+.product-status-button {
+  min-height: 32px !important;
+  padding: 5px 10px !important;
+  font-size: 0.75rem !important;
+}
+
+.product-status-button.is-active {
+  color: var(--ri-danger, #b91c1c);
+  background: var(--ri-danger-bg, #fef2f2);
+}
+
+.product-status-button.is-paused {
+  color: var(--ri-success, #15803d);
+  background: var(--ri-success-bg, #f0fdf4);
+}
+
+@media (max-width: 520px) {
+  .product-create-container .ri-tab-list {
+    width: 100%;
+  }
+
+  .product-create-container .ri-tab-list button {
+    flex: 1 1 auto;
+    padding-inline: 9px;
+  }
+}
+.product-edit-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.product-edit-form>div,.product-edit-form>section,.product-edit-form>.op-actions,.product-edit-form>p{grid-column:1/-1}
+.product-edit-form>label:nth-of-type(3){grid-column:1/-1}
+.product-edit-form>div[style*="repeat(3"]{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media(max-width:600px){.product-edit-form{grid-template-columns:1fr}.product-edit-form>div,.product-edit-form>section,.product-edit-form>.op-actions,.product-edit-form>p,.product-edit-form>label:nth-of-type(3){grid-column:1}}

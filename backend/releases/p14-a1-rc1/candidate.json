@@ -1,0 +1,735 @@
+{
+  "releaseId": "p14-a1-rc1",
+  "state": "CANDIDATE_NOT_EXECUTABLE",
+  "writerEpoch": 1,
+  "schemaVersion": 2,
+  "engine": "InnoDB",
+  "mysqlMin": "8.0.16",
+  "mysqlExact": null,
+  "sqlMode": null,
+  "baselineFingerprint": null,
+  "baselineMigrations": [
+    "001_auth",
+    "002_operations"
+  ],
+  "rendering": null,
+  "nativeVerified": false,
+  "sources": [
+    {
+      "name": "10_expand.draft.sql",
+      "sha256": "801d3838c3d85bd7ab5f066d0230a1b41f16585586004e5e8274a1296904d92b"
+    },
+    {
+      "name": "30_contract.draft.sql",
+      "sha256": "39d585da8e3a1b6efc3ca7a5a52c4fd09ddb6cc0a67af8896b8284db836e638a"
+    },
+    {
+      "name": "40_write_fences.draft.sql",
+      "sha256": "ad44ccd5fa750d4546a4ff3cf879d5f2e5333295393242ee2bc79f677c0d3961"
+    },
+    {
+      "name": "41_immutability.draft.sql",
+      "sha256": "af73aff4417ea5159104e7b37f68e75f70d5c97e4019eb785ad0a19b9fff4b3b"
+    },
+    {
+      "name": "00_preflight.draft.sql",
+      "sha256": "8631a1750dcc0fba10a43d83cc62467f7a0c3341245d1f7bd2cc5ee6886451fb"
+    },
+    {
+      "name": "20_backfill_bootstrap.draft.sql",
+      "sha256": "291663c0292090b1ec38ee92f3edf675c82d2822d9e7231c5b4543ffa9b52ba1"
+    },
+    {
+      "name": "50_cutover.draft.sql",
+      "sha256": "49dbed27632312794ef8fc66995690510ce249b1c6694cadd661f5945cb0b559"
+    }
+  ],
+  "baselineSources": [
+    {
+      "name": "001_auth.sql",
+      "sha256": "8be3fe4e8d8186a30fbe19316839ec201ab109b8e4a1ac40583b3f822f853759"
+    },
+    {
+      "name": "002_operations.sql",
+      "sha256": "937dd775fc8f4ac435d767cda3375586b0e5ec4a208249b2b9f7f48786147a0a"
+    }
+  ],
+  "steps": [
+    {
+      "id": "EX_CONTROL",
+      "sql": "CREATE TABLE business_schema_control (\n singleton_id TINYINT UNSIGNED NOT NULL PRIMARY KEY,\n mode VARCHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n required_writer_epoch INT UNSIGNED NOT NULL,\n schema_version INT UNSIGNED NOT NULL,\n reader_basis VARCHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n version BIGINT UNSIGNED NOT NULL,\n changed_at_utc DATETIME(6) NOT NULL,\n CONSTRAINT p14_control_single CHECK(singleton_id=1),\n CONSTRAINT p14_control_mode CHECK(mode IN ('EXPAND','MAINTENANCE','ENFORCED')),\n CONSTRAINT p14_control_reader CHECK(reader_basis IN ('RECORDED_TIME','BUSINESS_DATE')),\n CONSTRAINT p14_control_versions CHECK(required_writer_epoch>0 AND schema_version>0 AND version>0)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+      "sha256": "5df59d9518a5502c60c5ad045662468f03ac8f766287c71eb2f9710267839add",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_POLICY",
+      "sql": "CREATE TABLE business_posting_policies (\n id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,\n organization_id INT UNSIGNED NOT NULL,\n branch_id INT UNSIGNED NOT NULL,\n policy_version BIGINT UNSIGNED NOT NULL,\n business_timezone VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n date_algorithm_version VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n live_date_mode VARCHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n archive_enabled BOOLEAN NOT NULL DEFAULT FALSE,\n combined_enabled BOOLEAN NOT NULL DEFAULT FALSE,\n effective_from_utc DATETIME(6) NOT NULL,\n created_by INT UNSIGNED NOT NULL,\n created_at_utc DATETIME(6) NOT NULL,\n UNIQUE KEY p14_policy_tenant(organization_id,id),\n UNIQUE KEY p14_policy_branch(organization_id,branch_id,id),\n UNIQUE KEY p14_policy_version(organization_id,branch_id,policy_version),\n CONSTRAINT p14_policy_branch_fk FOREIGN KEY(organization_id,branch_id)\n  REFERENCES branches(organization_id,id),\n CONSTRAINT p14_policy_actor_fk FOREIGN KEY(organization_id,created_by)\n  REFERENCES users(organization_id,id),\n CONSTRAINT p14_policy_mode CHECK(live_date_mode='TODAY_ONLY'),\n CONSTRAINT p14_policy_zone CHECK(business_timezone='Asia/Ho_Chi_Minh'),\n CONSTRAINT p14_policy_algorithm CHECK(date_algorithm_version='business-date-v2'),\n CONSTRAINT p14_policy_rev CHECK(policy_version>0),\n CONSTRAINT p14_policy_flags CHECK(archive_enabled IN (0,1) AND combined_enabled IN (0,1)\n  AND (combined_enabled=0 OR archive_enabled=1))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+      "sha256": "f8693b43cc834134c85f00544fa87bbe57057d827aee442e9aefb69eaf55370a",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_CONTROL"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_GUARD",
+      "sql": "CREATE TABLE branch_posting_guards (\n organization_id INT UNSIGNED NOT NULL,\n branch_id INT UNSIGNED NOT NULL,\n active_policy_id BIGINT UNSIGNED NULL,\n live_revision BIGINT UNSIGNED NOT NULL DEFAULT 0,\n archive_revision BIGINT UNSIGNED NOT NULL DEFAULT 0,\n PRIMARY KEY(organization_id,branch_id),\n CONSTRAINT p14_guard_branch_fk FOREIGN KEY(organization_id,branch_id)\n  REFERENCES branches(organization_id,id),\n CONSTRAINT p14_guard_policy_fk FOREIGN KEY(organization_id,branch_id,active_policy_id)\n  REFERENCES business_posting_policies(organization_id,branch_id,id)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+      "sha256": "f81b86c5176c3e03a2d2faea1157642d57086a6299bb4b51928979cc3c0e997b",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_POLICY"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_PERIOD",
+      "sql": "CREATE TABLE business_periods (\n id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,\n organization_id INT UNSIGNED NOT NULL,\n branch_id INT UNSIGNED NOT NULL,\n date_start DATE NOT NULL,\n date_end_exclusive DATE NOT NULL,\n live_state VARCHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n archive_state VARCHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n version BIGINT UNSIGNED NOT NULL,\n policy_id BIGINT UNSIGNED NOT NULL,\n changed_by INT UNSIGNED NOT NULL,\n changed_at_utc DATETIME(6) NOT NULL,\n UNIQUE KEY p14_period_tenant(organization_id,id),\n UNIQUE KEY p14_period_branch(organization_id,branch_id,id),\n UNIQUE KEY p14_period_start(organization_id,branch_id,date_start),\n CONSTRAINT p14_period_branch_fk FOREIGN KEY(organization_id,branch_id)\n  REFERENCES branches(organization_id,id),\n CONSTRAINT p14_period_policy_fk FOREIGN KEY(organization_id,branch_id,policy_id)\n  REFERENCES business_posting_policies(organization_id,branch_id,id),\n CONSTRAINT p14_period_actor_fk FOREIGN KEY(organization_id,changed_by)\n  REFERENCES users(organization_id,id),\n CONSTRAINT p14_period_states CHECK(live_state IN ('OPEN','CLOSED')\n  AND archive_state IN ('OPEN','CLOSED')),\n CONSTRAINT p14_period_version CHECK(version>0),\n CONSTRAINT p14_period_month CHECK(\n  CASE WHEN date_start<'1000-01-01' OR date_start>='9999-12-01' THEN FALSE\n  ELSE DAYOFMONTH(date_start)=1\n   AND date_end_exclusive=DATE_ADD(date_start,INTERVAL 1 MONTH) END)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+      "sha256": "69b2955bb03488d6c649d69759cb6cefb093535a564815fb745d46497dbea0ee",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_GUARD"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_HEADER",
+      "sql": "ALTER TABLE stock_documents\n ADD COLUMN business_date DATE NULL,\n ADD COLUMN business_timezone VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,\n ADD COLUMN date_policy_version VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NULL,\n ADD COLUMN business_date_origin VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NULL,\n ADD COLUMN writer_epoch INT UNSIGNED NULL,\n ADD COLUMN posting_revision BIGINT UNSIGNED NULL,\n ADD COLUMN policy_id BIGINT UNSIGNED NULL,\n ADD COLUMN period_id BIGINT UNSIGNED NULL,\n ADD COLUMN accepted_at_utc DATETIME(6) NULL,\n ADD UNIQUE KEY p14_document_branch(organization_id,branch_id,id),\n ADD UNIQUE KEY p14_document_identity(organization_id,branch_id,type,request_key,id),\n ADD UNIQUE KEY p14_document_revision(organization_id,branch_id,posting_revision),\n ADD CONSTRAINT p14_doc_policy_fk FOREIGN KEY(organization_id,branch_id,policy_id)\n  REFERENCES business_posting_policies(organization_id,branch_id,id),\n ADD CONSTRAINT p14_doc_period_fk FOREIGN KEY(organization_id,branch_id,period_id)\n  REFERENCES business_periods(organization_id,branch_id,id);",
+      "sha256": "bf57527c48a4bb67b86e506e2ce9111657480036d780c58d4771bbf0ceded48a",
+      "kind": "ALTER",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_PERIOD"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_RECEIPT",
+      "sql": "CREATE TABLE document_request_receipts (\n id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,\n organization_id INT UNSIGNED NOT NULL,\n branch_id INT UNSIGNED NOT NULL,\n document_type ENUM('RECEIPT','SALE') CHARACTER SET {{TYPE_CHARSET}} COLLATE {{TYPE_COLLATION}} NOT NULL,\n request_key VARCHAR(80) CHARACTER SET {{KEY_CHARSET}} COLLATE {{KEY_COLLATION}} NOT NULL,\n request_schema_version VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n envelope_hash BINARY(32) NOT NULL,\n resolved_hash BINARY(32) NOT NULL,\n business_date DATE NOT NULL,\n policy_id BIGINT UNSIGNED NOT NULL,\n period_id BIGINT UNSIGNED NOT NULL,\n accepted_at_utc DATETIME(6) NOT NULL,\n document_id BIGINT UNSIGNED NOT NULL,\n response_version VARCHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n response_json JSON NOT NULL,\n UNIQUE KEY p14_receipt_tenant(organization_id,id),\n UNIQUE KEY p14_receipt_request(organization_id,document_type,request_key),\n UNIQUE KEY p14_receipt_doc(organization_id,branch_id,document_id),\n UNIQUE KEY p14_receipt_finalize(organization_id,branch_id,document_id,id),\n CONSTRAINT p14_receipt_doc_fk FOREIGN KEY\n  (organization_id,branch_id,document_type,request_key,document_id)\n  REFERENCES stock_documents(organization_id,branch_id,type,request_key,id),\n CONSTRAINT p14_receipt_policy_fk FOREIGN KEY(organization_id,branch_id,policy_id)\n  REFERENCES business_posting_policies(organization_id,branch_id,id),\n CONSTRAINT p14_receipt_period_fk FOREIGN KEY(organization_id,branch_id,period_id)\n  REFERENCES business_periods(organization_id,branch_id,id),\n CONSTRAINT p14_receipt_date CHECK(business_date>='1000-01-01')\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+      "sha256": "e23393a87eaea065aa93d93927ac4be430a2f1684a760497108706725d2c0d82",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_HEADER"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_FINALIZATION",
+      "sql": "CREATE TABLE document_finalizations (\n organization_id INT UNSIGNED NOT NULL,\n branch_id INT UNSIGNED NOT NULL,\n document_id BIGINT UNSIGNED NOT NULL,\n kind VARCHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n receipt_id BIGINT UNSIGNED NULL,\n migration_manifest_sha256 BINARY(32) NULL,\n finalized_at_utc DATETIME(6) NOT NULL,\n PRIMARY KEY(organization_id,document_id),\n CONSTRAINT p14_final_doc_fk FOREIGN KEY(organization_id,branch_id,document_id)\n  REFERENCES stock_documents(organization_id,branch_id,id),\n CONSTRAINT p14_final_receipt_fk FOREIGN KEY(organization_id,branch_id,document_id,receipt_id)\n  REFERENCES document_request_receipts(organization_id,branch_id,document_id,id),\n CONSTRAINT p14_final_kind CHECK(\n  (kind='NATIVE' AND receipt_id IS NOT NULL AND migration_manifest_sha256 IS NULL)\n  OR (kind='LEGACY' AND receipt_id IS NULL AND migration_manifest_sha256 IS NOT NULL))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;",
+      "sha256": "0e44d06affbadf13349cf68dd59a2625a331f10e6ac73c0553b3967f6371655f",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_RECEIPT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "EX_AUDIT",
+      "sql": "CREATE TABLE business_audit_events (\n id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,\n organization_id INT UNSIGNED NOT NULL,\n branch_id INT UNSIGNED NULL,\n actor_kind VARCHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n actor_user_id INT UNSIGNED NULL,\n actor_service_ref VARCHAR(120) CHARACTER SET ascii COLLATE ascii_bin NULL,\n action VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n target_kind VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n target_ref VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n correlation_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n occurred_at_utc DATETIME(6) NOT NULL,\n policy_id BIGINT UNSIGNED NULL,\n data_revision BIGINT UNSIGNED NULL,\n reason VARCHAR(1000) NULL,\n metadata JSON NOT NULL,\n UNIQUE KEY p14_audit_tenant(organization_id,id),\n KEY p14_audit_scope(organization_id,branch_id,id),\n CONSTRAINT p14_audit_org_fk FOREIGN KEY(organization_id) REFERENCES organizations(id),\n CONSTRAINT p14_audit_branch_fk FOREIGN KEY(organization_id,branch_id)\n  REFERENCES branches(organization_id,id),\n CONSTRAINT p14_audit_user_fk FOREIGN KEY(organization_id,actor_user_id)\n  REFERENCES users(organization_id,id),\n CONSTRAINT p14_audit_policy_fk FOREIGN KEY(organization_id,branch_id,policy_id)\n  REFERENCES business_posting_policies(organization_id,branch_id,id),\n CONSTRAINT p14_audit_actor CHECK(\n  (actor_kind='USER' AND actor_user_id IS NOT NULL AND actor_service_ref IS NULL)\n  OR (actor_kind='SERVICE' AND actor_user_id IS NULL AND actor_service_ref IS NOT NULL)),\n CONSTRAINT p14_audit_policy_scope CHECK(policy_id IS NULL OR branch_id IS NOT NULL)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n-- No data/bootstrap inserts in expand. No archive/AI schema created.",
+      "sha256": "a88d765d60b87db676e0610d6009ae5609b6bcaa98c02ffcffb72c42be17ed7e",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "expand",
+      "manual": false,
+      "dependsOn": [
+        "EX_FINALIZATION"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "CT_HEADER",
+      "sql": "ALTER TABLE stock_documents\n MODIFY COLUMN business_date DATE NOT NULL,\n MODIFY COLUMN business_timezone VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n MODIFY COLUMN date_policy_version VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n MODIFY COLUMN business_date_origin VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n MODIFY COLUMN writer_epoch INT UNSIGNED NOT NULL,\n ADD CONSTRAINT p14_doc_date CHECK(business_date>='1000-01-01'),\n ADD CONSTRAINT p14_doc_zone CHECK(business_timezone='Asia/Ho_Chi_Minh'),\n ADD CONSTRAINT p14_doc_lineage CHECK(\n  (business_date_origin='DERIVED_FROM_RECORDED_AT' AND writer_epoch=0\n   AND date_policy_version='recorded-time-iana-v1'\n   AND posting_revision IS NULL AND policy_id IS NULL\n   AND period_id IS NULL AND accepted_at_utc IS NULL)\n  OR\n  (business_date_origin='SERVER_TODAY' AND writer_epoch>0\n   AND date_policy_version='business-date-v2'\n   AND posting_revision IS NOT NULL AND posting_revision>0\n   AND policy_id IS NOT NULL AND period_id IS NOT NULL AND accepted_at_utc IS NOT NULL));",
+      "sha256": "7841d2dfa5d553029112890a6df9c872a940e085dd1fd2f4db0d6e6ad15126a6",
+      "kind": "ALTER",
+      "parameters": 0,
+      "phase": "contract",
+      "manual": false,
+      "dependsOn": [
+        "EX_AUDIT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "CT_MOVEMENT_IDENTITY",
+      "sql": "ALTER TABLE inventory_movements\n ADD UNIQUE KEY p14_movement_document_product(organization_id,document_id,product_id),\n ADD CONSTRAINT p14_movement_doc_branch_fk\n  FOREIGN KEY(organization_id,branch_id,document_id)\n  REFERENCES stock_documents(organization_id,branch_id,id),\n ADD CONSTRAINT p14_movement_nonzero CHECK(quantity_delta<>0);",
+      "sha256": "76986f29a133b5ca5d438f35086beb8e48719f3cf493360032b9a2e43e711ef9",
+      "kind": "ALTER",
+      "parameters": 0,
+      "phase": "contract",
+      "manual": false,
+      "dependsOn": [
+        "CT_HEADER"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "CT_DATE_INDEX",
+      "sql": "-- One branch-first candidate only, subject to native EXPLAIN/write-cost review.\n-- Keep document_period(created_at); do not change legacy list ORDER BY id DESC.\nCREATE INDEX p14_document_business_date\n ON stock_documents(organization_id,branch_id,business_date,id);",
+      "sha256": "a042726e331dc7a72408fecf4ddc13df9cdaa3e4372b74cdbb1d4c09418ed3f5",
+      "kind": "CREATE",
+      "parameters": 0,
+      "phase": "contract",
+      "manual": false,
+      "dependsOn": [
+        "CT_MOVEMENT_IDENTITY"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "CT_SCHEMA_VERSION",
+      "sql": "-- Parameters: UTC time, expected control version. Must affect exactly one row.\n-- Remains MAINTENANCE; reader not switched until cutover.\nUPDATE business_schema_control\nSET schema_version=2,version=version+1,changed_at_utc=?\nWHERE singleton_id=1 AND mode='MAINTENANCE' AND version=?;\n-- No defaults for native business_date/epoch; legacy NULL lineage is intentional.\n-- Do not MODIFY original created_at / request_key / payload_hash / money fields.",
+      "sha256": "e08fcca4eaf723669ef120011b9ae0e7f1db270414b514dd31cde962cbff143c",
+      "kind": "UPDATE",
+      "parameters": 2,
+      "phase": "contract",
+      "manual": true,
+      "dependsOn": [
+        "CT_DATE_INDEX"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "FN_HEADER_INSERT",
+      "sql": "CREATE TRIGGER p14_doc_before_insert BEFORE INSERT ON stock_documents\nFOR EACH ROW\nBEGIN\n DECLARE v_mode VARCHAR(24) DEFAULT NULL;\n DECLARE v_epoch INT UNSIGNED DEFAULT NULL;\n DECLARE v_policy BIGINT UNSIGNED DEFAULT NULL;\n DECLARE v_revision BIGINT UNSIGNED DEFAULT NULL;\n DECLARE v_effective DATETIME(6) DEFAULT NULL;\n DECLARE v_start DATE DEFAULT NULL;\n DECLARE v_end DATE DEFAULT NULL;\n DECLARE v_state VARCHAR(12) DEFAULT NULL;\n SELECT mode,required_writer_epoch INTO v_mode,v_epoch\n FROM business_schema_control WHERE singleton_id=1 FOR SHARE;\n IF v_mode IS NULL OR v_mode<>'ENFORCED' OR NEW.writer_epoch IS NULL\n  OR NEW.writer_epoch<>v_epoch OR @@session.time_zone<>'+00:00' THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 writer unavailable or incompatible';\n END IF;\n IF NEW.business_date_origin<>'SERVER_TODAY' OR NEW.writer_epoch=0\n  OR NEW.policy_id IS NULL OR NEW.period_id IS NULL OR NEW.accepted_at_utc IS NULL\n  OR NEW.business_timezone<>'Asia/Ho_Chi_Minh'\n  OR NEW.date_policy_version<>'business-date-v2' THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 native metadata required';\n END IF;\n SELECT g.active_policy_id,g.live_revision,p.effective_from_utc\n INTO v_policy,v_revision,v_effective\n FROM branch_posting_guards g\n JOIN business_posting_policies p ON p.organization_id=g.organization_id\n  AND p.branch_id=g.branch_id AND p.id=g.active_policy_id\n WHERE g.organization_id=NEW.organization_id AND g.branch_id=NEW.branch_id\n FOR SHARE;\n IF v_policy IS NULL OR v_policy<>NEW.policy_id\n  OR NEW.posting_revision IS NULL OR NEW.posting_revision<>v_revision+1\n  OR v_effective>NEW.accepted_at_utc THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 policy or revision mismatch';\n END IF;\n SELECT date_start,date_end_exclusive,live_state INTO v_start,v_end,v_state\n FROM business_periods WHERE organization_id=NEW.organization_id\n  AND branch_id=NEW.branch_id AND id=NEW.period_id FOR SHARE;\n IF v_state IS NULL OR v_state<>'OPEN' OR NEW.business_date<v_start\n  OR NEW.business_date>=v_end THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 period closed or missing';\n END IF;\n IF NEW.created_at IS NULL\n  OR TIMESTAMPDIFF(MICROSECOND,CAST(NEW.created_at AS DATETIME(6)),NEW.accepted_at_utc)\n   NOT BETWEEN 0 AND 999999 THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 accepted timestamp mismatch';\n END IF;\n -- IANA today, real actor permissions and receipt/complete commit are service checks.\n -- Do not use fixed +7 or CONVERT_TZ to pretend to validate historical IANA here.\nEND;",
+      "sha256": "b7f45c564c4243c8c78d323903bddf89837edba3360613a477d4cd6b64385d34",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "CT_SCHEMA_VERSION"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "FN_ITEM_INSERT",
+      "sql": "CREATE TRIGGER p14_item_before_insert BEFORE INSERT ON stock_document_items\nFOR EACH ROW\nBEGIN\n DECLARE v_doc BIGINT UNSIGNED DEFAULT NULL;\n SELECT id INTO v_doc FROM stock_documents\n WHERE organization_id=NEW.organization_id AND id=NEW.document_id FOR SHARE;\n IF v_doc IS NULL OR EXISTS(\n  SELECT 1 FROM document_finalizations\n  WHERE organization_id=NEW.organization_id AND document_id=NEW.document_id\n ) THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 document finalized or missing';\n END IF;\nEND;",
+      "sha256": "68153e6fe304405ad705d20e27c87d6ef2697f64085c2d0beaa08f6042a23411",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "FN_HEADER_INSERT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "FN_MOVEMENT_INSERT",
+      "sql": "CREATE TRIGGER p14_movement_before_insert BEFORE INSERT ON inventory_movements\nFOR EACH ROW\nBEGIN\n DECLARE v_doc BIGINT UNSIGNED DEFAULT NULL;\n DECLARE v_type VARCHAR(12) DEFAULT NULL;\n DECLARE v_quantity INT DEFAULT NULL;\n SELECT id,type INTO v_doc,v_type FROM stock_documents\n WHERE organization_id=NEW.organization_id AND branch_id=NEW.branch_id\n  AND id=NEW.document_id FOR SHARE;\n IF v_doc IS NULL OR EXISTS(\n  SELECT 1 FROM document_finalizations\n  WHERE organization_id=NEW.organization_id AND document_id=NEW.document_id\n ) THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 document finalized or missing';\n END IF;\n SELECT quantity INTO v_quantity FROM stock_document_items\n WHERE organization_id=NEW.organization_id AND document_id=NEW.document_id\n  AND product_id=NEW.product_id FOR SHARE;\n IF v_quantity IS NULL OR NEW.quantity_delta<>\n  CASE WHEN v_type='SALE' THEN -v_quantity ELSE v_quantity END THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 movement item mismatch';\n END IF;\nEND;",
+      "sha256": "9b1b58134ff8a5cd6635d1abc39964360ada13d5f374d29248833851be2ef7f1",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "FN_ITEM_INSERT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "FN_RECEIPT_INSERT",
+      "sql": "CREATE TRIGGER p14_receipt_before_insert BEFORE INSERT ON document_request_receipts\nFOR EACH ROW\nBEGIN\n DECLARE v_doc BIGINT UNSIGNED DEFAULT NULL;\n DECLARE v_policy BIGINT UNSIGNED DEFAULT NULL;\n DECLARE v_period BIGINT UNSIGNED DEFAULT NULL;\n DECLARE v_date DATE DEFAULT NULL;\n DECLARE v_accepted DATETIME(6) DEFAULT NULL;\n SELECT id,policy_id,period_id,business_date,accepted_at_utc\n INTO v_doc,v_policy,v_period,v_date,v_accepted FROM stock_documents\n WHERE organization_id=NEW.organization_id AND branch_id=NEW.branch_id\n  AND id=NEW.document_id FOR SHARE;\n IF v_doc IS NULL OR v_policy IS NULL OR v_period IS NULL\n  OR NOT(v_policy <=> NEW.policy_id) OR NOT(v_period <=> NEW.period_id)\n  OR NOT(v_date <=> NEW.business_date) OR NOT(v_accepted <=> NEW.accepted_at_utc)\n  OR EXISTS(SELECT 1 FROM document_finalizations\n   WHERE organization_id=NEW.organization_id AND document_id=NEW.document_id) THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 receipt metadata mismatch';\n END IF;\nEND;",
+      "sha256": "a7a54ecef70aa2f90bbc1ae9673fd1af87c7e5752d063308830a6137ab431fd7",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "FN_MOVEMENT_INSERT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "FN_FINALIZATION_INSERT",
+      "sql": "CREATE TRIGGER p14_final_before_insert BEFORE INSERT ON document_finalizations\nFOR EACH ROW\nBEGIN\n DECLARE v_origin VARCHAR(40) DEFAULT NULL;\n DECLARE v_total DECIMAL(16,2) DEFAULT NULL;\n DECLARE v_item_total DECIMAL(38,2) DEFAULT NULL;\n DECLARE v_items BIGINT UNSIGNED DEFAULT 0;\n DECLARE v_moves BIGINT UNSIGNED DEFAULT 0;\n SELECT business_date_origin,total INTO v_origin,v_total FROM stock_documents\n WHERE organization_id=NEW.organization_id AND branch_id=NEW.branch_id\n  AND id=NEW.document_id FOR UPDATE;\n IF v_origin IS NULL OR NEW.kind<>'NATIVE' OR v_origin<>'SERVER_TODAY'\n  OR NEW.receipt_id IS NULL THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 native finalization required';\n END IF;\n SELECT COUNT(*),SUM(quantity*unit_price) INTO v_items,v_item_total\n FROM stock_document_items\n WHERE organization_id=NEW.organization_id AND document_id=NEW.document_id;\n SELECT COUNT(*) INTO v_moves FROM inventory_movements\n WHERE organization_id=NEW.organization_id AND document_id=NEW.document_id;\n IF v_items<1 OR v_items>100 OR v_items<>v_moves\n  OR NOT(v_total <=> v_item_total) THEN\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 incomplete document';\n END IF;\n -- receipt FK is checked immediately; marker last in the same transaction.\n -- Legacy markers must already exist before this trigger is installed.\nEND;",
+      "sha256": "50fbfd795be0f98e12a9e47380c062f49d3b31874df4deb7e988f7d33f8d1b83",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "FN_RECEIPT_INSERT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_DOC_UPDATE",
+      "sql": "CREATE TRIGGER p14_doc_no_update BEFORE UPDATE ON stock_documents\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "4bd75030780e96dc5140b2c4648130663537b260887f17aed379cb42d8214352",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "FN_FINALIZATION_INSERT"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_DOC_DELETE",
+      "sql": "CREATE TRIGGER p14_doc_no_delete BEFORE DELETE ON stock_documents\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "2f402ed02b6653de1f43da7c5bd17d5ea4b08d3f0872f3b3ac72db8e1ec99cb2",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_DOC_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_ITEM_UPDATE",
+      "sql": "CREATE TRIGGER p14_item_no_update BEFORE UPDATE ON stock_document_items\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "b2eae4a91d336704bf31d54dea6ef12b7dd016db4716b9694aeb83bb1b498068",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_DOC_DELETE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_ITEM_DELETE",
+      "sql": "CREATE TRIGGER p14_item_no_delete BEFORE DELETE ON stock_document_items\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "880ed12d86a2b50ff3f15a247563755a22544908e92f64188b288de2548b6e91",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_ITEM_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_MOVE_UPDATE",
+      "sql": "CREATE TRIGGER p14_move_no_update BEFORE UPDATE ON inventory_movements\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "77b8da1b6713ec0b5b8a167d4bfffa4113695a563b7ea2ecdf30612d37c8f874",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_ITEM_DELETE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_MOVE_DELETE",
+      "sql": "CREATE TRIGGER p14_move_no_delete BEFORE DELETE ON inventory_movements\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "65ae798a8a75c14332b3f2efeb1cc719ba9a56472bbf20e1d3306165f9e94f4f",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_MOVE_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_RECEIPT_UPDATE",
+      "sql": "CREATE TRIGGER p14_receipt_no_update BEFORE UPDATE ON document_request_receipts\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "fa9754f4e410cc41ae812c88ea23d0367435f6b59eb80c794d2ad859cbfc4070",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_MOVE_DELETE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_RECEIPT_DELETE",
+      "sql": "CREATE TRIGGER p14_receipt_no_delete BEFORE DELETE ON document_request_receipts\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "34b22714d0158294571b2f8af210cf0fda99484ce254f11e53f2b255beef990c",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_RECEIPT_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_FINAL_UPDATE",
+      "sql": "CREATE TRIGGER p14_final_no_update BEFORE UPDATE ON document_finalizations\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "41b704101c8724f2a9114c633d143f95875ee090e8a599fb3c03a7d71d4baa38",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_RECEIPT_DELETE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_FINAL_DELETE",
+      "sql": "CREATE TRIGGER p14_final_no_delete BEFORE DELETE ON document_finalizations\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "b8a8204845d5dc91c06a78e994f6c88e6308e4083e0e1493ed00285fe675184d",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_FINAL_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_AUDIT_UPDATE",
+      "sql": "CREATE TRIGGER p14_audit_no_update BEFORE UPDATE ON business_audit_events\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "2129d5256b4f8b19d41d8873721d50d348dd022466e9e7c51048911eb5826db7",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_FINAL_DELETE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_AUDIT_DELETE",
+      "sql": "CREATE TRIGGER p14_audit_no_delete BEFORE DELETE ON business_audit_events\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "29ea931536533b7895faf15f7a7032fc668aff356adf73ed578d5c6124cb52ae",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_AUDIT_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_POLICY_UPDATE",
+      "sql": "CREATE TRIGGER p14_policy_no_update BEFORE UPDATE ON business_posting_policies\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;",
+      "sha256": "b516da133158e3798a5e602f06554dc3bc05701cd39fdb2b3ff9f06ec197a529",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_AUDIT_DELETE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    },
+    {
+      "id": "IMM_POLICY_DELETE",
+      "sql": "CREATE TRIGGER p14_policy_no_delete BEFORE DELETE ON business_posting_policies\nFOR EACH ROW\nBEGIN\n SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='P14 append-only data';\nEND;\n\n-- These guards do not supply a deferred commit hook.\n-- Trusted runtime must insert receipt/audit/finalization before COMMIT.\n-- Stored-procedure hardening against arbitrary DML requires a separate approval.",
+      "sha256": "84285351937d7cbe21f175f75ec17e7c4166c448ffe686209c9291f8aa9d29d6",
+      "kind": "TRIGGER",
+      "parameters": 0,
+      "phase": "fences",
+      "manual": false,
+      "dependsOn": [
+        "IMM_POLICY_UPDATE"
+      ],
+      "beforeFingerprint": null,
+      "afterFingerprint": null,
+      "tables": []
+    }
+  ],
+  "manualTemplates": [
+    {
+      "id": "PF_IDENTITY",
+      "sql": "SELECT DATABASE() AS schema_name, @@server_uuid AS server_uuid,\n       @@port AS server_port, VERSION() AS mysql_version,\n       CURRENT_USER() AS authenticated_account,\n       @@session.time_zone AS session_timezone, @@session.sql_mode AS sql_mode,\n       @@session.transaction_isolation AS transaction_isolation;",
+      "sha256": "115eb9ca1029d32e8f3e64643339a1265111de568d602c42d1908d0c66a74155",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_TABLES",
+      "sql": "SELECT table_name, engine, table_collation\nFROM information_schema.tables\nWHERE table_schema = DATABASE()\nORDER BY table_name;",
+      "sha256": "85e3f11e248abe925e6a80054e9b029c246ec4a47e263552069497ca9111155e",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_COLUMNS",
+      "sql": "SELECT table_name, ordinal_position, column_name, column_type, is_nullable,\n       column_default, character_set_name, collation_name, extra\nFROM information_schema.columns\nWHERE table_schema = DATABASE()\nORDER BY table_name, ordinal_position;",
+      "sha256": "51e49d66cd0e09de2d834b080fd8e93a830d9e14d0512cc2713d5c996e9ac9a5",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_INDEXES",
+      "sql": "SELECT table_name, index_name, non_unique, seq_in_index, column_name, sub_part\nFROM information_schema.statistics\nWHERE table_schema = DATABASE()\nORDER BY table_name, index_name, seq_in_index;",
+      "sha256": "ead1b22e32959b08d86cb0fbb5dce061cab86844a7d8282cc1da4104560177a8",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_CONSTRAINTS",
+      "sql": "SELECT tc.table_name, tc.constraint_name, tc.constraint_type,\n       kcu.column_name, kcu.ordinal_position,\n       kcu.referenced_table_name, kcu.referenced_column_name\nFROM information_schema.table_constraints tc\nLEFT JOIN information_schema.key_column_usage kcu\n ON kcu.constraint_schema=tc.constraint_schema\n AND kcu.table_name=tc.table_name AND kcu.constraint_name=tc.constraint_name\nWHERE tc.constraint_schema=DATABASE()\nORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position;",
+      "sha256": "6dc54dffda35418d591c1f4f6bc359ace2e42b66601d1c950d845e7d9e11f4af",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_CHECKS",
+      "sql": "SELECT tc.table_name, tc.constraint_name, tc.enforced, cc.check_clause\nFROM information_schema.table_constraints tc\nJOIN information_schema.check_constraints cc\n ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name\nWHERE tc.constraint_schema=DATABASE() AND tc.constraint_type='CHECK';",
+      "sha256": "4acdc4455a1e1b4d04d9f9395d7a626bb82ae0d3d556f10b67b50376fbb4bd6c",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_TRIGGERS",
+      "sql": "SELECT trigger_name, event_manipulation, event_object_table, action_timing,\n       action_statement, sql_mode, character_set_client, collation_connection\nFROM information_schema.triggers\nWHERE trigger_schema=DATABASE()\nORDER BY event_object_table, action_timing, trigger_name;",
+      "sha256": "bd21ec3388c9936c20b648975c65e84057edf0d199ee3210a7ef70260d506e20",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_NULL_DOCUMENT_TIME",
+      "sql": "SELECT COUNT(*) AS invalid_rows FROM stock_documents WHERE created_at IS NULL;",
+      "sha256": "b38eedcbe580e62d3eb84ed502f8b6ceae0a62d005fec7b88bc48949600e6701",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_MOVEMENT_DUPLICATES",
+      "sql": "SELECT organization_id, document_id, product_id, COUNT(*) AS rows_per_item\nFROM inventory_movements\nGROUP BY organization_id, document_id, product_id HAVING COUNT(*)<>1;",
+      "sha256": "11ed4e9d82ea4b69769115e14b866c23a742f3015fdaa658894828e70fed5c10",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_MOVEMENT_BRANCH",
+      "sql": "SELECT COUNT(*) AS invalid_rows\nFROM inventory_movements m\nLEFT JOIN stock_documents d\n ON d.organization_id=m.organization_id AND d.id=m.document_id\nWHERE d.id IS NULL OR d.branch_id<>m.branch_id;",
+      "sha256": "1f5ec57b57a79e94e5a41c2c6d22c4dac20174673054da2033308954a0f9a957",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_DOCUMENT_TOTAL",
+      "sql": "SELECT COUNT(*) AS invalid_rows\nFROM stock_documents d\nLEFT JOIN (\n SELECT organization_id,document_id,COUNT(*) AS n,\n        SUM(quantity*unit_price) AS total\n FROM stock_document_items GROUP BY organization_id,document_id\n) x ON x.organization_id=d.organization_id AND x.document_id=d.id\nWHERE COALESCE(x.n,0)=0 OR NOT(d.total <=> x.total);",
+      "sha256": "43f2c7fa61c6cd2fe840bafda6c74b4a570133701d687fb44652c49c74a9aba4",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_ITEM_MOVEMENT",
+      "sql": "SELECT COUNT(*) AS invalid_rows\nFROM stock_document_items x\nJOIN stock_documents d ON d.organization_id=x.organization_id AND d.id=x.document_id\nLEFT JOIN inventory_movements m\n ON m.organization_id=x.organization_id AND m.document_id=x.document_id\n AND m.product_id=x.product_id\nWHERE m.id IS NULL OR m.quantity_delta<>\n CASE WHEN d.type='SALE' THEN -x.quantity ELSE x.quantity END;",
+      "sha256": "ea321269f1759e82e726e13215e72f89c44e055157b499d814d3d64cdeec3d58",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_EXTRA_MOVEMENT",
+      "sql": "SELECT COUNT(*) AS invalid_rows\nFROM inventory_movements m\nLEFT JOIN stock_document_items x\n ON x.organization_id=m.organization_id AND x.document_id=m.document_id\n AND x.product_id=m.product_id\nWHERE x.id IS NULL;",
+      "sha256": "a4166220aa77b6841a29f8a2b3ad698c85715e509d8a3a7c25303a991813599c",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_BALANCE_RECONCILE",
+      "sql": "SELECT COUNT(*) AS invalid_rows\nFROM (\n SELECT organization_id,branch_id,product_id,SUM(quantity_delta) AS quantity\n FROM inventory_movements GROUP BY organization_id,branch_id,product_id\n) m\nLEFT JOIN inventory_balances b ON b.organization_id=m.organization_id\n AND b.branch_id=m.branch_id AND b.product_id=m.product_id\nWHERE b.product_id IS NULL OR b.quantity<>m.quantity;",
+      "sha256": "7a4a0a9b7a9f78e4bca3eac0945f61cdcc011ccc36c050cf4818a712a192d78b",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "PF_BALANCE_WITHOUT_MOVEMENT",
+      "sql": "SELECT COUNT(*) AS invalid_rows\nFROM inventory_balances b\nLEFT JOIN inventory_movements m ON m.organization_id=b.organization_id\n AND m.branch_id=b.branch_id AND m.product_id=b.product_id\nWHERE m.id IS NULL AND b.quantity<>0;\n-- Also collect SHOW CREATE TABLE, SHOW GRANTS/active roles, schema_migrations\n-- and server/TLS identity using the future runner's redacted metadata adapter.\n-- Invariant violations are NO-GO; no repair DML is included.",
+      "sha256": "6ef69f5d249b1f0f3af31accf164513a4c8c42bb5590bfed6a0cb2b6e3301d2e",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "BF_CONTROL_SEED",
+      "sql": "-- Parameters: UTC time. Exactly one seed, schema1 EXPAND writer epoch1.\nINSERT INTO business_schema_control\n (singleton_id,mode,required_writer_epoch,schema_version,reader_basis,version,changed_at_utc)\nVALUES(1,'EXPAND',1,1,'RECORDED_TIME',1,?);",
+      "sha256": "2521c0b17e99535153943024097bdf2dcf031e1341a5f6b7ef42d2733c42885e",
+      "kind": "INSERT",
+      "parameters": 1
+    },
+    {
+      "id": "BF_DOCUMENT_PAGE",
+      "sql": "-- Parameters: last_pk,high_watermark,chunk_limit (positive bounded integer).\nSELECT id,organization_id,branch_id,created_at,payload_hash,total,\n business_date,business_timezone,date_policy_version,business_date_origin,\n writer_epoch,posting_revision,policy_id,period_id,accepted_at_utc\nFROM stock_documents WHERE id>? AND id<=? ORDER BY id LIMIT ?;",
+      "sha256": "e44b1a14e92c01ded99eb86ee39c4015db2092aff5cc2abf880f1e9c18c3a647",
+      "kind": "SELECT",
+      "parameters": 3
+    },
+    {
+      "id": "BF_LOCK_DOCUMENT",
+      "sql": "-- Parameters: org,doc_id. Chunk transaction locks each target before update.\nSELECT id,created_at,payload_hash,total,business_date,business_timezone,\n date_policy_version,business_date_origin,writer_epoch,posting_revision,\n policy_id,period_id,accepted_at_utc\nFROM stock_documents WHERE organization_id=? AND id=? FOR UPDATE;",
+      "sha256": "355154e65b9dce74f43d85442e2d81f7b0ae3f6183b85eee978103b79a3c3bb8",
+      "kind": "SELECT",
+      "parameters": 2
+    },
+    {
+      "id": "BF_DERIVE_LEGACY",
+      "sql": "-- Parameters: DATE computed by pinned Temporal IANA from original UTC,\n-- org,doc_id,expected original created_at.\n-- UTC session mandatory; no SET created_at / total / payload_hash.\nUPDATE stock_documents\nSET business_date=?,business_timezone='Asia/Ho_Chi_Minh',\n date_policy_version='recorded-time-iana-v1',\n business_date_origin='DERIVED_FROM_RECORDED_AT',writer_epoch=0\nWHERE organization_id=? AND id=? AND created_at=?\n AND business_date IS NULL AND business_timezone IS NULL\n AND date_policy_version IS NULL AND business_date_origin IS NULL\n AND writer_epoch IS NULL AND posting_revision IS NULL\n AND policy_id IS NULL AND period_id IS NULL AND accepted_at_utc IS NULL;",
+      "sha256": "d3f2491f86fe135ff832e83a62f5b25bc903e7eb617764b4184508b0b16db185",
+      "kind": "UPDATE",
+      "parameters": 4
+    },
+    {
+      "id": "BF_POLICY_SEED",
+      "sql": "-- Parameters: org,branch,version,effective_from_utc,real authorized actor,created_at_utc.\n-- No hidden user and no policy fabricated for legacy documents.\nINSERT INTO business_posting_policies\n (organization_id,branch_id,policy_version,business_timezone,date_algorithm_version,\n  live_date_mode,archive_enabled,combined_enabled,effective_from_utc,created_by,created_at_utc)\nVALUES(?,?,?,'Asia/Ho_Chi_Minh','business-date-v2','TODAY_ONLY',FALSE,FALSE,?,?,?);",
+      "sha256": "4d5580ba2727721ba190b55f85fd7bc910c10fc58f150d0de36c9700784895f2",
+      "kind": "INSERT",
+      "parameters": 6
+    },
+    {
+      "id": "BF_GUARD_SEED",
+      "sql": "-- Parameters: org,branch,approved policy_id (same org/branch).\nINSERT INTO branch_posting_guards\n (organization_id,branch_id,active_policy_id,live_revision,archive_revision)\nVALUES(?,?,?,0,0);",
+      "sha256": "d8d7f831ecf7020fb42aa78dd78caf46e3731de270c9affb112e966ad5383b02",
+      "kind": "INSERT",
+      "parameters": 3
+    },
+    {
+      "id": "BF_PERIOD_SEED",
+      "sql": "-- Parameters: org,branch,date_start,date_end_exclusive,\n-- live_state,archive_state,policy_id,real actor,changed_at_utc.\n-- States from approval manifest; never default missing period to OPEN.\nINSERT INTO business_periods\n (organization_id,branch_id,date_start,date_end_exclusive,live_state,archive_state,\n  version,policy_id,changed_by,changed_at_utc)\nVALUES(?,?,?,?,?,?,1,?,?,?);",
+      "sha256": "7bf8f584f6cd1b5b298dbe9089d8f9f5a0fac373c1f32a69217d8961214e57e9",
+      "kind": "INSERT",
+      "parameters": 9
+    },
+    {
+      "id": "BF_LEGACY_FINALIZATION",
+      "sql": "-- Parameters: org,branch,doc_id,manifest SHA256 bytes,finalized UTC.\n-- Only after full original-item/movement/economic reconciliation.\nINSERT INTO document_finalizations\n (organization_id,branch_id,document_id,kind,receipt_id,\n  migration_manifest_sha256,finalized_at_utc)\nVALUES(?,?,?,'LEGACY',NULL,?,?);",
+      "sha256": "3b6683351eb7359355b03bebf924296f80479726aabfdb2ed9167475154362be",
+      "kind": "INSERT",
+      "parameters": 5
+    },
+    {
+      "id": "BF_MISSING_METADATA",
+      "sql": "SELECT COUNT(*) AS invalid_rows FROM stock_documents\nWHERE business_date IS NULL OR business_timezone IS NULL OR date_policy_version IS NULL\n OR business_date_origin IS NULL OR writer_epoch IS NULL;",
+      "sha256": "487eb5b66f848ba5fd3303f1edbdb2a861c421e62fabb634af793406d308d7e5",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "BF_MISSING_FINALIZATIONS",
+      "sql": "SELECT COUNT(*) AS invalid_rows FROM stock_documents d\nLEFT JOIN document_finalizations f\n ON f.organization_id=d.organization_id AND f.document_id=d.id\nWHERE f.document_id IS NULL;",
+      "sha256": "f6b51ec88cfe39627f1c6e02757bdef462554147de9b366e3c51cd3ee2e66afc",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "BF_MISSING_GUARD",
+      "sql": "SELECT COUNT(*) AS invalid_rows FROM branches b\nLEFT JOIN branch_posting_guards g\n ON g.organization_id=b.organization_id AND g.branch_id=b.id\nWHERE b.status='ACTIVE' AND (g.branch_id IS NULL OR g.active_policy_id IS NULL);\n\n-- Bootstrap audit uses business_audit_events prepared insert through future\n-- operator adapter, SERVICE actor + manifest reference, no invented actor ID.\n-- Atomic chunk checkpoint/receipt SQL is runner implementation work in A1,\n-- not a missing instruction to execute templates manually.",
+      "sha256": "3a6688542a9720429f61fbc8bc6d35fec38d9a01a4b23946617dfc20636e8bde",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "CO_LOCK_CONTROL",
+      "sql": "-- Start an explicit transaction in the future runner before this statement.\nSELECT mode,required_writer_epoch,schema_version,reader_basis,version\nFROM business_schema_control WHERE singleton_id=1 FOR UPDATE;",
+      "sha256": "eda9a9dab4338a6c272886e5bc203af1c0eeba66bd880c934f7fe22f8382dbaa",
+      "kind": "SELECT",
+      "parameters": 0
+    },
+    {
+      "id": "CO_ENTER_MAINTENANCE",
+      "sql": "-- Parameters: UTC time,expected control version; exactly one affected row.\n-- Execute BEFORE final tail/30/40/41, COMMIT this change, keep ingress closed.\nUPDATE business_schema_control\nSET mode='MAINTENANCE',version=version+1,changed_at_utc=?\nWHERE singleton_id=1 AND mode IN ('EXPAND','ENFORCED') AND version=?;",
+      "sha256": "11104f1dfa0e299b4f79bd37270dab111949e2488a593d006e3f0c5a43f4f89d",
+      "kind": "UPDATE",
+      "parameters": 2
+    },
+    {
+      "id": "CO_ACTIVATE",
+      "sql": "-- Parameters: approved new epoch,UTC time,expected version.\n-- Separate later transaction, only AFTER 30/40/41 verified, old credentials fenced,\n-- all native tests/parity/bootstrap evidence, app readiness and release approval.\nUPDATE business_schema_control\nSET mode='ENFORCED',required_writer_epoch=?,reader_basis='BUSINESS_DATE',\n version=version+1,changed_at_utc=?\nWHERE singleton_id=1 AND mode='MAINTENANCE' AND schema_version=2 AND version=?;",
+      "sha256": "457c5a8089bbf189c918958a3c2565ddb11f535ba621f9afe9663c92a3460f8a",
+      "kind": "UPDATE",
+      "parameters": 3
+    },
+    {
+      "id": "CO_READ_BASIS_RECOVERY",
+      "sql": "-- Parameters: UTC time,expected version.\n-- Alternative recovery branch ONLY in maintenance under separate approval.\n-- Keep writer epoch and schema version; never reopen old binary.\nUPDATE business_schema_control\nSET reader_basis='RECORDED_TIME',version=version+1,changed_at_utc=?\nWHERE singleton_id=1 AND mode='MAINTENANCE' AND version=?;\n-- Do not execute CO_ACTIVATE and recovery as a blind sequential script.\n-- A later operator may reopen ENFORCED with RECORDED_TIME only in an approved\n-- release whose reader fallback and new-epoch-compatible writer have been tested.",
+      "sha256": "a1527365a05f7b2a954a0ea295c75b3511da305562a060228e9f3b8703b39e26",
+      "kind": "UPDATE",
+      "parameters": 2
+    }
+  ],
+  "digest": "91d0ccd1e3f6c495326a556cc967414ed1981ba380e763b696412a185f7b4cb1"
+}

@@ -1,0 +1,50 @@
+{
+  "documentType": "READ_ONLY_HOST_SNAPSHOT",
+  "capturedDuring": "A2.1-PREP session; separate read-only queries, not a live reservation",
+  "totalRAMBytes": 8419024896,
+  "freeRAMBytes": 1527287808,
+  "logicalCpu": 8,
+  "diskCFreeBytes": 142756380672,
+  "commands": {
+    "docker": null,
+    "podman": null,
+    "wsl": "C:/WINDOWS/system32/wsl.exe"
+  },
+  "dockerStandardExecutable": false,
+  "services": [
+    {
+      "name": "MySQL97",
+      "state": "Running",
+      "used": false
+    },
+    {
+      "name": "wampmysqld64",
+      "state": "Stopped",
+      "used": false
+    }
+  ],
+  "virtualization": {
+    "firmwareEnabled": false,
+    "slat": false,
+    "hypervisorPresent": true,
+    "readinessConfirmed": false
+  },
+  "listeningOnProposedPorts": [],
+  "checkedPorts": [
+    13316,
+    13317,
+    13318,
+    13319
+  ],
+  "portsReserved": false,
+  "dockerDaemonInvoked": false,
+  "wslStarted": false,
+  "databaseConnections": 0,
+  "credentialsRead": false,
+  "resourcesCreated": 0,
+  "limitations": [
+    "No Docker engine validation",
+    "CIM flags under hypervisor not definitive capability proof",
+    "RAM/disk/ports can change"
+  ]
+}

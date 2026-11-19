@@ -1,0 +1,390 @@
+﻿{
+  "documentType": "REVIEW_PLAN_NOT_EXECUTABLE_MANIFEST",
+  "date": "2026-11-06",
+  "state": "A2_0_STATIC_ONLY",
+  "executionAllowed": false,
+  "provisioningAllowed": false,
+  "nativeVerified": false,
+  "sourceReleaseId": "p14-a1-rc1",
+  "sourceReleaseDigest": "91d0ccd1e3f6c495326a556cc967414ed1981ba380e763b696412a185f7b4cb1",
+  "targetReleaseId": null,
+  "targetIdentity": null,
+  "hardeningRequired": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09",
+    "R10"
+  ],
+  "requiredStepTypes": [
+    "DDL",
+    "TX",
+    "BACKFILL_CHUNK",
+    "BARRIER",
+    "VERIFY"
+  ],
+  "phases": [
+    {
+      "id": "P00",
+      "kind": "PROVISION_AND_IDENTITY",
+      "dependsOn": [],
+      "sourceSteps": [],
+      "preconditions": [
+        "explicit provisioning approval",
+        "fresh isolated target and resources",
+        "dedicated secret source"
+      ],
+      "postconditions": [
+        "pinned image/UUID/TLS/account identity",
+        "no production mounts or credentials"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P01",
+      "kind": "BASELINE_RELEASE",
+      "dependsOn": [
+        "P00"
+      ],
+      "sourceSteps": [
+        "001_auth.sql",
+        "002_operations.sql"
+      ],
+      "preconditions": [
+        "approved empty test schema",
+        "packaged baseline, no old runner"
+      ],
+      "postconditions": [
+        "baseline schema/source/version fingerprint"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P02",
+      "kind": "DDL_EXPAND",
+      "dependsOn": [
+        "P01"
+      ],
+      "sourceSteps": [
+        "EX_CONTROL",
+        "EX_POLICY",
+        "EX_GUARD",
+        "EX_PERIOD",
+        "EX_HEADER",
+        "EX_RECEIPT",
+        "EX_FINALIZATION",
+        "EX_AUDIT"
+      ],
+      "preconditions": [
+        "baseline verified",
+        "exact schema predicates"
+      ],
+      "postconditions": [
+        "additive schema fingerprint",
+        "original economics/timestamps unchanged"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P03",
+      "kind": "BOOTSTRAP_AND_ONLINE_BACKFILL",
+      "dependsOn": [
+        "P02"
+      ],
+      "sourceSteps": [
+        "BF_CONTROL_SEED",
+        "BF_POLICY_SEED",
+        "BF_GUARD_SEED",
+        "BF_PERIOD_SEED",
+        "BF_DOCUMENT_PAGE",
+        "BF_LOCK_DOCUMENT",
+        "BF_DERIVE_LEGACY"
+      ],
+      "preconditions": [
+        "approved bootstrap/actor/period manifest",
+        "control EXPAND",
+        "synthetic-only fixtures"
+      ],
+      "postconditions": [
+        "chunk data receipts/checkpoints",
+        "no forged legacy policy/accepted_at/receipt"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P04",
+      "kind": "MAINTENANCE_BARRIER",
+      "dependsOn": [
+        "P03"
+      ],
+      "sourceSteps": [
+        "CO_LOCK_CONTROL",
+        "CO_ENTER_MAINTENANCE"
+      ],
+      "preconditions": [
+        "test writer/process/principal inventory",
+        "expected control version"
+      ],
+      "postconditions": [
+        "MAINTENANCE committed",
+        "test ingress drained and legacy credential fenced"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P05",
+      "kind": "FINAL_TAIL_AND_RECONCILIATION",
+      "dependsOn": [
+        "P04"
+      ],
+      "sourceSteps": [
+        "BF_DOCUMENT_PAGE",
+        "BF_LOCK_DOCUMENT",
+        "BF_DERIVE_LEGACY",
+        "BF_LEGACY_FINALIZATION",
+        "BF_MISSING_METADATA",
+        "BF_MISSING_FINALIZATIONS",
+        "BF_MISSING_GUARD"
+      ],
+      "preconditions": [
+        "maintenance still enforced",
+        "final high watermark"
+      ],
+      "postconditions": [
+        "zero metadata/orphan/movement/branch inconsistencies",
+        "economic/raw UTC/legacy hash parity",
+        "legacy markers complete"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P06",
+      "kind": "DDL_CONTRACT",
+      "dependsOn": [
+        "P05"
+      ],
+      "sourceSteps": [
+        "CT_HEADER",
+        "CT_MOVEMENT_IDENTITY",
+        "CT_DATE_INDEX"
+      ],
+      "preconditions": [
+        "verified data predicates",
+        "index decision and schema fingerprint"
+      ],
+      "postconditions": [
+        "contract schema verified",
+        "original fields unchanged"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P07",
+      "kind": "CONTROL_TRANSACTION_ATTESTATION",
+      "dependsOn": [
+        "P06"
+      ],
+      "sourceSteps": [
+        "CT_SCHEMA_VERSION"
+      ],
+      "preconditions": [
+        "control MAINTENANCE/schema1/version CAS",
+        "typed TX receipt implementation"
+      ],
+      "postconditions": [
+        "schema2 + version increment exactly once",
+        "data receipt verified"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P08",
+      "kind": "DDL_FENCES",
+      "dependsOn": [
+        "P07"
+      ],
+      "sourceSteps": [
+        "FN_HEADER_INSERT",
+        "FN_ITEM_INSERT",
+        "FN_MOVEMENT_INSERT",
+        "FN_RECEIPT_INSERT",
+        "FN_FINALIZATION_INSERT",
+        "IMM_DOC_UPDATE",
+        "IMM_DOC_DELETE",
+        "IMM_ITEM_UPDATE",
+        "IMM_ITEM_DELETE",
+        "IMM_MOVE_UPDATE",
+        "IMM_MOVE_DELETE",
+        "IMM_RECEIPT_UPDATE",
+        "IMM_RECEIPT_DELETE",
+        "IMM_FINAL_UPDATE",
+        "IMM_FINAL_DELETE",
+        "IMM_AUDIT_UPDATE",
+        "IMM_AUDIT_DELETE",
+        "IMM_POLICY_UPDATE",
+        "IMM_POLICY_DELETE"
+      ],
+      "preconditions": [
+        "schema2/MAINTENANCE",
+        "legacy markers complete"
+      ],
+      "postconditions": [
+        "19 triggers exact definition/security metadata",
+        "no old writer bypass"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P09",
+      "kind": "PRE_CUTOVER_VERIFICATION",
+      "dependsOn": [
+        "P08"
+      ],
+      "sourceSteps": [],
+      "preconditions": [
+        "full phase/source/identity bound",
+        "no UNKNOWN outstanding"
+      ],
+      "postconditions": [
+        "native old-writer denial",
+        "legacy/P1.3 parity and immutable originals",
+        "grants negative tests"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P10",
+      "kind": "DISPOSABLE_CUTOVER_TRANSACTION",
+      "dependsOn": [
+        "P09"
+      ],
+      "sourceSteps": [
+        "CO_LOCK_CONTROL",
+        "CO_ACTIVATE"
+      ],
+      "preconditions": [
+        "explicit native-test-only activation approval",
+        "control expected version/epoch"
+      ],
+      "postconditions": [
+        "ENFORCED + BUSINESS_DATE atomic",
+        "only disposable ingress ready"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "P11",
+      "kind": "NATIVE_CORRECTNESS_AND_METRICS",
+      "dependsOn": [
+        "P10"
+      ],
+      "sourceSteps": [],
+      "preconditions": [
+        "two real test processes/pools",
+        "matrix/fault budget approval"
+      ],
+      "postconditions": [
+        "case outcomes and invariant evidence",
+        "capacity remains unproven until load runs"
+      ],
+      "expectedBeforeFingerprint": null,
+      "expectedAfterFingerprint": null,
+      "approvalRef": null,
+      "status": "NOT_RUN"
+    }
+  ],
+  "recoveryBranches": [
+    {
+      "id": "READ_BASIS_RECOVERY",
+      "from": [
+        "P09",
+        "P10",
+        "P11"
+      ],
+      "steps": [
+        "CO_LOCK_CONTROL",
+        "CO_READ_BASIS_RECOVERY"
+      ],
+      "requires": [
+        "separate approval",
+        "maintenance",
+        "expected version",
+        "writer epoch not downgraded"
+      ],
+      "automatic": false
+    },
+    {
+      "id": "UNKNOWN_RECONCILIATION",
+      "from": [
+        "ANY"
+      ],
+      "requires": [
+        "preserve evidence",
+        "verify exact target/release",
+        "compare pre/post schema and data receipt"
+      ],
+      "automaticReplay": false
+    }
+  ],
+  "journalProposal": {
+    "directory": null,
+    "namespace": [
+      "targetTupleHash",
+      "schema",
+      "releaseDigest",
+      "runId"
+    ],
+    "localFileLockRequired": true,
+    "dbAdvisoryLockRequired": true,
+    "directoryAclVerified": false,
+    "powerLossVerified": false,
+    "phaseFinalFingerprintRequired": true
+  },
+  "forbiddenShortcuts": [
+    "marking manual VERIFIED without evidence",
+    "dropping dependency",
+    "changing RC1 flag to bypass gate",
+    "using old runtime migrate runner",
+    "converting real database into test instance",
+    "resetting UNKNOWN volume without reconciliation"
+  ]
+}
+

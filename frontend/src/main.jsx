@@ -1,0 +1,13 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './app/App';
+import {AuthProvider} from './auth/AuthContext';
+import {BranchProvider} from './branches/BranchContext';
+import {ThemeProvider} from './design-system/ThemeProvider.jsx';
+import AccountLockedModal from './components/auth/AccountLockedModal.jsx';
+import './styles/global.css';
+import './design-system/tokens.css';
+import './design-system/components.css';
+import './design-system/legacy.css';
+createRoot(document.getElementById('root')).render(<React.StrictMode><ThemeProvider><BrowserRouter><AuthProvider><BranchProvider><App /><AccountLockedModal /></BranchProvider></AuthProvider></BrowserRouter></ThemeProvider></React.StrictMode>);

@@ -1,0 +1,80 @@
+import 'dotenv/config';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+
+test('POS settings, discounts, payment, idempotency and stock are atomic',{skip:process.env.RUN_DB_TESTS!=='1'},async()=>{
+ process.env.BANK_WEBHOOK_SECRET='test-bank-webhook-secret-at-least-32-bytes';
+ const {pool,verifyDatabase}=await import('../src/db/pool.js');
+ const {config}=await import('../src/config/env.js');
+ const {default:jwt}=await import('jsonwebtoken');
+ const {default:app}=await import('../src/app.js');
+ await verifyDatabase();
+ const slug=randomUUID(),sessionId=randomUUID(),requestKey=randomUUID();
+ let organizationId,userId,branchId,categoryId,productId,customerId;const auditDocumentIds=[];
+ const server=await new Promise(resolve=>{const instance=app.listen(0,'127.0.0.1',()=>resolve(instance));});
+ try{
+  const [organization]=await pool.execute("INSERT INTO organizations(name,slug,status) VALUES (?,?,'ACTIVE')",['POS integration',slug]);organizationId=organization.insertId;
+  const [user]=await pool.execute("INSERT INTO users(organization_id,email,password_hash,full_name,role,status) VALUES (?,?,?,?,?,'ACTIVE')",[organizationId,`pos-${slug}@example.test`,'not-used','POS Owner','OWNER']);userId=user.insertId;
+  const [branch]=await pool.execute("INSERT INTO branches(organization_id,name,status) VALUES (?,?,'ACTIVE')",[organizationId,'POS Branch']);branchId=branch.insertId;
+  const [category]=await pool.execute('INSERT INTO categories(organization_id,name) VALUES (?,?)',[organizationId,'Đồ uống']);categoryId=category.insertId;
+  const [product]=await pool.execute("INSERT INTO products(organization_id,category_id,sku,name,sale_price,cost_price,attributes,status) VALUES (?,?,?,?,?,?,?,'ACTIVE')",[organizationId,categoryId,'POS-SKU','POS Product',10000,6000,JSON.stringify({barcode:'893000000001'})]);productId=product.insertId;
+  await pool.execute('INSERT INTO inventory_balances(organization_id,branch_id,product_id,quantity,average_cost) VALUES (?,?,?,?,6000)',[organizationId,branchId,productId,5]);
+  await pool.execute('INSERT INTO auth_sessions(id,organization_id,user_id,expires_at) VALUES (?,?,?,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR))',[sessionId,organizationId,userId]);
+  const token=jwt.sign({},config.secret,{algorithm:'HS256',subject:String(userId),jwtid:sessionId,issuer:'retail-app',audience:'retail-web',expiresIn:'1h'});
+  const base=`http://127.0.0.1:${server.address().port}/api/v1`;
+  const call=async(path,{method='GET',body,authToken=token,extraHeaders={}}={})=>{const response=await fetch(base+path,{method,headers:{Cookie:`session=${authToken}`,Accept:'application/json','Content-Type':'application/json','X-Requested-With':'retail-web',...extraHeaders},...(body?{body:JSON.stringify(body)}:{})});const data=await response.json();return {response,data};};
+
+  let result=await call(`/branches/${branchId}/payment-settings`,{method:'PUT',body:{bank_bin:'970436',bank_code:'VCB',bank_account_number:'0123456789',bank_account_name:'POS OWNER',static_qr_url:null}});assert.equal(result.response.status,200);assert.equal(result.data.configured,true);
+  result=await call(`/branches/${branchId}/pos-settings`);assert.equal(result.response.status,200);assert.equal(result.data.pos_layout_mode,'OWNER_MODE');assert.equal(result.data.can_change,true);
+  result=await call(`/branches/${branchId}/pos-settings`,{method:'PATCH',body:{pos_layout_mode:'CASHIER_MODE'}});assert.equal(result.response.status,200);assert.equal(result.data.pos_layout_mode,'CASHIER_MODE');
+  const managerSession=randomUUID();const [manager]=await pool.execute("INSERT INTO users(organization_id,email,password_hash,full_name,role,status) VALUES (?,?,?,?,?,'ACTIVE')",[organizationId,`manager-${slug}@example.test`,'not-used','POS Manager','MANAGER']);
+  await pool.execute("INSERT INTO user_branch_roles(organization_id,user_id,branch_id,role) VALUES (?,?,?,'MANAGER')",[organizationId,manager.insertId,branchId]);await pool.execute('INSERT INTO auth_sessions(id,organization_id,user_id,expires_at) VALUES (?,?,?,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR))',[managerSession,organizationId,manager.insertId]);
+  const managerToken=jwt.sign({},config.secret,{algorithm:'HS256',subject:String(manager.insertId),jwtid:managerSession,issuer:'retail-app',audience:'retail-web',expiresIn:'1h'});
+  result=await call(`/branches/${branchId}/pos-settings`,{method:'PUT',body:{pos_layout_mode:'OWNER_MODE'},authToken:managerToken});assert.equal(result.response.status,200);assert.equal(result.data.pos_layout_mode,'OWNER_MODE');
+  result=await call(`/products?branch_id=${branchId}&q=893000000001`);assert.equal(result.response.status,200);assert.equal(result.data.items[0].stock,5);assert.equal(result.data.items[0].barcode,'893000000001');
+  result=await call('/customers',{method:'POST',body:{name:'Khách POS',phone:'0900000000'}});assert.equal(result.response.status,201);customerId=result.data.id;
+  const sale={branch_id:branchId,request_key:requestKey,customer_id:customerId,note:'Integration POS',items:[{product_id:productId,quantity:2,discount:{type:'PERCENT',value:10}}],order_discount:{type:'PERCENT',value:10},payment:{method:'CASH',cash_received:20000}};
+  result=await call('/sales',{method:'POST',body:sale});assert.equal(result.response.status,201);assert.equal(Number(result.data.total),16200);const documentId=result.data.id;
+  const replay=await call('/sales',{method:'POST',body:sale});assert.equal(replay.response.status,200);assert.equal(replay.data.id,documentId);assert.equal(replay.data.replayed,true);
+  const detail=await call(`/sales/${documentId}`);assert.equal(detail.response.status,200);assert.equal(Number(detail.data.document.subtotal),20000);assert.equal(Number(detail.data.document.item_discount_total),2000);assert.equal(Number(detail.data.document.order_discount),1800);assert.equal(Number(detail.data.document.change_due),3800);assert.equal(detail.data.document.payment_status,'PAID');assert.equal(detail.data.document.customer_name,'Khách POS');assert.equal(Number(detail.data.items[0].line_total),18000);
+  const [[stock]]=await pool.execute('SELECT quantity FROM inventory_balances WHERE organization_id=? AND branch_id=? AND product_id=?',[organizationId,branchId,productId]);assert.equal(stock.quantity,3);
+  const biBeforeReturn=await call(`/bi/overview?branch_id=${branchId}`);assert.equal(biBeforeReturn.response.status,200);assert.equal(Number(biBeforeReturn.data.kpi.net_revenue),16200);assert.equal(Number(biBeforeReturn.data.kpi.total_cogs),12000);assert.equal(Number(biBeforeReturn.data.kpi.gross_profit),4200);
+  const returned=await call(`/documents/sales/${documentId}/return`,{method:'POST',body:{reason:'Customer returned one unit',items:[{product_id:productId,quantity:1}]}});assert.equal(returned.response.status,200);assert.equal(Number(returned.data.refund_amount),8100);assert.equal(Number(returned.data.refund_cost),6000);assert.equal(returned.data.return_status,'PARTIAL_RETURNED');
+  const returnedDetail=await call(`/sales/${documentId}`);assert.equal(Number(returnedDetail.data.items[0].returned_quantity),1);assert.equal(Number(returnedDetail.data.document.returned_amount),8100);
+  const [[stockAfterReturn]]=await pool.execute('SELECT quantity FROM inventory_balances WHERE organization_id=? AND branch_id=? AND product_id=?',[organizationId,branchId,productId]);assert.equal(stockAfterReturn.quantity,4);
+  const [[returnMovement]]=await pool.execute("SELECT quantity_delta,movement_type FROM inventory_movements WHERE organization_id=? AND document_id=? AND movement_type='RETURN'",[organizationId,documentId]);assert.equal(returnMovement.quantity_delta,1);assert.equal(returnMovement.movement_type,'RETURN');
+  const [[refundPayment]]=await pool.execute("SELECT amount,payment_type,status FROM sale_payments WHERE organization_id=? AND document_id=? AND payment_type='REFUND'",[organizationId,documentId]);assert.equal(Number(refundPayment.amount),-8100);assert.equal(refundPayment.status,'REFUNDED');
+  const biAfterReturn=await call(`/bi/overview?branch_id=${branchId}`);assert.equal(Number(biAfterReturn.data.kpi.net_revenue),8100);assert.equal(Number(biAfterReturn.data.kpi.total_cogs),6000);assert.equal(Number(biAfterReturn.data.kpi.gross_profit),2100);assert.equal(Number(biAfterReturn.data.kpi.units),1);
+  const duplicateReturn=await call(`/documents/sales/${documentId}/return`,{method:'POST',body:{reason:'Duplicate return attempt',items:[{product_id:productId,quantity:2}]}});assert.equal(duplicateReturn.response.status,409);
+  const [[payments]]=await pool.execute('SELECT COUNT(*) count FROM sale_payments WHERE organization_id=? AND document_id=?',[organizationId,documentId]);assert.equal(payments.count,2);
+  const transfer=await call('/sales',{method:'POST',body:{branch_id:branchId,request_key:randomUUID(),items:[{product_id:productId,quantity:1}],payment:{method:'BANK_TRANSFER'}}});assert.equal(transfer.response.status,201);assert.equal(transfer.data.payment_status,'WAITING_PAYMENT');assert.equal(transfer.data.order_status,'OPEN');auditDocumentIds.push(transfer.data.id);
+  const pendingDetail=await call(`/sales/${transfer.data.id}`);assert.equal(pendingDetail.data.document.payment_status,'WAITING_PAYMENT');
+  assert.ok(pendingDetail.data.payment_qr_url.includes(`amount=${Number(transfer.data.total)}`));assert.equal(new URL(pendingDetail.data.payment_qr_url).searchParams.get('addInfo'),`PI-${transfer.data.id}`);assert.equal(pendingDetail.data.payment_reference,`PI-${transfer.data.id}`);
+  const confirmation=await call(`/sales/${transfer.data.id}/confirm-payment`,{method:'POST',body:{}});assert.equal(confirmation.response.status,200);assert.equal(confirmation.data.payment_status,'PAID');
+  const [[confirmedPayment]]=await pool.execute('SELECT status FROM sale_payments WHERE organization_id=? AND document_id=?',[organizationId,transfer.data.id]);assert.equal(confirmedPayment.status,'PAID');
+  const openPayload={branch_id:branchId,request_key:randomUUID(),order_status:'OPEN',items:[{product_id:productId,quantity:1}],payment:{method:'CASH'}};
+  let open=await call('/sales',{method:'POST',body:openPayload});assert.equal(open.response.status,201);assert.equal(open.data.order_status,'OPEN');assert.equal(open.data.payment_status,null);const openId=open.data.id;
+  const duplicateOpen=await call('/sales',{method:'POST',body:{...openPayload,request_key:randomUUID()}});assert.equal(duplicateOpen.response.status,200);assert.equal(duplicateOpen.data.id,openId);assert.equal(duplicateOpen.data.replayed,true);
+  const openedList=await call(`/sales/open?branch_id=${branchId}`);assert.ok(openedList.data.items.some(item=>Number(item.id)===Number(openId)));
+  const updateBody={items:[{product_id:productId,quantity:2}],payment_method:'BANK_TRANSFER'};const edited=await call(`/documents/sales/${openId}`,{method:'PUT',body:updateBody});assert.equal(edited.response.status,200);assert.equal(Number(edited.data.total),20000);assert.equal(edited.data.payment_method,'BANK_TRANSFER');assert.equal(edited.data.payment_status,'WAITING_PAYMENT');
+  const openQr=await call(`/sales/${openId}`);assert.equal(openQr.data.document.payment_method,'BANK_TRANSFER');assert.equal(openQr.data.document.payment_status,'WAITING_PAYMENT');assert.ok(openQr.data.payment_qr_url.includes('amount=20000'));assert.equal(new URL(openQr.data.payment_qr_url).searchParams.get('addInfo'),`PI-${openId}`);
+  let [[updatedBalance]]=await pool.execute('SELECT quantity FROM inventory_balances WHERE organization_id=? AND branch_id=? AND product_id=?',[organizationId,branchId,productId]);assert.equal(updatedBalance.quantity,1);
+  const reduced=await call(`/documents/sales/${openId}`,{method:'PUT',body:{items:[{product_id:productId,quantity:1}]}});assert.equal(reduced.response.status,200);
+  const completed=await call(`/sales/${openId}/confirm-payment`,{method:'POST',body:{}});assert.equal(completed.data.order_status,'COMPLETED');
+  const cancelCandidate=await call('/sales',{method:'POST',body:{branch_id:branchId,request_key:randomUUID(),order_status:'OPEN',items:[{product_id:productId,quantity:1}],payment:{method:'CASH'}}});assert.equal(cancelCandidate.response.status,201);
+  const cancelled=await call(`/sales/${cancelCandidate.data.id}/cancel`,{method:'POST',body:{}});assert.equal(cancelled.data.order_status,'CANCELLED');
+  const [[finalBalance]]=await pool.execute('SELECT quantity FROM inventory_balances WHERE organization_id=? AND branch_id=? AND product_id=?',[organizationId,branchId,productId]);assert.equal(finalBalance.quantity,2);
+  const webhookOrder=await call('/sales',{method:'POST',body:{branch_id:branchId,request_key:randomUUID(),items:[{product_id:productId,quantity:1}],payment:{method:'BANK_TRANSFER'}}});assert.equal(webhookOrder.response.status,201);auditDocumentIds.push(webhookOrder.data.id);
+  const webhook=await call('/payments/webhook/bank-transfer',{method:'POST',body:{document_id:webhookOrder.data.id,amount:webhookOrder.data.total,reference:`RI-${webhookOrder.data.id}`,transaction_id:'bank-test-transaction-1'},extraHeaders:{'x-api-key':process.env.BANK_WEBHOOK_SECRET}});assert.equal(webhook.response.status,200);assert.equal(webhook.data.order_status,'COMPLETED');
+  await call('/settings',{method:'PUT',body:{operations:{dailyDigest:true}}});
+  const digest=await call('/notifications/digests/run',{method:'POST',body:{type:'DAILY',period:new Date().toISOString().slice(0,10)}});assert.equal(digest.response.status,201);assert.ok(digest.data.created>=1);
+  const notices=await call('/notifications');const digestNotice=notices.data.items.find(item=>item.kind==='DAILY_DIGEST');assert.ok(digestNotice);
+  const digestDetail=await call(`/notifications/${encodeURIComponent(digestNotice.id)}`);assert.equal(digestDetail.response.status,200);assert.ok(digestDetail.data.body);
+  assert.equal((await call('/notifications/read',{method:'PATCH',body:{ids:[digestNotice.id]}})).response.status,200);
+  assert.equal((await call('/notifications',{method:'DELETE',body:{ids:[digestNotice.id]}})).response.status,200);
+ }finally{
+  if(organizationId){await pool.execute("DELETE FROM audit_logs WHERE organization_id=? AND event_type='SALE_RETURN' AND JSON_UNQUOTE(JSON_EXTRACT(details,'$.document_id')) IN (SELECT CAST(id AS CHAR) FROM stock_documents WHERE organization_id=?)",[organizationId,organizationId]);for(const docId of auditDocumentIds)await pool.execute("DELETE FROM audit_logs WHERE organization_id=? AND event_type IN ('SALE_PAYMENT_CONFIRMED','BANK_PAYMENT_WEBHOOK') AND JSON_UNQUOTE(JSON_EXTRACT(details,'$.document_id'))=?",[organizationId,String(docId)]);for(const table of ['notification_reads','notification_digests','sale_payments','inventory_movements','stock_document_items','stock_documents','customers','inventory_balances','products','categories','auth_sessions','user_branch_roles','branches','users'])await pool.execute(`DELETE FROM ${table} WHERE organization_id=?`,[organizationId]);await pool.execute('DELETE FROM organizations WHERE id=?',[organizationId]);}
+  await new Promise(resolve=>server.close(resolve));await pool.end();
+ }
+});

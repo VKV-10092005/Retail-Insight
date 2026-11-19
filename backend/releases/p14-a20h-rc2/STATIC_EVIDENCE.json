@@ -1,0 +1,111 @@
+{
+  "documentType": "A2_0_H_STATIC_MOCK_EVIDENCE",
+  "date": "2026-11-06",
+  "release": {
+    "path": "backend/releases/p14-a20h-rc2/candidate.json",
+    "fileSha256": "9c309242ea0ea7d6553242b9c6d79a87f7e7bc5489252de78e4a75ad7f51c042",
+    "digest": "e3184de4ff673a0351cdf721eeb19df3a837912cfbf7ee9fab3ff2bc49ca5071",
+    "state": "CANDIDATE_NOT_EXECUTABLE",
+    "nativeVerified": false,
+    "phases": 12,
+    "steps": 57,
+    "sourceEntries": 30,
+    "sourceMismatches": 0,
+    "nullBefore": 57,
+    "nullAfter": 57
+  },
+  "tests": {
+    "rc2": {
+      "controls": 9,
+      "gate": 24,
+      "migration": 17,
+      "writer": 28,
+      "launcher": 9,
+      "total": 87,
+      "fail": 0
+    },
+    "historicalA1": {
+      "pass": 102,
+      "fail": 0
+    },
+    "pureRegression": {
+      "pass": 84,
+      "fail": 0
+    },
+    "sqliteHttpMockRegression": {
+      "pass": 71,
+      "fail": 0
+    },
+    "finalSuitePass": 344,
+    "finalSuiteFail": 0,
+    "native": "NOT_RUN",
+    "load": "NOT_RUN"
+  },
+  "historicalManifests": [
+    {
+      "manifest": "docs/p1_4_a0_sql/MANIFEST.md",
+      "entries": 13,
+      "mismatches": 0
+    },
+    {
+      "manifest": "docs/P1_4_A1_MANIFEST_2026-11-06.md",
+      "entries": 20,
+      "mismatches": 0
+    },
+    {
+      "manifest": "docs/p1_4_a20/MANIFEST.md",
+      "entries": 8,
+      "mismatches": 0
+    }
+  ],
+  "draftSentinels": [
+    {
+      "path": "docs/p1_4_a0_sql/00_preflight.draft.sql",
+      "reviewOnly": true
+    },
+    {
+      "path": "docs/p1_4_a0_sql/10_expand.draft.sql",
+      "reviewOnly": true
+    },
+    {
+      "path": "docs/p1_4_a0_sql/20_backfill_bootstrap.draft.sql",
+      "reviewOnly": true
+    },
+    {
+      "path": "docs/p1_4_a0_sql/30_contract.draft.sql",
+      "reviewOnly": true
+    },
+    {
+      "path": "docs/p1_4_a0_sql/40_write_fences.draft.sql",
+      "reviewOnly": true
+    },
+    {
+      "path": "docs/p1_4_a0_sql/41_immutability.draft.sql",
+      "reviewOnly": true
+    },
+    {
+      "path": "docs/p1_4_a0_sql/50_cutover.draft.sql",
+      "reviewOnly": true
+    }
+  ],
+  "scope": {
+    "realDatabaseConnections": 0,
+    "serverSqlExecuted": 0,
+    "productionCredentialsLoaded": false,
+    "containersOrVmsCreated": 0,
+    "nativeBackendProcessesStarted": 0,
+    "rc2NativeListenersStarted": 0,
+    "runtimeMounted": false,
+    "aiPipelineChanged": false,
+    "testFilesystemOnly": true,
+    "sqliteOwnedEphemeralHttp": true
+  },
+  "decision": {
+    "sourceMockReview": "GO",
+    "environment": "BLOCKED_R10",
+    "executableBinding": "BLOCKED",
+    "nativeFindings": "NATIVE_REQUIRED",
+    "a21": "NO_GO",
+    "nextStageApproved": false
+  }
+}

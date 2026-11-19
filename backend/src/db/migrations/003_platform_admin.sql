@@ -1,0 +1,25 @@
+-- Migration 003: Platform Admin support and support tickets
+ALTER TABLE users 
+  MODIFY organization_id INT UNSIGNED NULL,
+  MODIFY role ENUM('OWNER','MANAGER','INVENTORY','CASHIER','PLATFORM_ADMIN') NOT NULL DEFAULT 'CASHIER';
+
+ALTER TABLE auth_sessions 
+  MODIFY organization_id INT UNSIGNED NULL;
+
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  organization_id INT UNSIGNED NULL,
+  user_id INT UNSIGNED NOT NULL,
+  category ENUM('TECH_SUPPORT','BUG_REPORT','ONLINE_WEB_REQUEST','FEATURE_REQUEST') NOT NULL DEFAULT 'TECH_SUPPORT',
+  subject VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  contact_info VARCHAR(255) NOT NULL,
+  status ENUM('OPEN','IN_PROGRESS','RESOLVED','CLOSED') NOT NULL DEFAULT 'OPEN',
+  admin_note TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (organization_id) REFERENCES organizations(id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  INDEX idx_tickets_org (organization_id),
+  INDEX idx_tickets_status (status)
+);

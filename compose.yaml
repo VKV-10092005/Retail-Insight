@@ -1,0 +1,90 @@
+name: retail-insight
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: retail_app
+      MYSQL_USER: retail_app
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Set MYSQL_APP_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
+    command: ["--default-time-zone=+00:00"]
+    volumes: ["app_database:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql --user=$$MYSQL_USER --database=retail_app --execute='SELECT 1' --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks: [internal]
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment: &backend_environment
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      TRUST_PROXY: 1
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: retail_app
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Set MYSQL_APP_PASSWORD}
+      MYSQL_DATABASE: retail_app
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+      AI_SERVICE_URL: http://ai:8000
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?Set AI_SERVICE_TOKEN}
+      RESEARCH_MYSQL_HOST: ${RESEARCH_MYSQL_HOST:-}
+      RESEARCH_MYSQL_PORT: ${RESEARCH_MYSQL_PORT:-3306}
+      RESEARCH_MYSQL_USER: ${RESEARCH_MYSQL_USER:-}
+      RESEARCH_MYSQL_PASSWORD: ${RESEARCH_MYSQL_PASSWORD:-}
+    depends_on:
+      mysql: {condition: service_healthy}
+      ai: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [internal, egress]
+  migrate:
+    profiles: [tools]
+    build: ./backend
+    environment: *backend_environment
+    command: ["npm", "run", "migrate"]
+    depends_on:
+      mysql: {condition: service_healthy}
+    networks: [internal]
+  ai:
+    build: ./ai-service
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?Set AI_SERVICE_TOKEN}
+      MODEL_DIRECTORY: /models
+      RESEARCH_ARTIFACT_DIRECTORY: /research
+    volumes:
+      - ./ai-service/models:/models:ro
+      - ./data/research:/research:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:?Set PUBLIC_HOST}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes: ["caddy_data:/data", "caddy_config:/config"]
+    depends_on:
+      backend: {condition: service_healthy}
+    networks: [internal, egress]
+volumes:
+  app_database:
+  caddy_data:
+  caddy_config:
+networks:
+  internal:
+    internal: true
+  egress:

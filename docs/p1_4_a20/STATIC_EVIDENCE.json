@@ -1,0 +1,125 @@
+﻿{
+  "documentType": "A2_0_STATIC_EVIDENCE",
+  "businessDate": "2026-11-06",
+  "timezone": "Asia/Bangkok",
+  "scope": {
+    "sqlConnectionsOpened": 0,
+    "sqlStatementsExecuted": 0,
+    "nativeTestsRun": 0,
+    "containersCreated": 0,
+    "backendsStarted": 0,
+    "sourceFilesModified": 0,
+    "productionCredentialsRead": false
+  },
+  "hostSnapshot": {
+    "totalMemoryBytes": 8419024896,
+    "availableMemoryKiB": 1776908,
+    "logicalProcessors": 8,
+    "diskCFreeBytes": 139253334016,
+    "listenerScan": {
+      "ports": [
+        13316,
+        13317,
+        13318
+      ],
+      "observedCount": 0,
+      "reserved": false
+    },
+    "commandDiscovery": {
+      "docker": false,
+      "podman": false,
+      "mysqldOnPath": false,
+      "wslExe": true,
+      "mysqlOnPath": {
+        "path": "C:/WINDOWS/system32/mysql",
+        "sizeBytes": 0,
+        "extension": "",
+        "usableClientConfirmed": false
+      }
+    },
+    "services": [
+      {
+        "name": "MySQL97",
+        "status": "Running",
+        "actualDbVersion": null,
+        "usedForTests": false
+      },
+      {
+        "name": "wampmysqld64",
+        "status": "Stopped",
+        "usedForTests": false
+      }
+    ],
+    "mysqldFilesObserved": [
+      "C:/Program Files/MySQL/MySQL Server 9.7/bin/mysqld.exe",
+      "C:/Program Files/MySQL/MySQL Server 2/bin/mysqld.exe"
+    ],
+    "mysqlDirectoryNames": [
+      "MySQL Server 2",
+      "MySQL Server 9.7",
+      "MySQL Workbench 8.0 CE"
+    ],
+    "dockerStandardDirectoryExists": false,
+    "note": "Read-only metadata snapshot; RAM/ports change over time; no daemon/DB connection or executable invocation"
+  },
+  "releaseReview": {
+    "releaseId": "p14-a1-rc1",
+    "fileSha256": "70c9ec5f4ad5d7d4d6abac7911fd41eb12aaadd0b0724350a9dc9d45cf785974",
+    "logicDigest": "91d0ccd1e3f6c495326a556cc967414ed1981ba380e763b696412a185f7b4cb1",
+    "digestVerified": true,
+    "rebuildMatches": true,
+    "state": "CANDIDATE_NOT_EXECUTABLE",
+    "steps": 31,
+    "uniqueStepIds": 31,
+    "dependencyEdges": 30,
+    "acyclic": true,
+    "manualStepIds": [
+      "CT_SCHEMA_VERSION"
+    ],
+    "unboundBeforeFingerprints": 31,
+    "unboundAfterFingerprints": 31,
+    "emptyTablesPredicates": 31,
+    "manualTemplates": 30,
+    "statementHashesMatch": 31,
+    "sourceManifests": [
+      {
+        "path": "docs/p1_4_a0_sql/MANIFEST.md",
+        "entries": 13,
+        "mismatches": 0
+      },
+      {
+        "path": "docs/P1_4_A1_MANIFEST_2026-11-06.md",
+        "entries": 20,
+        "mismatches": 0
+      }
+    ],
+    "syntheticRendering": {
+      "metadataSource": "SYNTHETIC_UTF8MB4_ONLY",
+      "actualDatabaseMetadata": false,
+      "digest": "ff56b945c4b8115ebe0285bceab56c7986d7150bac2455bd6c3d3db0a4ed65cb",
+      "unresolvedTokens": 0,
+      "state": "CANDIDATE_NOT_EXECUTABLE",
+      "sqlExecuted": false
+    },
+    "baselineSource": {
+      "files": 96,
+      "aggregateSha256": "2c3d85bba0311b789a5d3fee16996c36116a1989ff72b818ff6bb8f63b7310d8",
+      "checkedUnchanged": true
+    }
+  },
+  "validationLimits": [
+    "Not a Docker engine validation",
+    "No native MySQL grammar/DDL/transaction/privilege validation",
+    "No A1 unit rerun or new PASS count",
+    "No active isolation/collation/TLS/UUID inventory",
+    "No capacity or latency results"
+  ],
+  "decision": {
+    "documentation": "GO",
+    "provisioning": "NO_GO_PENDING_APPROVAL_AND_RESOURCES",
+    "nativeRC1": "NO_GO_PENDING_HARDENING_AND_BINDING",
+    "productionRuntime": "OUT_OF_SCOPE",
+    "nextStageApproved": false
+  }
+}
+

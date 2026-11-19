@@ -1,0 +1,1 @@
+ALTER TABLE organizations ADD COLUMN address VARCHAR(500) NULL AFTER name;

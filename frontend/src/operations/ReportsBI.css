@@ -1,0 +1,27 @@
+
+.reports-executive-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:0 0 20px}
+.reports-exec-kpi{display:grid;min-width:0;gap:12px;padding:17px 18px;border:1px solid var(--ri-border);border-radius:14px;background:var(--ri-surface);box-shadow:var(--ri-shadow-sm);border-top:3px solid #4f46e5}
+.reports-exec-kpi.tone-positive{border-top-color:#10b981}.reports-exec-kpi.tone-negative{border-top-color:#ef4444}.reports-exec-kpi.tone-info{border-top-color:#0ea5e9}.reports-exec-kpi.tone-neutral{border-top-color:#94a3b8}
+.reports-exec-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--ri-muted);font-size:12px;font-weight:700}
+.reports-exec-kpi-top i{color:var(--ri-muted);font-size:10px;font-style:normal;opacity:.65}
+.reports-exec-kpi>strong{overflow:hidden;color:var(--ri-text);font-size:clamp(20px,2vw,27px);letter-spacing:-.035em;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.reports-exec-kpi-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.reports-exec-kpi-foot small{overflow:hidden;color:var(--ri-muted);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.reports-exec-kpi-foot>b{flex:0 0 auto;padding:4px 8px;border-radius:999px;background:color-mix(in srgb,var(--ri-primary) 9%,var(--ri-surface));color:var(--ri-primary);font-size:10px;white-space:nowrap}
+.reports-exec-kpi.tone-positive .reports-exec-kpi-foot>b{background:#ecfdf5;color:#047857}.reports-exec-kpi.tone-negative .reports-exec-kpi-foot>b{background:#fef2f2;color:#b91c1c}
+.reports-donut-layout{display:grid;grid-template-columns:minmax(190px,.85fr) minmax(0,1.15fr);align-items:center;gap:12px;min-height:270px}
+.reports-donut-chart{position:relative;width:100%;height:250px;min-width:0}
+.reports-donut-center{position:absolute;top:50%;left:50%;display:grid;max-width:135px;transform:translate(-50%,-50%);gap:5px;text-align:center;pointer-events:none}
+.reports-donut-center small{color:var(--ri-muted);font-size:11px}.reports-donut-center strong{color:var(--ri-text);font-size:18px;line-height:1.15;white-space:nowrap}
+.reports-donut-legend{display:grid;gap:4px;min-width:0}
+.reports-donut-legend-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--ri-border);font-size:11px}
+.reports-donut-label{display:flex;align-items:center;gap:7px;min-width:0}.reports-donut-label i{width:9px;height:9px;flex:0 0 9px;border-radius:50%}.reports-donut-label b{overflow:hidden;color:var(--ri-text);text-overflow:ellipsis;white-space:nowrap}
+.reports-donut-legend-row>strong{color:var(--ri-text);font-size:11px;white-space:nowrap}.reports-donut-legend-row>small{min-width:38px;color:var(--ri-muted);text-align:right}
+.reports-donut-empty{display:grid;min-height:250px;place-items:center;color:var(--ri-muted);font-size:13px;text-align:center}
+.bi-chart-tooltip{min-width:180px;padding:11px 13px;border:1px solid var(--ri-border);border-radius:10px;background:var(--ri-surface);color:var(--ri-text);box-shadow:var(--ri-shadow-md)}
+.bi-chart-tooltip>strong{display:block;margin-bottom:8px;color:var(--ri-text);font-size:12px}
+.bi-tooltip-row{display:flex;justify-content:space-between;gap:18px;margin-top:5px;font-size:11px}.bi-tooltip-row span{color:var(--ri-muted)}.bi-tooltip-row b{color:var(--ri-text);white-space:nowrap}
+.bi-empty-overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;background:color-mix(in srgb,var(--ri-surface) 86%,transparent);backdrop-filter:blur(2px);text-align:center}
+.bi-empty-overlay p{margin:0;color:var(--ri-text);font-weight:700}
+@media(max-width:1100px){.reports-executive-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.reports-donut-layout{grid-template-columns:minmax(170px,.8fr) minmax(0,1.2fr)}}
+@media(max-width:640px){.reports-executive-kpis{grid-template-columns:1fr;gap:10px}.reports-exec-kpi{padding:14px}.reports-donut-layout{grid-template-columns:1fr;gap:0}.reports-donut-chart{height:225px}.reports-donut-legend{padding:0 8px 8px}}

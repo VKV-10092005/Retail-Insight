@@ -1,0 +1,4 @@
+.settings-general-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.settings-general-pair .setting-field{min-width:0}
+.settings-ai-card .setting-field small{display:block;margin-top:5px;color:var(--ri-muted);font-size:11px}
+@media(max-width:520px){.settings-general-pair{grid-template-columns:1fr}}

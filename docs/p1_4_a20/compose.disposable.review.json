@@ -1,0 +1,83 @@
+﻿{
+  "name": "p14-disposable-a21-run001",
+  "x-a20-review": {
+    "stage": "A2_0_STATIC_ONLY",
+    "provisioningAuthorized": false,
+    "sqlExecutionAuthorized": false,
+    "notes": [
+      "Review artifact only; not validated by Docker engine",
+      "Starting MySQL initializes system data and requires separate approval",
+      "Never attach retail-insight networks/volumes or runtime env",
+      "Disk budget is not a portable enforced quota"
+    ]
+  },
+  "services": {
+    "mysql_disposable": {
+      "profiles": [
+        "requires-a21-approval"
+      ],
+      "image": "${P14_A21_MYSQL_IMAGE:?Exact patch and digest must be approved}",
+      "restart": "no",
+      "cpus": 2,
+      "mem_limit": "2g",
+      "pids_limit": 256,
+      "ports": [
+        "127.0.0.1:13316:3306"
+      ],
+      "environment": {
+        "MYSQL_ROOT_PASSWORD_FILE": "/run/secrets/mysql_bootstrap"
+      },
+      "secrets": [
+        "mysql_bootstrap"
+      ],
+      "command": [
+        "--default-time-zone=+00:00",
+        "--default-storage-engine=InnoDB",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_0900_ai_ci",
+        "--max-connections=80",
+        "--innodb-buffer-pool-size=536870912",
+        "--transaction-isolation=REPEATABLE-READ",
+        "--sql-mode=${P14_A21_SQL_MODE:?Bind reviewed exact strict mode}",
+        "--lower-case-table-names=${P14_A21_LOWER_CASE_TABLE_NAMES:?Bind case policy before initialization}",
+        "--require-secure-transport=${P14_A21_REQUIRE_SECURE_TRANSPORT:?Approve TLS policy first}"
+      ],
+      "volumes": [
+        "test_database:/var/lib/mysql"
+      ],
+      "networks": [
+        "test_internal"
+      ],
+      "labels": {
+        "p14.scope": "disposable-only",
+        "p14.run": "a21_run001",
+        "p14.disk-budget-gib": "20"
+      }
+    }
+  },
+  "secrets": {
+    "mysql_bootstrap": {
+      "file": "${P14_A21_ROOT_SECRET_FILE:?Operator-owned test secret file; never production .env}"
+    }
+  },
+  "volumes": {
+    "test_database": {
+      "name": "p14_disposable_a21_run001_data",
+      "labels": {
+        "p14.scope": "disposable-only",
+        "p14.run": "a21_run001"
+      }
+    }
+  },
+  "networks": {
+    "test_internal": {
+      "name": "p14_disposable_a21_run001_internal",
+      "internal": true,
+      "labels": {
+        "p14.scope": "disposable-only",
+        "p14.run": "a21_run001"
+      }
+    }
+  }
+}
+

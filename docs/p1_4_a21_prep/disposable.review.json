@@ -1,0 +1,58 @@
+{
+  "documentType": "A2_1_PREP_REVIEW_ONLY",
+  "executionAllowed": false,
+  "provisioningAllowed": false,
+  "nativeVerified": false,
+  "rc3Created": false,
+  "proposal": {
+    "host": {
+      "separate": true,
+      "cpu": 4,
+      "ramGiB": 8,
+      "diskGiB": 80
+    },
+    "mysql": {
+      "family": "8.4",
+      "exactVersion": null,
+      "imageSha256": null,
+      "ramGiB": 2,
+      "cpu": 2,
+      "bufferPoolMiB": 512,
+      "maxConnections": 80,
+      "defaultIsolation": "REPEATABLE READ",
+      "engine": "InnoDB",
+      "sqlMode": null,
+      "charset": null,
+      "collation": null
+    },
+    "ports": {
+      "mysqlLoopback": 13316,
+      "backendA": 13317,
+      "backendB": 13318
+    },
+    "schema": null,
+    "serverUuid": null,
+    "forbiddenServerUuids": null,
+    "tls": null,
+    "credentials": null
+  },
+  "approval": {
+    "provisioning": null,
+    "inventory": null,
+    "rehearsal": null,
+    "seed": null,
+    "binding": null,
+    "twoProcesses": null,
+    "nativeCases": null,
+    "load": null,
+    "cleanup": null
+  },
+  "targetReleaseDigest": "e3184de4ff673a0351cdf721eeb19df3a837912cfbf7ee9fab3ff2bc49ca5071",
+  "blockers": [
+    "R10 resources/engine absent",
+    "Actual target/deny UUID/TLS/principals unknown",
+    "Native rehearsal and signatures not approved",
+    "No phase fingerprints captured",
+    "Observer cross-account visibility unproven"
+  ]
+}

@@ -1,0 +1,85 @@
+services:
+  - type: web
+    name: retail-insight-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: "4000"
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DATABASE
+        value: retail_app
+      - key: MYSQL_SSL
+        value: "true"
+      - key: MYSQL_SSL_CA
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AZURE_SPEECH_KEY
+        sync: false
+      - key: AZURE_SPEECH_REGION
+        sync: false
+      - key: AZURE_TTS_VOICE
+        value: vi-VN-HoaiMyNeural
+      - key: ALLOW_DEV_OTP
+        value: "0"
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: retail-insight-ai
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: AI_SERVICE_TOKEN
+        fromService:
+          type: web
+          name: retail-insight-ai
+          envVarKey: AI_SERVICE_TOKEN
+
+  - type: web
+    name: retail-insight-ai
+    runtime: python
+    rootDir: ai-service
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: AI_SERVICE_TOKEN
+        generateValue: true
+      - key: MODEL_DIRECTORY
+        value: ./models
+      - key: RESEARCH_ARTIFACT_DIRECTORY
+        value: ../data/research
