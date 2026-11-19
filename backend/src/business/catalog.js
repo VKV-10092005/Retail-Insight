@@ -18,7 +18,7 @@ async function sessionUser(user){
 }
 const product=z.object({sku:z.string().trim().min(1).max(100),name:z.string().trim().min(1).max(180),category_id:positiveId.nullable().optional(),branch_id:positiveId.optional(),sale_price:price,cost_price:price.nullable().optional(),status:z.enum(['ACTIVE','DISABLED']).default('ACTIVE'),image_url:z.string().max(1500000).nullable().optional(),attributes:z.record(z.string(),z.union([z.string().max(100),z.number().finite(),z.null()])).optional()}).strict();
 router.get('/categories',asyncRoute(async(req,res)=>{
- const query=z.object({branch_id:positiveId.optional()}).parse(req.query);let branchId=query.branch_id,branchMode=null;
+ const query=z.object({branch_id:z.preprocess(value=>value===''||value==null?undefined:value,positiveId.optional())}).parse(req.query);let branchId=query.branch_id,branchMode=null;
  if(!branchId&&req.user.role!=='OWNER'){const [assignments]=await pool.execute('SELECT branch_id FROM user_branch_roles WHERE organization_id=? AND user_id=? ORDER BY branch_id',[req.organizationId,req.user.id]);if(assignments.length===1)branchId=Number(assignments[0].branch_id);else if(assignments.length>1)throw new HttpError(400,'Chọn chi nhánh để xem danh mục');}
  let sql='SELECT id,name,organization_id FROM categories WHERE organization_id=?',values=[req.organizationId];
  if(branchId){const branch=await getBranchCatalogMode(req.user,branchId);branchMode=branch.catalog_mode;if(branchMode==='INDEPENDENT'){sql+=' AND branch_id=?';values.push(branch.id);}else{sql+=' AND (branch_id IS NULL OR branch_id=?)';values.push(branch.id);}}
@@ -48,7 +48,7 @@ router.get('/products',asyncRoute(async(req,res)=>{
  const q=period.parse(req.query);const args=[req.organizationId];let where='p.organization_id=?';let branchId=q.branch_id||q.branchId,branchMode=null;
  if(!branchId&&req.user.role!=='OWNER'){const [assignments]=await pool.execute('SELECT branch_id FROM user_branch_roles WHERE organization_id=? AND user_id=? ORDER BY branch_id',[req.organizationId,req.user.id]);if(assignments.length===1)branchId=Number(assignments[0].branch_id);else if(assignments.length>1)throw new HttpError(400,'Chọn chi nhánh để xem sản phẩm');}
  if(branchId){const branch=await getBranchCatalogMode(req.user,branchId);branchMode=branch.catalog_mode;if(branchMode==='INDEPENDENT'){where+=' AND (p.branch_id=? OR EXISTS(SELECT 1 FROM inventory_balances scope_i WHERE scope_i.organization_id=p.organization_id AND scope_i.product_id=p.id AND scope_i.branch_id=?))';args.push(branch.id,branch.id);}else{where+=' AND (p.branch_id IS NULL OR p.branch_id=?)';args.push(branch.id);}}
- if(q.q){where+=" AND (p.sku LIKE ? OR p.name LIKE ? OR JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.barcode')) LIKE ?)";args.push('%'+q.q+'%','%'+q.q+'%','%'+q.q+'%');}
+ const search=q.q||q.search;if(search){where+=" AND (p.sku LIKE ? OR p.name LIKE ? OR JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.barcode')) LIKE ?)";args.push('%'+search+'%','%'+search+'%','%'+search+'%');}
  if(q.category_id){where+=' AND p.category_id=?';args.push(q.category_id);}
  if(q.status){where+=' AND p.status=?';args.push(q.status);}
  const [[count]]=await pool.execute(`SELECT COUNT(*) AS total FROM products p WHERE ${where}`,args);

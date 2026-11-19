@@ -48,7 +48,7 @@ export default function Replenishment() {
   });
 
   const replenishmentResource = useResource(`/ai/forecast?${queryParams}`);
-  const isOffline = isAiOfflineError(replenishmentResource?.error) || isAiOfflineError(ready?.error);
+  const isOffline = isAiOfflineError(replenishmentResource?.error) || (!replenishmentResource?.loading && !replenishmentResource?.data && isAiOfflineError(ready?.error));
 
   const handleQtyChange = (itemId, val) => {
     const num = Math.max(0, parseInt(val, 10) || 0);

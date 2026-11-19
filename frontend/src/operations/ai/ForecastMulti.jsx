@@ -21,7 +21,7 @@ export default function ForecastMulti(){
   const visible=products.filter(p=>`${p.sku} ${p.name}`.toLowerCase().includes(search.toLowerCase()));
   const query=params({task:'multi_sku',branch_id:branchId,origin,product_ids:selected.join(',')});
   const forecast=useResource(selected.length?`/ai/forecast?${query}`:null);
-  const offline=isAiOfflineError(forecast?.error)||isAiOfflineError(ready?.error);
+  const offline=isAiOfflineError(forecast?.error)||(!forecast?.loading&&!forecast?.data&&isAiOfflineError(ready?.error));
   const toggle=id=>setSelected(current=>current.includes(String(id))?current.filter(value=>value!==String(id)):[...current,String(id)]);
   return <div className="ai-page-container">
     <PageHeader eyebrow="DỰ BÁO HÀNG LOẠT" title="Dự báo nhiều sản phẩm" description="Chọn các sản phẩm cần dự báo. Kết quả gồm nhu cầu kỳ tới, tồn kho hiện tại và ngưỡng tồn tối thiểu."/>

@@ -22,7 +22,7 @@ export default function Products({
   const canEditProduct=!readOnly&&['OWNER','MANAGER','INVENTORY'].includes(user?.role);
   const canManageCategories=canEdit;
   const [query, setQuery] = useState({ q: '', category_id: '', status: '', page: 1 });
-  const list = useResource(productBranchId?'/products?' + params({...query,limit:1000,branchId:productBranchId,branch_id:productBranchId}):null);
+  const list = useResource(productBranchId?'/products?' + params({...query,limit:500,branchId:productBranchId,branch_id:productBranchId}):null);
   const categories = useResource('/categories'+(productBranchId?'?branch_id='+productBranchId:''));
   const canCreate=['OWNER','MANAGER'].includes(user?.role)||(['CASHIER','INVENTORY'].includes(user?.role)&&list.data?.catalog_mode==='INDEPENDENT');
   const canBulkImport=['OWNER','MANAGER','INVENTORY'].includes(user?.role);

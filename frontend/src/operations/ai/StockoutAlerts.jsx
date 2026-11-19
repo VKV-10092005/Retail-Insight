@@ -46,7 +46,7 @@ export default function StockoutAlerts() {
   });
 
   const alertsResource = useResource(`/ai/forecast?${queryParams}`);
-  const isOffline = isAiOfflineError(alertsResource?.error) || isAiOfflineError(ready?.error);
+  const isOffline = isAiOfflineError(alertsResource?.error) || (!alertsResource?.loading && !alertsResource?.data && isAiOfflineError(ready?.error));
 
   return (
     <div className="ai-page-container">

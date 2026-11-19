@@ -55,7 +55,7 @@ export default function ForecastSku() {
     setFilters(current => current.product_id ? current : { ...current, product_id: String(preferred.id) });
   }, [filters.product_id, products.data, productsPage2.data, products.loading, productsPage2.loading]);
 
-  const isOffline = isAiOfflineError(forecast?.error) || isAiOfflineError(ready?.error);
+  const isOffline = isAiOfflineError(forecast?.error) || (!forecast?.loading && !forecast?.data && isAiOfflineError(ready?.error));
 
   return (
     <div className="ai-page-container">

@@ -4,7 +4,7 @@ const MAX_CACHE_BYTES=32*1024*1024;
 const MAX_ENTRY_BYTES=1024*1024;
 const cache=new Map();
 let cacheBytes=0;
-const cacheablePath=/^\/(?:dashboard\/overview|branches|categories|products|inventory(?:\/balances|\/movements)?|sales\/open|bi\/overview|platform\/(?:dashboard|organizations|security\/(?:stats|logs|notifications)))$/;
+const cacheablePath=/^\/(?:dashboard\/overview|branches|categories|products|inventory(?:\/balances|\/movements)?|sales\/open|bi\/overview|ai\/(?:forecast|summary)|platform\/(?:dashboard|organizations|security\/(?:stats|logs|notifications)))$/;
 
 function removeCache(key){const entry=cache.get(key);if(entry){cacheBytes-=entry.bytes;cache.delete(key);}}
 function trimCache(){

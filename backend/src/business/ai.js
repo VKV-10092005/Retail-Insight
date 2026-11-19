@@ -8,10 +8,10 @@ import {researchSelect} from '../db/research.js';
 import {restartAiService} from '../services/aiServiceManager.js';
 import {config} from '../config/env.js';
 const router=Router();
-export async function aiCall(path,body){
+export async function aiCall(path,body,{timeoutMs=15000}={}){
  const token=process.env.AI_SERVICE_TOKEN;if(!token||token.length<32)throw new HttpError(503,'Chưa cấu hình AI_SERVICE_TOKEN giữa backend và AI service');
  const base=config.aiServiceUrl;
- let response;try{response=await fetch(base+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});}catch(error){if(error?.cause?.code==='ECONNREFUSED'||error?.cause?.code==='ECONNRESET'){restartAiService();throw new HttpError(503,'AI FastAPI is starting or restarting. Please retry shortly.');}throw new HttpError(503,'Cannot connect to AI service at '+base+': '+(error?.message||'network error'));}
+ let response;try{response=await fetch(base+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(timeoutMs)});}catch(error){if(error?.cause?.code==='ECONNREFUSED'||error?.cause?.code==='ECONNRESET'){restartAiService();throw new HttpError(503,'AI FastAPI is starting or restarting. Please retry shortly.');}throw new HttpError(503,'Cannot connect to AI service at '+base+': '+(error?.message||'network error'));}
  let data;try{data=await response.json();}catch{throw new HttpError(503,'AI service returned an invalid response');}
  if(!response.ok)throw new HttpError(response.status>=500?503:422,typeof data.detail==='string'?data.detail:'Input AI không hợp lệ');return data;
 }
@@ -56,6 +56,41 @@ async function loadOperationalProducts(req,q,origin,selectedIds=[]){
   return {...product,id:String(product.id),category_id:product.category_id==null?null:Number(product.category_id),attributes,stock:stockMap.has(Number(product.id))?stockMap.get(Number(product.id)):null,min_stock:attributes.min_stock==null?null:Number(attributes.min_stock),daily_rate_28:sales.quantity28/days28,daily_rate_84:sales.quantity84/days84,category_daily_rate:categoryRate.get(key)||0};
  });
 }
+function adaptiveEstimate(product,origin){
+ const daily28=Math.max(0,Number(product.daily_rate_28)||0),daily84=Math.max(0,Number(product.daily_rate_84)||0),peer=Math.max(0,Number(product.category_daily_rate)||0),minimum=Math.max(0,Number(product.min_stock)||0),floor=minimum/90,observed=.65*daily28+.35*daily84;
+ const daily=observed>0?(floor ? .9*observed+.1*floor : observed):peer>0?(floor ? .8*peer+.2*floor : peer):floor;
+ const name=String(product.category_name||'').trim().toLowerCase();
+ const forecasts=[1,2,3].map(horizon=>{const month=addMonth(origin,horizon),number=Number(month.slice(5,7));let season=1;
+  if(['bút','vở','sách','giấy','họa cụ','văn phòng phẩm','stationery','school'].some(word=>name.includes(word)))season=[8,9].includes(number)?1.2:[6,7].includes(number)?1.08:number===1?1.05:1;
+  else if(['áo','quần','giày','mũ','balo','túi','thời trang','fashion','footwear','apparel'].some(word=>name.includes(word)))season=[11,12].includes(number)?1.12:[4,5,6,7,8].includes(number)?1.08:number===1?.94:1;
+  else if(['nước','đồ uống','giải khát','beverage'].some(word=>name.includes(word))&&[4,5,6,7,8].includes(number))season=1.08;
+  else if(['thực phẩm','bánh','kẹo','food','grocery'].some(word=>name.includes(word))&&[1,2].includes(number))season=1.06;
+  const [year,monthNumber]=month.split('-').map(Number),days=new Date(Date.UTC(year,monthNumber,0)).getUTCDate();
+  return {month,horizon,quantity:Math.round(Math.max(0,daily*days*season)*100)/100,seasonality_factor:season};
+ });
+ return {...product,product_id:String(product.id),quantity:forecasts[0].quantity,predicted:forecasts[0].quantity,horizon:1,forecasts,method:'ADAPTIVE_FORECAST',basis:observed>0?'SKU_DAILY_SALES':peer>0?'CATEGORY_PEER_DAILY_SALES':floor>0?'MIN_STOCK_BENCHMARK':'NO_SIGNAL_ZERO_FLOOR',confidence:observed>0?'MEDIUM':'LOW',daily_rate:Math.round(daily*1e6)/1e6,seasonality_factor:forecasts[0].seasonality_factor};
+}
+function localForecastFallback(task,products,origin,rows=[]){
+ const estimated=products.map(product=>adaptiveEstimate(product,origin));
+ if(task==='total'||task==='multi'){
+  if(!estimated.length)return {status:'INSUFFICIENT_DATA',reason:'NO_ACTIVE_PRODUCTS',items:[],metrics:null};
+  const items=[1,2,3].map(horizon=>{const forecasts=estimated.map(product=>product.forecasts[horizon-1]),quantity=Math.round(forecasts.reduce((sum,row)=>sum+row.quantity,0)*100)/100;return {month:forecasts[0]?.month,horizon,quantity,predicted:quantity,corrected:quantity,actual:null,factor:forecasts.reduce((sum,row)=>sum+row.seasonality_factor,0)/forecasts.length,method:'ADAPTIVE_FORECAST'};});
+  return {status:'ADAPTIVE_FORECAST',reason:'AI_SERVICE_UNAVAILABLE_LOCAL_FALLBACK',method:'ADAPTIVE_COLD_START_BENCHMARK',origin,items,metrics:null};
+ }
+ const items=estimated.map(item=>{
+  const stock=item.stock==null?null:Number(item.stock),minimum=item.min_stock==null?null:Number(item.min_stock),days=stock!=null&&item.quantity>0?Math.min(365,stock/item.quantity*30):null,below=minimum!=null&&stock!=null&&stock<=minimum;
+  if(task==='replenishment'){
+   const target=stock==null||item.quantity==null?null:Math.max(Math.ceil(minimum||0),Math.ceil(item.quantity)+Math.ceil(.2*item.quantity));
+   return {...item,days_of_supply:days,target_stock:target,recommended_quantity:target==null?null:Math.max(0,target-stock),status:stock==null?'MISSING_STOCK':target>stock?'REPLENISH':'SUFFICIENT_STOCK',reason:stock==null?'Chưa có bản ghi tồn kho':'Dự phòng tồn kho theo nhu cầu dự báo'};
+  }
+  if(task==='stockout'){
+   const risk=Boolean(below||(days!=null&&days<=30));return {...item,days_of_supply:days,below_min_stock:below,risk,priority:below?'Cần nhập: dưới min_stock':risk?'Ưu tiên kiểm tra':'Theo dõi'};
+  }
+  return item;
+ });
+ const history=task==='sku'?(()=>{const byMonth=new Map(rows.filter(row=>products.some(product=>String(product.id)===String(row.product_id))).map(row=>[row.month,Number(row.quantity)]));return Array.from({length:12},(_,index)=>{const month=addMonth(origin,index-11);return {month,quantity:byMonth.get(month)||0};});})():undefined;
+ return {status:'ADAPTIVE_FORECAST',reason:'AI_SERVICE_UNAVAILABLE_LOCAL_FALLBACK',method:'ADAPTIVE_COLD_START_BENCHMARK',items,...(history?{history}:{}),missing_inputs:items.filter(item=>item.stock==null).map(item=>({product_id:item.id,reason:'MISSING_STOCK'})),metrics:null};
+}
 router.get('/ai/readiness',requireRoles('OWNER','MANAGER'),asyncRoute(async(req,res)=>res.json(await aiCall('/v1/readiness'))));
 async function computeForecast(req){
  const q=query.parse(req.query),now=new Date().toISOString().slice(0,7),origin=q.origin||addMonth(now,-1);
@@ -73,7 +108,7 @@ async function computeForecast(req){
   const known=new Map(monthly.map(r=>[r.month,Number(r.quantity)]));const history=[];
   for(let month=start;month<=origin;month=addMonth(month,1))history.push({month,quantity:known.get(month)||0});
   const products=await loadOperationalProducts(req,q,origin);
-  const result=await aiCall('/v1/adaptive-total',{origin,history,horizons:[1,2,3],products});
+  let result;try{result=await aiCall('/v1/adaptive-total',{origin,history,horizons:[1,2,3],products},{timeoutMs:5000});}catch(error){if(Number(error.status)!==503)throw error;result=localForecastFallback(q.task,products,origin,history);}
   if(q.task==='total')return ({...result,items:(result.items||[]).map(r=>({...r,predicted:r.predicted??r.quantity,corrected:r.corrected??r.quantity,actual:null,factor:r.factor??r.trend??1})),history,source:'OPERATIONAL',origin,observation_start:firstComplete,metrics:null});
   return ({...result,source:'OPERATIONAL',origin,observation_start:firstComplete,metrics:null});
  }
@@ -93,7 +128,7 @@ async function computeForecast(req){
   const stockAsOf='CURRENT';
  const history=[];for(let month=firstComplete;month<=origin;month=addMonth(month,1)){if(history.length>=240)break;history.push({month,quantity:rows.filter(r=>r.month===month).reduce((s,r)=>s+Number(r.quantity),0)});}
   const body={cohorts:cohorts.map(r=>({...r,quantity:Number(r.quantity)})),task:q.task,origin,history,rows:rows.map(r=>({...r,quantity:Number(r.quantity),unit_price:Number(r.unit_price)})),products,version:q.version??null,current_origin:addMonth(now,-1)};
-  const result=await aiCall('/v1/operational',body);
+  let result;try{result=await aiCall('/v1/operational',body,{timeoutMs:5000});}catch(error){if(Number(error.status)!==503)throw error;result=localForecastFallback(q.task,products,origin,rows);}
   if(result.status==='READY'&&(q.task==='sku'||q.task==='multi_sku')){
    const byProduct=new Map(body.products.map(p=>[p.id,p]));
    result.items=(result.items||[]).map(item=>{const product=byProduct.get(String(item.product_id));return {...item,sku:product?.sku,name:product?.name,stock:product?.stock,min_stock:product?.min_stock};});

@@ -94,7 +94,7 @@ export default function Ledger({
   };
 
   // Resolve API resources before effects that read them (notably receipt detail hydration).
-  const products = useResource(branch?`/products?limit=1000&branchId=${encodeURIComponent(branch)}&branch_id=${encodeURIComponent(branch)}`:null);
+  const products = useResource(branch?`/products?limit=500&branchId=${encodeURIComponent(branch)}&branch_id=${encodeURIComponent(branch)}`:null);
   const categories = useResource(branch?`/categories?branch_id=${encodeURIComponent(branch)}`:null);
   const branches = useResource('/branches');
   const scopedFilters={...filters,...(branch?{branch_id:branch}:{})};

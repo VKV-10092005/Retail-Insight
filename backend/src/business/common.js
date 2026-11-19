@@ -12,7 +12,10 @@ function isGregorianDate(value){
  return year>=1&&month>=1&&month<=12&&day>=1&&day<=days[month-1];
 }
 const calendarDate=label=>z.string().refine(isGregorianDate,{message:label+' phải có định dạng YYYY-MM-DD và tồn tại trong lịch Gregorian (năm 0001–9999)'});
-export const period=z.object({start:calendarDate('Ngày bắt đầu').optional(),end:calendarDate('Ngày kết thúc').optional(),branch_id:positiveId.optional(),branchId:positiveId.optional(),category_id:positiveId.optional(),product_id:positiveId.optional(),status:z.string().trim().max(30).optional(),all:z.union([z.boolean(),z.coerce.number()]).optional(),q:z.string().max(100).optional(),page:z.coerce.number().int().min(1).max(100000).default(1),limit:z.coerce.number().int().min(1).max(100).default(20)}).refine(q=>!q.start||!q.end||q.start<=q.end,{path:['end'],message:'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc (start <= end)'});
+const optionalQuery=(schema)=>z.preprocess(value=>value===''||value===null?undefined:value,schema.optional());
+const safePage=z.preprocess(value=>value===''||value==null?1:value,z.coerce.number().int().min(1).max(100000).default(1));
+const safeLimit=z.preprocess(value=>Math.min(Number(value)||50,500),z.number().int().min(1).default(50));
+export const period=z.object({start:optionalQuery(calendarDate('Ngày bắt đầu')),end:optionalQuery(calendarDate('Ngày kết thúc')),branch_id:optionalQuery(positiveId),branchId:optionalQuery(positiveId),category_id:optionalQuery(positiveId),product_id:optionalQuery(positiveId),status:optionalQuery(z.string().trim().max(30)),all:z.preprocess(value=>value===''||value===null?undefined:value,z.union([z.boolean(),z.coerce.number()]).optional()),q:optionalQuery(z.string().trim().max(100)),search:optionalQuery(z.string().trim().max(100)),page:safePage,limit:safeLimit}).refine(q=>!q.start||!q.end||q.start<=q.end,{path:['end'],message:'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc (start <= end)'});
 export async function assertBranch(user,id,allowed=[],connection=pool){
  const [branches]=await connection.execute("SELECT id,name FROM branches WHERE organization_id=? AND id=? AND status='ACTIVE'",[user.organization_id,id]);
  if(!branches.length)throw new HttpError(404,'Không tìm thấy chi nhánh');

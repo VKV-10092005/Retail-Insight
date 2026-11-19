@@ -28,7 +28,7 @@ export default function ForecastTotal() {
   });
 
   const forecast = useResource(`/ai/forecast?${queryParams}`);
-  const isOffline = isAiOfflineError(forecast?.error) || isAiOfflineError(ready?.error);
+  const isOffline = isAiOfflineError(forecast?.error) || (!forecast?.loading && !forecast?.data && isAiOfflineError(ready?.error));
 
   return (
     <div className="ai-page-container">
