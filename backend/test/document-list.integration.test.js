@@ -62,7 +62,7 @@ const statements=[];
 const snapshotCommands=[];
 pool.query=async()=>{throw Error('Unexpected MySQL access in isolated HTTP test');};
 pool.getConnection=async()=>({
- query:async sql=>{assert.ok(['SET TRANSACTION ISOLATION LEVEL REPEATABLE READ','START TRANSACTION READ ONLY'].includes(sql));snapshotCommands.push(sql);},
+ query:async sql=>{assert.ok(['SET TRANSACTION ISOLATION LEVEL REPEATABLE READ','START TRANSACTION'].includes(sql));snapshotCommands.push(sql);},
  execute:(...args)=>pool.execute(...args),
  commit:async()=>snapshotCommands.push('COMMIT'),rollback:async()=>snapshotCommands.push('ROLLBACK'),release:()=>snapshotCommands.push('RELEASE')
 });
@@ -211,10 +211,10 @@ test('authenticated sales/receipts HTTP with isolated relational fixtures (no My
    assert.equal(a.status,200);assert.deepEqual(a.body.items,b.body.items);
    assert.equal(a.body.calendar.timestamp_source,'inventory_balances.updated_at');
   });
-  await t.test('BI read snapshot is explicit, read-only and does not use SQL named timezones',async()=>{
+  await t.test('BI read snapshot uses a repeatable-read transaction without SQL named timezones',async()=>{
    snapshotCommands.length=0;statements.length=0;
    assert.equal((await request('/bi/overview')).status,200);
-   assert.deepEqual(snapshotCommands,['SET TRANSACTION ISOLATION LEVEL REPEATABLE READ','START TRANSACTION READ ONLY','COMMIT','RELEASE']);
+   assert.deepEqual(snapshotCommands,['SET TRANSACTION ISOLATION LEVEL REPEATABLE READ','START TRANSACTION','COMMIT','RELEASE']);
    assert.ok(!statements.some(s=>/CONVERT_TZ|DATE_FORMAT/.test(s.sql)));
   });
   await t.test('existing role restrictions remain unchanged',async()=>{

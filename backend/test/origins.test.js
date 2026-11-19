@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { allowedOrigins } from '../src/config/origins.js';
+import { allowedOrigins, isAllowedVercelOrigin } from '../src/config/origins.js';
 const primary='http://localhost:5173';
 test('development permits exactly the configured origin and two loopback origins',()=>{
  assert.deepEqual(allowedOrigins(primary,'development'),[primary,'http://127.0.0.1:5173']);
@@ -9,5 +9,10 @@ test('development permits exactly the configured origin and two loopback origins
 });
 for(const mode of ['production','test',undefined])test('no automatic aliases outside explicit development: '+mode,()=>{
  assert.deepEqual(allowedOrigins('https://retail.example.invalid',mode),['https://retail.example.invalid']);
+});
+test('production dynamically accepts HTTPS Vercel origins only',()=>{
+ for(const origin of ['https://vercel.app','https://retail-preview.vercel.app','https://branch.retail-preview.vercel.app'])assert.equal(isAllowedVercelOrigin(origin,'production'),true);
+ for(const origin of ['http://retail-preview.vercel.app','https://evil-vercel.app','https://vercel.app.evil.invalid','null','https://retail-preview.vercel.app/path'])assert.equal(isAllowedVercelOrigin(origin,'production'),false);
+ assert.equal(isAllowedVercelOrigin('https://retail-preview.vercel.app','development'),false);
 });
 for(const origin of ['*','null','https://example.invalid/path','https://user@example.invalid','https://example.invalid/'])test('reject invalid origin '+origin,()=>assert.throws(()=>allowedOrigins(origin,'development')));

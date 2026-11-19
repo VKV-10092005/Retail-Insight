@@ -7,6 +7,7 @@ import { join, dirname } from 'node:path';
 import { existsSync } from 'node:fs';
 import { ZodError } from 'zod';
 import { config } from './config/env.js';
+import { isAllowedVercelOrigin } from './config/origins.js';
 import { pool,verifyDatabase } from './db/pool.js';
 import auth from './routes/auth.js';
 import { authenticate,tenantScope,requireRoles,branchScope } from './middlewares/auth.js';
@@ -34,6 +35,7 @@ const frontendDist=join(__dirname,'..','..','frontend','dist');
 const isPrivateDevelopmentOrigin=origin=>{
  if(!origin)return true;
  if(config.origins.includes(origin))return true;
+ if(isAllowedVercelOrigin(origin,process.env.NODE_ENV))return true;
  if(config.production)return false;
  try{
   const url=new URL(origin);

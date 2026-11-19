@@ -43,7 +43,7 @@ export async function readSnapshot(fn){
  const c=await pool.getConnection();let active=false;
  try{
   await c.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-  await c.query('START TRANSACTION READ ONLY');active=true;
+  await c.query('START TRANSACTION');active=true;
   const result=await fn(c);await c.commit();active=false;return result;
  }catch(error){if(active)await c.rollback();throw error;}finally{c.release();}
 }

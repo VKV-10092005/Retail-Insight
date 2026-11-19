@@ -487,10 +487,9 @@ async function generateWithGemini(message, history, context, user) {
 
   const systemInstruction = buildSystemInstruction(context, user);
   const modelsToTry = [
-    'gemini-3.5-flash-lite',
-    'gemini-2.5-flash-lite',
     'gemini-3.8-flash',
-    'gemini-flash-latest',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash-lite',
   ];
 
   let lastErrorDetail = null;
@@ -529,7 +528,10 @@ async function generateWithGemini(message, history, context, user) {
 
       if (res.ok) {
         const data = await res.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = data?.candidates?.[0]?.content?.parts
+          ?.filter(part => typeof part?.text === 'string' && !part.thought)
+          .map(part => part.text)
+          .join('');
         if (text && text.trim()) {
           return { reply: text.trim(), lastError: null };
         }
