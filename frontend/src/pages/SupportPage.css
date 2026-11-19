@@ -62,6 +62,7 @@
 .support-admin-layout.support-messenger-layout{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);flex:1 1 auto;width:100%;height:auto;max-height:none;min-height:0;margin:0;overflow:hidden}
 .support-messenger-layout>.support-thread-list,.support-messenger-layout>.support-chat{min-width:0;min-height:0;height:100%;overflow:hidden}
 .support-messenger-layout>.support-chat{display:flex;flex-direction:column}
+.support-messenger-layout>.support-chat.support-chat-empty{display:flex;height:100%;min-height:calc(100vh - 140px);flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .support-messenger-layout .support-chat-header{flex:0 0 auto}
 .support-messenger-layout .support-chat-history{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto}
 .support-messenger-layout .support-compose{flex:0 0 auto;min-width:0;align-items:center;padding:9px 14px 14px}
