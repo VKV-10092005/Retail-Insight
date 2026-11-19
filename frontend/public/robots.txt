@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /pos
 
-Sitemap: https://vercel.app/sitemap.xml
+Sitemap: https://vercel.app
