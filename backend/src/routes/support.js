@@ -31,7 +31,15 @@ async function getThread(connection,id){
   IF(u.role='OWNER',(SELECT GROUP_CONCAT(b.name ORDER BY b.name SEPARATOR ', ') FROM branches b WHERE b.organization_id=u.organization_id AND b.status='ACTIVE'),(SELECT GROUP_CONCAT(DISTINCT b.name ORDER BY b.name SEPARATOR ', ') FROM user_branch_roles ubr JOIN branches b ON b.id=ubr.branch_id AND b.organization_id=ubr.organization_id WHERE ubr.user_id=u.id AND ubr.organization_id=u.organization_id)) user_branch_name,
   IF(r.role='OWNER',(SELECT GROUP_CONCAT(b.name ORDER BY b.name SEPARATOR ', ') FROM branches b WHERE b.organization_id=r.organization_id AND b.status='ACTIVE'),(SELECT GROUP_CONCAT(DISTINCT b.name ORDER BY b.name SEPARATOR ', ') FROM user_branch_roles rbr JOIN branches b ON b.id=rbr.branch_id AND b.organization_id=rbr.organization_id WHERE rbr.user_id=r.id AND rbr.organization_id=r.organization_id)) recipient_branch_name
   FROM support_threads t JOIN users u ON u.id=t.user_id LEFT JOIN users r ON r.id=t.recipient_user_id
-  LEFT JOIN users a ON a.id=COALESCE((SELECT m.sender_user_id FROM support_messages m JOIN users au ON au.id=m.sender_user_id WHERE m.thread_id=t.id AND au.role='PLATFORM_ADMIN' AND au.status='ACTIVE' ORDER BY m.id DESC LIMIT 1),(SELECT ua.id FROM users ua WHERE ua.role='PLATFORM_ADMIN' AND ua.status='ACTIVE' ORDER BY ua.id LIMIT 1))
+  LEFT JOIN (
+   SELECT thread_id,sender_user_id FROM (
+    SELECT m.thread_id,m.sender_user_id,ROW_NUMBER() OVER (PARTITION BY m.thread_id ORDER BY m.id DESC) AS rn
+    FROM support_messages m JOIN users au ON au.id=m.sender_user_id
+    WHERE au.role='PLATFORM_ADMIN' AND au.status='ACTIVE'
+   ) ranked_admin_messages WHERE rn=1
+  ) latest_admin ON latest_admin.thread_id=t.id
+  LEFT JOIN (SELECT id FROM users WHERE role='PLATFORM_ADMIN' AND status='ACTIVE' ORDER BY id LIMIT 1) default_admin ON 1=1
+  LEFT JOIN users a ON a.id=COALESCE(latest_admin.sender_user_id,default_admin.id)
   JOIN organizations o ON o.id=t.organization_id WHERE t.id=?`,[id]);
  return rows[0]||null;
 }
@@ -69,7 +77,15 @@ const threadSelect=`SELECT t.id,t.organization_id,t.user_id,t.recipient_user_id,
  IF(r.role='OWNER',(SELECT GROUP_CONCAT(b.name ORDER BY b.name SEPARATOR ', ') FROM branches b WHERE b.organization_id=r.organization_id AND b.status='ACTIVE'),(SELECT GROUP_CONCAT(DISTINCT b.name ORDER BY b.name SEPARATOR ', ') FROM user_branch_roles rbr JOIN branches b ON b.id=rbr.branch_id AND b.organization_id=rbr.organization_id WHERE rbr.user_id=r.id AND rbr.organization_id=r.organization_id)) recipient_branch_name,
  (SELECT CASE WHEN m.is_recalled=1 THEN 'Tin nhắn đã được thu hồi' ELSE m.content END FROM support_messages m WHERE m.thread_id=t.id ORDER BY m.id DESC LIMIT 1) last_message_preview
  FROM support_threads t JOIN users u ON u.id=t.user_id LEFT JOIN users r ON r.id=t.recipient_user_id JOIN organizations o ON o.id=t.organization_id
-  LEFT JOIN users a ON a.id=COALESCE((SELECT m.sender_user_id FROM support_messages m JOIN users au ON au.id=m.sender_user_id WHERE m.thread_id=t.id AND au.role='PLATFORM_ADMIN' AND au.status='ACTIVE' ORDER BY m.id DESC LIMIT 1),(SELECT ua.id FROM users ua WHERE ua.role='PLATFORM_ADMIN' AND ua.status='ACTIVE' ORDER BY ua.id LIMIT 1))`;
+  LEFT JOIN (
+   SELECT thread_id,sender_user_id FROM (
+    SELECT m.thread_id,m.sender_user_id,ROW_NUMBER() OVER (PARTITION BY m.thread_id ORDER BY m.id DESC) AS rn
+    FROM support_messages m JOIN users au ON au.id=m.sender_user_id
+    WHERE au.role='PLATFORM_ADMIN' AND au.status='ACTIVE'
+   ) ranked_admin_messages WHERE rn=1
+  ) latest_admin ON latest_admin.thread_id=t.id
+  LEFT JOIN (SELECT id FROM users WHERE role='PLATFORM_ADMIN' AND status='ACTIVE' ORDER BY id LIMIT 1) default_admin ON 1=1
+  LEFT JOIN users a ON a.id=COALESCE(latest_admin.sender_user_id,default_admin.id)`;
 function presentThread(row,user){
  const internal=row.thread_type==='INTERNAL_CHAT',peerIsUser=internal&&Number(row.user_id)!==Number(user.id);
  const adminSupport=row.thread_type==='ADMIN_SUPPORT'&&user.role!=='PLATFORM_ADMIN';
