@@ -12,6 +12,11 @@ import {getDigestSchedulerStatus} from '../services/digestScheduler.js';
 import {verifyDatabase} from '../db/pool.js';
 const router=Router();
 router.use(requireRoles('PLATFORM_ADMIN'));
+const positivePathId=(value,message='ID không hợp lệ')=>{
+ const id=Number(value);
+ if(!Number.isSafeInteger(id)||id<1)throw new HttpError(400,message);
+ return id;
+};
 const platformPrefs=z.object({maintenance:z.boolean().optional(),aiChatLimit:z.number().int().min(1).max(120).optional(),auditEnabled:z.boolean().optional(),general:z.object({theme:z.enum(['light','dark','system']).optional(),sound:z.boolean().optional(),numberFormat:z.enum(['vi-VN','en-US']).optional(),timezone:z.string().max(80).optional()}).optional()}).strict();
 router.get('/settings',asyncRoute(async(req,res)=>res.json(await getSettings('PLATFORM','global'))));
 router.put('/settings',asyncRoute(async(req,res)=>{
@@ -46,8 +51,7 @@ router.get('/organizations',asyncRoute(async(req,res)=>{
   res.json({organizations:rows});
 }));
 router.patch('/organizations/:id/status',asyncRoute(async(req,res)=>{
-  const id=Number(req.params.id);
-  if(!Number.isSafeInteger(id)||id<1)throw new HttpError(400,'ID tổ chức không hợp lệ');
+  const id=positivePathId(req.params.id,'ID tổ chức không hợp lệ');
   const {status}=z.object({status:z.enum(['ACTIVE','DISABLED'])}).parse(req.body);
   const [result]=await pool.execute('UPDATE organizations SET status=? WHERE id=?',[status,id]);
   if(!result.affectedRows) throw new HttpError(404,'Không tìm thấy tổ chức');
@@ -64,7 +68,7 @@ router.get('/tickets',asyncRoute(async(req,res)=>{
   res.json({tickets});
 }));
 router.post('/tickets/:id/conversation',asyncRoute(async(req,res)=>{
- const id=Number(req.params.id);if(!Number.isSafeInteger(id)||id<1)throw new HttpError(400,'ID phiếu không hợp lệ');
+ const id=positivePathId(req.params.id,'ID phiếu không hợp lệ');
  const [rows]=await pool.execute(`SELECT t.*,u.full_name user_name,o.name org_name FROM support_tickets t
   JOIN users u ON u.id=t.user_id LEFT JOIN organizations o ON o.id=t.organization_id WHERE t.id=?`,[id]);
  const ticket=rows[0];if(!ticket)throw new HttpError(404,'Không tìm thấy phiếu hỗ trợ');
@@ -85,7 +89,7 @@ router.post('/tickets/:id/conversation',asyncRoute(async(req,res)=>{
  res.json({thread_id:threadId});
 }));
 router.patch('/tickets/:id',asyncRoute(async(req,res)=>{
-  const id=Number(req.params.id);
+  const id=positivePathId(req.params.id,'ID phiếu không hợp lệ');
   const {status,admin_note}=z.object({
     status:z.enum(['OPEN','IN_PROGRESS','RESOLVED','CLOSED']).optional(),
     admin_note:z.string().max(2000).optional()
@@ -95,7 +99,7 @@ router.patch('/tickets/:id',asyncRoute(async(req,res)=>{
   if(admin_note!==undefined){sets.push('admin_note=?');vals.push(admin_note);}
   if(!sets.length) throw new HttpError(400,'Không có dữ liệu cập nhật');
   vals.push(id);
-  await pool.execute('UPDATE support_tickets SET '+sets.join(',')+'WHERE id=?',vals);
+  await pool.execute('UPDATE support_tickets SET '+sets.join(', ')+' WHERE id=?',vals);
   res.json({message:'Đã cập nhật phiếu hỗ trợ'});
 }));
 router.get('/system-health',asyncRoute(async(req,res)=>{
@@ -189,8 +193,9 @@ router.get('/security/stats', asyncRoute(async (req, res) => {
 
 // 2. Danh sách Security Logs có bộ lọc & tìm kiếm
 router.get('/security/logs', asyncRoute(async (req, res) => {
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(100, Math.max(10, Number(req.query.limit) || 20));
+  const requestedPage=Number(req.query.page),requestedLimit=Number(req.query.limit);
+  const page=Math.min(1_000_000,Number.isSafeInteger(requestedPage)&&requestedPage>0?requestedPage:1);
+  const limit=Math.min(100,Math.max(10,Number.isSafeInteger(requestedLimit)&&requestedLimit>0?requestedLimit:20));
   const offset = (page - 1) * limit;
 
   const { search, severity, status } = req.query;
@@ -228,7 +233,7 @@ router.get('/security/logs', asyncRoute(async (req, res) => {
      ${whereSql}
      ORDER BY a.created_at DESC
      LIMIT ? OFFSET ?`,
-    [...params, String(limit), String(offset)]
+    [...params, Number(limit), Number(offset)]
   );
 
   res.json({
@@ -244,7 +249,7 @@ router.get('/security/logs', asyncRoute(async (req, res) => {
 
 // 3. Xem lịch sử vi phạm chi tiết của một tài khoản
 router.get('/security/users/:id/history', asyncRoute(async (req, res) => {
-  const userId = Number(req.params.id);
+  const userId=positivePathId(req.params.id,'ID người dùng không hợp lệ');
   const [[userRow]] = await pool.execute(
     `SELECT u.id, u.email, u.full_name, u.role, u.status, u.is_locked, u.locked_at, u.unlock_request_note, u.unlock_requested_at, u.locked_until, u.lock_reason, o.name AS organization_name
      FROM users u
@@ -271,7 +276,7 @@ router.get('/security/users/:id/history', asyncRoute(async (req, res) => {
 
 // 4. ADMIN mở khóa thủ công cho tài khoản
 router.post('/security/users/:id/unlock', asyncRoute(async (req, res) => {
-  const userId = Number(req.params.id);
+  const userId=positivePathId(req.params.id,'ID người dùng không hợp lệ');
   const { reason } = z.object({
     reason: z.string().trim().min(2, 'Vui lòng cung cấp lý do mở khóa').max(255),
   }).parse(req.body);
@@ -293,7 +298,7 @@ router.post('/security/users/:id/unlock', asyncRoute(async (req, res) => {
 }));
 
 router.post('/security/users/:id/lock', asyncRoute(async(req,res)=>{
-  const userId=Number(req.params.id);
+  const userId=positivePathId(req.params.id,'ID người dùng không hợp lệ');
   const {reason}=z.object({reason:z.string().trim().min(2).max(500)}).parse(req.body);
   const [[target]]=await pool.execute('SELECT id,role FROM users WHERE id=?',[userId]);
   if(!target)throw new HttpError(404,'Không tìm thấy tài khoản');
