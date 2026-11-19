@@ -10,8 +10,24 @@ import {transaction} from '../business/common.js';
 import os from 'node:os';
 import {getDigestSchedulerStatus} from '../services/digestScheduler.js';
 import {verifyDatabase} from '../db/pool.js';
+import {config} from '../config/env.js';
 const router=Router();
 router.use(requireRoles('PLATFORM_ADMIN'));
+const retryDelay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function fetchAiWithRetry(url,options={},attempts=3){
+ let lastError,lastResponse;
+ for(let attempt=0;attempt<attempts;attempt++){
+  try{
+   const response=await fetch(url,{...options,signal:AbortSignal.timeout(2500)});
+   if(response.ok||(response.status<500&&response.status!==429))return response;
+   await response.body?.cancel();
+   lastResponse=response;
+  }catch(error){lastError=error;}
+  if(attempt+1<attempts)await retryDelay(300*(attempt+1));
+ }
+ if(lastResponse)return lastResponse;
+ throw lastError||new Error('AI Service is unavailable');
+}
 const positivePathId=(value,message='ID không hợp lệ')=>{
  const id=Number(value);
  if(!Number.isSafeInteger(id)||id<1)throw new HttpError(400,message);
@@ -119,16 +135,16 @@ router.get('/system-health',asyncRoute(async(req,res)=>{
     (SELECT COUNT(*) FROM products) product_count,
     (SELECT COUNT(*) FROM stock_documents) transaction_count`);
   const memory=process.memoryUsage(),scheduler=getDigestSchedulerStatus();
-  const base=(process.env.AI_SERVICE_URL||'http://127.0.0.1:8000').replace(/\/$/,'');
+  const base=config.aiServiceUrl;
   let fastapi={status:'offline',latency_ms:null,models:[]};
   const aiStarted=process.hrtime.bigint();
   try{
-    const response=await fetch(base+'/health',{signal:AbortSignal.timeout(2000)});
+    const response=await fetchAiWithRetry(base+'/health');
     const elapsed=Number(process.hrtime.bigint()-aiStarted)/1e6;
     if(response.ok){
       fastapi={status:'ok',latency_ms:Number(elapsed.toFixed(2)),models:[]};
       if(process.env.AI_SERVICE_TOKEN){
-        const readiness=await fetch(base+'/v1/readiness',{headers:{Authorization:`Bearer ${process.env.AI_SERVICE_TOKEN}`},signal:AbortSignal.timeout(2000)});
+        const readiness=await fetchAiWithRetry(base+'/v1/readiness',{headers:{Authorization:`Bearer ${process.env.AI_SERVICE_TOKEN}`}});
         if(readiness.ok){
           const data=await readiness.json();
           fastapi.models=[
