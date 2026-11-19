@@ -5,9 +5,11 @@ import {Card,PageHeader} from '../components/ui/Elements';
 import {Mail,KeyRound,ShieldCheck,Lock,Unlock,CheckCircle2,AlertCircle,Send,RefreshCw,ArrowRight,Eye,EyeOff} from 'lucide-react';
 import PasswordChecklist, { isPasswordStrong } from '../components/auth/PasswordChecklist';
 import OtpInput from '../components/auth/OtpInput';
+import {apiUrl} from '../services/apiUrl';
 
 async function apiRequest(url, opts={}){
-  const r = await fetch(url,{
+  const r = await fetch(apiUrl(url),{
+    credentials:'include',
     headers:{'X-Requested-With':'retail-web','Content-Type':'application/json'},
     ...opts
   });
@@ -57,7 +59,7 @@ export default function ChangePasswordPage(){
     setOtpCode('');
 
     try{
-      const res = await apiRequest('/api/v1/auth/send-password-otp',{
+      const res = await apiRequest('/auth/send-password-otp',{
         method:'POST'
       });
       setOtpSent(true);
@@ -82,7 +84,7 @@ export default function ChangePasswordPage(){
     setOtpErr(null);
 
     try{
-      const res = await apiRequest('/api/v1/auth/verify-password-otp',{
+      const res = await apiRequest('/auth/verify-password-otp',{
         method:'POST',
         body:JSON.stringify({ otp: otpCode.trim() })
       });
@@ -123,7 +125,7 @@ export default function ChangePasswordPage(){
 
     setChanging(true);
     try{
-      await apiRequest('/api/v1/auth/change-password',{
+      await apiRequest('/auth/change-password',{
         method:'POST',
         body:JSON.stringify({
           otp_token: otpToken,

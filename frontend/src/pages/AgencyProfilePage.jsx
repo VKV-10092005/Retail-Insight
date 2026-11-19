@@ -3,6 +3,7 @@ import {ArrowDown,ArrowRight,BarChart3,Check,ChevronDown,ChevronLeft,ChevronRigh
 import {useNavigate} from 'react-router-dom';
 import UserAvatar from '../components/common/UserAvatar';
 import {getJSON} from '../services/api';
+import {apiUrl} from '../services/apiUrl';
 import './AgencyProfilePage.css';
 
 const values=['Bán hàng không giới hạn','Chủ động dữ liệu khách hàng','Thương hiệu riêng chuyên nghiệp','Mở rộng tệp khách hàng mới','Đặt hàng thuận tiện 24/7','Đồng bộ kho tức thì','Tích hợp thanh toán linh hoạt','Đo lường hiệu quả rõ ràng','Sẵn sàng tăng trưởng cùng AI'];
@@ -73,7 +74,7 @@ function AgencyPromoVideoPlayer({onConsult}){
   if(!voiceEnabled){startSilentScene();return()=>{active=false;cancelAnimationFrame(frameRef.current);};}
   const audio=audioRef.current;
   if(!audio){startSilentScene();return()=>{active=false;cancelAnimationFrame(frameRef.current);};}
-  audio.src=`/api/v1/tts/speak?text=${encodeURIComponent(scene.narration)}`;
+  audio.src=apiUrl(`/tts/speak?text=${encodeURIComponent(scene.narration)}`);
   audio.preload='auto';
   audio.onloadedmetadata=()=>{if(!active)return;const resumeAt=Math.min(audioTimeRef.current,Math.max(0,(audio.duration||0)-.1));if(resumeAt>0)audio.currentTime=resumeAt;};
   audio.ontimeupdate=()=>{if(active&&Number.isFinite(audio.duration)&&audio.duration>0)updateProgress(audio.currentTime/audio.duration);};

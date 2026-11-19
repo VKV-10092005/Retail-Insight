@@ -3,11 +3,10 @@ import {useAuth} from '../auth/AuthContext';
 import {useBranch} from '../branches/BranchContext';
 import {currentSettings,formatAppNumber} from '../services/appSettings';
 import {fetchWithRetry} from '../services/fetchWithRetry';
-
-const base=import.meta.env.VITE_API_URL||import.meta.env.VITE_API_BASE_URL||'/api/v1';
+import {apiUrl} from '../services/apiUrl';
 
 export async function request(path,{method='GET',body,signal}={}){
-  const response=await fetchWithRetry(base+path,{
+  const response=await fetchWithRetry(apiUrl(path),{
     method,
     signal,
     credentials:'include',

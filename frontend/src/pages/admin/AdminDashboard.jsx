@@ -2,9 +2,10 @@ import React,{useCallback,useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {ShieldAlert,RefreshCw} from 'lucide-react';
 import DigestDetails from '../../components/layout/DigestDetails';
+import {apiUrl} from '../../services/apiUrl';
 
 function request(url,opts={}){
-  return fetch(url,{headers:{'X-Requested-With':'retail-web','Content-Type':'application/json'},...opts})
+  return fetch(apiUrl(url),{credentials:'include',headers:{'X-Requested-With':'retail-web','Content-Type':'application/json'},...opts})
     .then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.message||r.statusText);return d;});
 }
 const money=value=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(value||0);
@@ -13,16 +14,16 @@ export default function AdminDashboard(){
   const [orgs,setOrgs]=useState([]),[stats,setStats]=useState(null),[digests,setDigests]=useState([]),[digestBusy,setDigestBusy]=useState(false);
   const [loading,setLoading]=useState(true),[err,setErr]=useState(null),[updating,setUpdating]=useState(null);
   const load=useCallback(async()=>{
-    try{setLoading(true);setErr(null);const [summary,tenants,digestData]=await Promise.all([request('/api/v1/platform/dashboard'),request('/api/v1/platform/organizations'),request('/api/v1/platform/notification-digests')]);setStats(summary);setOrgs(tenants.organizations||[]);setDigests(digestData.items||[]);}
+    try{setLoading(true);setErr(null);const [summary,tenants,digestData]=await Promise.all([request('/platform/dashboard'),request('/platform/organizations'),request('/platform/notification-digests')]);setStats(summary);setOrgs(tenants.organizations||[]);setDigests(digestData.items||[]);}
     catch(e){setErr(e.message);}finally{setLoading(false);}
   },[]);
   useEffect(()=>{load();},[load]);
   async function toggleStatus(org){
     setUpdating(org.id);const status=org.status==='ACTIVE'?'DISABLED':'ACTIVE';
-    try{await request(`/api/v1/platform/organizations/${org.id}/status`,{method:'PATCH',body:JSON.stringify({status})});setOrgs(prev=>prev.map(o=>o.id===org.id?{...o,status}:o));await load();}
+    try{await request(`/platform/organizations/${org.id}/status`,{method:'PATCH',body:JSON.stringify({status})});setOrgs(prev=>prev.map(o=>o.id===org.id?{...o,status}:o));await load();}
     catch(e){setErr(e.message);}finally{setUpdating(null);}
   }
-  async function runDigest(type){setDigestBusy(true);try{await request('/api/v1/platform/notification-digests/run',{method:'POST',body:JSON.stringify({type})});const data=await request('/api/v1/platform/notification-digests');setDigests(data.items||[]);}catch(e){setErr(e.message);}finally{setDigestBusy(false);}}
+  async function runDigest(type){setDigestBusy(true);try{await request('/platform/notification-digests/run',{method:'POST',body:JSON.stringify({type})});const data=await request('/platform/notification-digests');setDigests(data.items||[]);}catch(e){setErr(e.message);}finally{setDigestBusy(false);}}
   const cards=stats?[['Tổ chức / cửa hàng',stats.organizations.total,`${stats.organizations.active} hoạt động · ${stats.organizations.disabled} bị khóa`],['Tài khoản nhân sự',stats.users.total,`Owner ${stats.users.byRole.OWNER} · Manager ${stats.users.byRole.MANAGER} · Cashier ${stats.users.byRole.CASHIER}`],['Sản phẩm đang kinh doanh',stats.products.active,'Toàn nền tảng'],['Hóa đơn / doanh thu',stats.invoices.total,money(stats.invoices.revenue)]]:[];
   return <div className="page-wrapper">
     <div className="page-header"><div><h1 className="page-title">Tổng quan nền tảng</h1><p className="page-subtitle">Thống kê và quản lý các tổ chức trên Retail Insight</p></div><div style={{display:'flex',gap:10}}><Link to="/admin/security" className="ri-btn ri-btn-secondary"><ShieldAlert size={16}/> Quản lý an ninh</Link><button className="ri-btn ri-btn-primary" onClick={load} disabled={loading}><RefreshCw size={16}/> {loading?'Đang tải...':'Làm mới'}</button></div></div>

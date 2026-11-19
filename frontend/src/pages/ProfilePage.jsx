@@ -4,10 +4,12 @@ import {ROLE_LABELS} from '../config/roles';
 import {Card,PageHeader} from '../components/ui/Elements';
 import {User,Mail,Phone,Shield,Calendar,CheckCircle2,AlertCircle,Camera,Trash2} from 'lucide-react';
 import UserAvatar from '../components/common/UserAvatar';
+import {apiUrl} from '../services/apiUrl';
 import './ProfilePage.css';
 
 async function apiRequest(url, opts={}){
-  const r = await fetch(url,{
+  const r = await fetch(apiUrl(url),{
+    credentials:'include',
     headers:{'X-Requested-With':'retail-web','Content-Type':'application/json'},
     ...opts
   });
@@ -53,7 +55,7 @@ export default function ProfilePage(){
     if(saveInFlightRef.current){pendingProfileRef.current=snapshot;return;}
     saveInFlightRef.current=true;setSaveState('saving');setErrMsg(null);
     try{
-      const res=await apiRequest('/api/v1/auth/profile',{method:'PUT',body:JSON.stringify({full_name:snapshot.full_name,phone:snapshot.phone||null,bio:snapshot.bio||null,...(user?.role==='OWNER'?{organization_name:snapshot.organization_name,organization_address:snapshot.organization_address||null}:{})})});
+      const res=await apiRequest('/auth/profile',{method:'PUT',body:JSON.stringify({full_name:snapshot.full_name,phone:snapshot.phone||null,bio:snapshot.bio||null,...(user?.role==='OWNER'?{organization_name:snapshot.organization_name,organization_address:snapshot.organization_address||null}:{})})});
       const savedUser=res.user||{full_name:snapshot.full_name,name:snapshot.full_name,phone:snapshot.phone||null,bio:snapshot.bio||null,...(user?.role==='OWNER'?{storeName:snapshot.organization_name,organizationAddress:snapshot.organization_address||null}:{})};
       savedProfileRef.current=snapshot;updateUser(savedUser);setSaveState('saved');
     }catch(err){setErrMsg(err.message);setSaveState('error');}
@@ -78,12 +80,12 @@ export default function ProfilePage(){
     setErrMsg(null);setAvatarSaving(true);
     try{
       const dataUrl=await new Promise((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;const side=Math.min(image.width,image.height),x=(image.width-side)/2,y=(image.height-side)/2;canvas.getContext('2d').drawImage(image,x,y,side,side,0,0,256,256);URL.revokeObjectURL(url);resolve(canvas.toDataURL('image/jpeg',0.85));};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Không đọc được ảnh đã chọn.'));};image.src=url;});
-      const response=await apiRequest('/api/v1/auth/avatar',{method:'PUT',body:JSON.stringify({avatar_url:dataUrl})});
+      const response=await apiRequest('/auth/avatar',{method:'PUT',body:JSON.stringify({avatar_url:dataUrl})});
       updateUser({avatar_url:response.avatar_url});setSuccessMsg('Đã cập nhật ảnh đại diện.');
     }catch(error){setErrMsg(error.message||'Không thể cập nhật ảnh đại diện.');}
     finally{setAvatarSaving(false);if(avatarInput.current)avatarInput.current.value='';}
   }
-  async function removeAvatar(){setAvatarSaving(true);setErrMsg(null);try{await apiRequest('/api/v1/auth/avatar',{method:'PUT',body:JSON.stringify({avatar_url:null})});updateUser({avatar_url:null});setSuccessMsg('Đã xóa ảnh đại diện.');}catch(error){setErrMsg(error.message||'Không thể xóa ảnh đại diện.');}finally{setAvatarSaving(false);}}
+  async function removeAvatar(){setAvatarSaving(true);setErrMsg(null);try{await apiRequest('/auth/avatar',{method:'PUT',body:JSON.stringify({avatar_url:null})});updateUser({avatar_url:null});setSuccessMsg('Đã xóa ảnh đại diện.');}catch(error){setErrMsg(error.message||'Không thể xóa ảnh đại diện.');}finally{setAvatarSaving(false);}}
 
   return (
     <>

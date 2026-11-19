@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import {apiUrl} from '../../services/apiUrl';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -17,7 +18,8 @@ import {
 } from 'lucide-react';
 
 function request(url, opts = {}) {
-  return fetch(url, {
+  return fetch(apiUrl(url), {
+    credentials: 'include',
     headers: { 'X-Requested-With': 'retail-web', 'Content-Type': 'application/json' },
     ...opts,
   }).then(async (r) => {
@@ -88,9 +90,9 @@ export default function AdminSecurity() {
       if (statusFilter) params.append('status', statusFilter);
 
       const [statsData, logsData, notifsData] = await Promise.all([
-        request('/api/v1/platform/security/stats'),
-        request(`/api/v1/platform/security/logs?${params.toString()}`),
-        request('/api/v1/platform/security/notifications'),
+        request('/platform/security/stats'),
+        request(`/platform/security/logs?${params.toString()}`),
+        request('/platform/security/notifications'),
       ]);
 
       setStats(statsData);
@@ -117,7 +119,7 @@ export default function AdminSecurity() {
     if (!userId) return;
     try {
       setLoadingHistory(true);
-      const data = await request(`/api/v1/platform/security/users/${userId}/history`);
+      const data = await request(`/platform/security/users/${userId}/history`);
       setUserHistory(data);
     } catch (e) {
       alert(`Lỗi khi lấy lịch sử người dùng: ${e.message}`);
@@ -132,7 +134,7 @@ export default function AdminSecurity() {
 
     try {
       setUnlocking(true);
-      await request(`/api/v1/platform/security/users/${unlockTarget.id}/unlock`, {
+      await request(`/platform/security/users/${unlockTarget.id}/unlock`, {
         method: 'POST',
         body: JSON.stringify({ reason: unlockReason.trim() }),
       });
@@ -151,20 +153,20 @@ export default function AdminSecurity() {
 
   async function approveUnlock(user) {
     try {
-      await request(`/api/v1/platform/security/users/${user.id}/unlock`, {method:'POST',body:JSON.stringify({reason:'Duyệt yêu cầu mở khóa của người dùng'})});
+      await request(`/platform/security/users/${user.id}/unlock`, {method:'POST',body:JSON.stringify({reason:'Duyệt yêu cầu mở khóa của người dùng'})});
       loadData(pagination.page);
     } catch (e) { alert(`Mở khóa thất bại: ${e.message}`); }
   }
   async function handleManualLock(userId) {
     const reason=window.prompt('Lý do khóa tạm thời tài khoản:');
     if(!reason?.trim())return;
-    try { await request(`/api/v1/platform/security/users/${userId}/lock`,{method:'POST',body:JSON.stringify({reason:reason.trim()})});loadData(pagination.page); }
+    try { await request(`/platform/security/users/${userId}/lock`,{method:'POST',body:JSON.stringify({reason:reason.trim()})});loadData(pagination.page); }
     catch(e){alert(`Khóa tài khoản thất bại: ${e.message}`);}
   }
 
   async function markAllNotificationsRead() {
     try {
-      await request('/api/v1/platform/security/notifications/read-all', { method: 'PATCH' });
+      await request('/platform/security/notifications/read-all', { method: 'PATCH' });
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
       if (stats) setStats({ ...stats, unreadAlertsCount: 0 });
     } catch (e) {

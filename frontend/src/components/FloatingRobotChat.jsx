@@ -16,6 +16,7 @@ import {
   Printer
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import {apiUrl} from '../services/apiUrl';
 import './FloatingRobotChat.css';
 
 // ── 4 Nút câu hỏi gợi ý nhanh phân hóa theo vai trò (Role-based Quick Chips) ──
@@ -525,7 +526,7 @@ export default function FloatingRobotChat() {
     }));
 
     try {
-      const res = await fetch('/api/v1/assistant/chat', {
+      const res = await fetch(apiUrl('/assistant/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'retail-web' },
         credentials: 'include',

@@ -2,8 +2,9 @@ import React,{useCallback,useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {Activity,AlertTriangle,CheckCircle2,Cpu,Database,HardDrive,RefreshCw,Server,ShieldAlert,XCircle} from 'lucide-react';
 import './AdminSystem.css';
+import {apiUrl} from '../../services/apiUrl';
 
-function request(url,opts={}){return fetch(url,{headers:{'X-Requested-With':'retail-web'},...opts}).then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.message||response.statusText);return data;});}
+function request(url,opts={}){return fetch(apiUrl(url),{credentials:'include',headers:{'X-Requested-With':'retail-web'},...opts}).then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.message||response.statusText);return data;});}
 const number=value=>Number(value||0).toLocaleString('vi-VN');
 const mb=value=>Number(value||0).toLocaleString('vi-VN',{maximumFractionDigits:1})+' MB';
 const formatUptime=value=>{const seconds=Math.max(0,Number(value)||0),days=Math.floor(seconds/86400),hours=Math.floor(seconds%86400/3600),minutes=Math.floor(seconds%3600/60);return [days?days+' ngày':'',hours?hours+' giờ':'',minutes+' phút'].filter(Boolean).join(' ')||'Dưới 1 phút';};
@@ -12,7 +13,7 @@ function Progress({value,color}){const percent=Math.max(0,Math.min(100,Number(va
 function ServiceCard({icon:Icon,title,status,latency,children}){return <article className="system-card system-service-card"><div className="system-card-top"><span className="system-service-icon"><Icon size={19}/></span><span className="system-latency">{latency===null||latency===undefined?'—':number(latency)+' ms'}</span></div><h2>{title}</h2><State status={status}/><div className="system-card-stats">{children}</div></article>;}
 export default function AdminSystem(){
  const [health,setHealth]=useState(null),[loading,setLoading]=useState(true),[err,setErr]=useState(null),[lastChecked,setLastChecked]=useState(null),[autoRefresh,setAutoRefresh]=useState(()=>localStorage.getItem('admin.system.autoRefresh')==='true'),[history,setHistory]=useState([]);
- const load=useCallback(async({quiet=false}={})=>{const started=performance.now();try{if(!quiet)setLoading(true);setErr(null);const data=await request('/api/v1/platform/system-health');const checkedAt=new Date();data.client_latency_ms=Number((performance.now()-started).toFixed(2));setHealth(data);setLastChecked(checkedAt);setHistory(rows=>[{checkedAt,data},...rows].slice(0,8));}catch(error){const checkedAt=new Date();setErr(error.message);setLastChecked(checkedAt);const failed={mysql:{status:'error',latency_ms:null},backend:{status:'error',latency_ms:Number((performance.now()-started).toFixed(2))},fastapi:{status:'error',latency_ms:null}};setHistory(rows=>[{checkedAt,data:failed},...rows].slice(0,8));}finally{if(!quiet)setLoading(false);}},[]);
+ const load=useCallback(async({quiet=false}={})=>{const started=performance.now();try{if(!quiet)setLoading(true);setErr(null);const data=await request('/platform/system-health');const checkedAt=new Date();data.client_latency_ms=Number((performance.now()-started).toFixed(2));setHealth(data);setLastChecked(checkedAt);setHistory(rows=>[{checkedAt,data},...rows].slice(0,8));}catch(error){const checkedAt=new Date();setErr(error.message);setLastChecked(checkedAt);const failed={mysql:{status:'error',latency_ms:null},backend:{status:'error',latency_ms:Number((performance.now()-started).toFixed(2))},fastapi:{status:'error',latency_ms:null}};setHistory(rows=>[{checkedAt,data:failed},...rows].slice(0,8));}finally{if(!quiet)setLoading(false);}},[]);
  useEffect(()=>{void load();},[load]);
  useEffect(()=>{localStorage.setItem('admin.system.autoRefresh',String(autoRefresh));},[autoRefresh]);
  useEffect(()=>{if(!autoRefresh)return undefined;const timer=setInterval(()=>void load({quiet:true}),30000);return()=>clearInterval(timer);},[autoRefresh,load]);

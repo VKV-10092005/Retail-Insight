@@ -1,7 +1,7 @@
 import {fetchWithRetry} from './fetchWithRetry.js';
-﻿const base=import.meta.env.VITE_API_URL||import.meta.env.VITE_API_BASE_URL||'/api/v1';
+import {apiUrl} from './apiUrl.js';
 export async function getJSON(path,{signal}={}){
- const res=await fetchWithRetry(`${base}${path}`,{signal,credentials:'include',headers:{Accept:'application/json'}});
+ const res=await fetchWithRetry(apiUrl(path),{signal,credentials:'include',headers:{Accept:'application/json','X-Requested-With':'retail-web'}});
  const data=await res.json();
  if(!res.ok){if(res.status===401)window.dispatchEvent(new Event('auth-expired'));if(res.status===423&&data?.code==='ACCOUNT_TEMP_LOCKED')window.dispatchEvent(new CustomEvent('account-temp-locked',{detail:data}));throw new Error(data.message||`Yêu cầu không thành công (${res.status})`);}
  return data;

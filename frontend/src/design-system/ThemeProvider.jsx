@@ -1,6 +1,7 @@
 import React,{createContext,useContext,useState,useEffect,useCallback,useId} from 'react';
 import {THEME_KEY,normalizeTheme,resolveTheme,applyTheme} from './theme.js';
 import {cacheAppSettings,currentSettings} from '../services/appSettings.js';
+import {apiUrl} from '../services/apiUrl.js';
 import {Sun,Moon} from 'lucide-react';
 
 const Context=createContext(null);
@@ -49,8 +50,8 @@ export function ThemeProvider({children}){
     localStorage.setItem(THEME_KEY,next);
     const userId=localStorage.getItem('ri_current_user_id')||'user',settings=currentSettings();cacheAppSettings(userId,{...settings,general:{...settings.general,theme:next}},localStorage.getItem('ri_current_user_role'));
     if(persist&&userId!=='user'){
-      const platform=localStorage.getItem('ri_current_user_role')==='PLATFORM_ADMIN',base=import.meta.env.VITE_API_URL||import.meta.env.VITE_API_BASE_URL||'/api/v1';
-      fetch(base+(platform?'/platform/settings':'/settings'),{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json','X-Requested-With':'retail-web'},body:JSON.stringify(platform?{general:{...settings.general,theme:next}}:{general:{...settings.general,theme:next}})}).catch(()=>{});
+      const platform=localStorage.getItem('ri_current_user_role')==='PLATFORM_ADMIN';
+      fetch(apiUrl(platform?'/platform/settings':'/settings'),{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json','X-Requested-With':'retail-web'},body:JSON.stringify(platform?{general:{...settings.general,theme:next}}:{general:{...settings.general,theme:next}})}).catch(()=>{});
     }
     setStorageError(false);
   }catch{

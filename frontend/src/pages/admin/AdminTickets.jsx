@@ -2,9 +2,10 @@ import React,{useEffect,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {MessageCircle,X} from 'lucide-react';
 import './AdminTickets.css';
+import {apiUrl} from '../../services/apiUrl';
 
 function request(url,opts={}){
- return fetch(url,{headers:{'X-Requested-With':'retail-web','Content-Type':'application/json'},...opts})
+ return fetch(apiUrl(url),{credentials:'include',headers:{'X-Requested-With':'retail-web','Content-Type':'application/json'},...opts})
   .then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.message||r.statusText);return d;});
 }
 const STATUS_LABEL={NEW:'Mới',IN_PROGRESS:'Đang tư vấn',COMPLETED:'Hoàn thành'};
@@ -20,9 +21,9 @@ function parseIntake(content=''){
 export default function AdminTickets(){
  const navigate=useNavigate();
  const [tickets,setTickets]=useState([]),[loading,setLoading]=useState(true),[err,setErr]=useState(''),[selected,setSelected]=useState(null);
- async function load(){try{setLoading(true);setErr('');const data=await request('/api/v1/platform/tickets');setTickets(data.tickets||[]);}catch(e){setErr(e.message);}finally{setLoading(false);}}
+ async function load(){try{setLoading(true);setErr('');const data=await request('/platform/tickets');setTickets(data.tickets||[]);}catch(e){setErr(e.message);}finally{setLoading(false);}}
  useEffect(()=>{void load();},[]);
- async function changeStatus(ticket,status){try{await request(`/api/v1/support/threads/${ticket.thread_id}/status`,{method:'PATCH',body:JSON.stringify({status})});setTickets(rows=>rows.map(row=>row.id===ticket.id?{...row,status}:row));if(selected?.id===ticket.id)setSelected(row=>({...row,status}));}catch(e){alert(e.message);}}
+ async function changeStatus(ticket,status){try{await request(`/support/threads/${ticket.thread_id}/status`,{method:'PATCH',body:JSON.stringify({status})});setTickets(rows=>rows.map(row=>row.id===ticket.id?{...row,status}:row));if(selected?.id===ticket.id)setSelected(row=>({...row,status}));}catch(e){alert(e.message);}}
  function openChat(ticket){navigate(`/support?threadId=${encodeURIComponent(ticket.thread_id)}`);}
  const details=selected?parseIntake(selected.message):{};
  return <div className="page-wrapper admin-tickets-page">
