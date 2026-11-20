@@ -113,15 +113,11 @@
 :root[data-theme="dark"] .agency-contact-message,:root.dark .agency-contact-message,.dark .agency-contact-message{background:#1e293b;border-color:#475569;color:#cffafe}
 
 /* Make the criteria wheel read as one connected system in both color modes. */
-.agency-wheel-ring{border-color:#cbd5e1;opacity:.85}
-.agency-wheel-ray{position:absolute;z-index:1;top:50%;left:50%;width:106px;height:2px;margin-left:110px;transform:rotate(var(--ray-angle));transform-origin:left center;border-radius:999px;background:#94a3b8;opacity:.85;transition:background .2s ease,opacity .2s ease,box-shadow .2s ease}
-.agency-wheel-ray.active{background:#0284c7;opacity:1;box-shadow:0 0 8px rgba(2,132,199,.42)}
-.agency-criteria-section.is-visible .agency-wheel-ray.active{background:#0284c7}
-:root[data-theme="dark"] .agency-wheel-ring,:root.dark .agency-wheel-ring,.dark .agency-wheel-ring{border-color:rgba(148,163,184,.7)}
-:root[data-theme="dark"] .agency-wheel-ray,:root.dark .agency-wheel-ray,.dark .agency-wheel-ray{background:rgba(100,116,139,.8)}
-:root[data-theme="dark"] .agency-wheel-ray.active,:root.dark .agency-wheel-ray.active,.dark .agency-wheel-ray.active{background:#0f766e;box-shadow:0 0 9px rgba(15,118,110,.55)}
-@media(max-width:760px){.agency-wheel-ray{width:90px;margin-left:95px}}
-@media(max-width:520px){.agency-wheel-ray{width:71px;margin-left:82px}}
+.agency-wheel-ring{border:1px dashed #cbd5e1;background:none;opacity:.85}
+.agency-wheel-ring-inner{width:290px;height:290px;opacity:.68}
+:root[data-theme="dark"] .agency-wheel-ring,:root.dark .agency-wheel-ring,.dark .agency-wheel-ring{border-color:rgba(71,85,105,.8);background:none}
+@media(max-width:760px){.agency-wheel-ring-inner{width:250px;height:250px}}
+@media(max-width:520px){.agency-wheel-ring-inner{width:195px;height:195px}}
 :root[data-theme="dark"] .agency-secondary,:root.dark .agency-secondary,.dark .agency-secondary,:root[data-theme="dark"] .agency-plan-button,:root.dark .agency-plan-button,.dark .agency-plan-button{background:#1e293b;border-color:#475569;color:#e2e8f0}
 :root[data-theme="dark"] .agency-footer,:root.dark .agency-footer,.dark .agency-footer{border-color:rgba(148,163,184,.18);color:#94a3b8}
 :root[data-theme="dark"] .agency-admin-details span,:root.dark .agency-admin-details span,.dark .agency-admin-details span{color:#94a3b8}

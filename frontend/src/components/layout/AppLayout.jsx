@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect} from 'react';
 import {Outlet,useLocation,useNavigate} from 'react-router-dom';
-import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,PanelLeftClose,PanelLeftOpen,HelpCircle,PartyPopper} from 'lucide-react';
+import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,PanelLeft,HelpCircle,PartyPopper} from 'lucide-react';
 import {useAuth} from '../../auth/AuthContext';
 import {useBranch} from '../../branches/BranchContext';
 import {ROLE_LABELS,ROLES} from '../../config/roles';
@@ -274,7 +274,7 @@ export default function AppLayout(){
               aria-label={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
               title={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
             >
-              {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+              <PanelLeft size={18} />
             </button>
             <div className="breadcrumb">
               Hệ thống <ChevronRight size={14}/> <strong>{titleMap[location.pathname]||'Trang làm việc'}</strong>

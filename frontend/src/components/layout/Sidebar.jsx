@@ -233,7 +233,7 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
           <button className="mobile-close" aria-label="Đóng menu" onClick={onClose}><X size={20}/></button>
         </div>
 
-        <nav className="nav">
+        <nav className="nav flex-1 overflow-y-auto pb-8 scrollbar-thin">
           {navGroups.map(g=>(
             <div className="nav-group" key={g.label}>
               <div className="nav-label">{g.label}</div>
