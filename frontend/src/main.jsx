@@ -10,4 +10,5 @@ import './styles/global.css';
 import './design-system/tokens.css';
 import './design-system/components.css';
 import './design-system/legacy.css';
+import './styles/hallmark.css';
 createRoot(document.getElementById('root')).render(<React.StrictMode><ThemeProvider><BrowserRouter><AuthProvider><BranchProvider><App /><AccountLockedModal /></BranchProvider></AuthProvider></BrowserRouter></ThemeProvider></React.StrictMode>);

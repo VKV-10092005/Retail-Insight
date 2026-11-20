@@ -87,7 +87,7 @@ export function ThemeToggle({className=''}){
       aria-label={isDark ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
       style={{display:'inline-flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}
     >
-      {isDark ? <Sun size={19} style={{color:'#F59E0B'}}/> : <Moon size={19} style={{color:'#0891B2'}}/>}
+      {isDark ? <Sun size={19} style={{color:'#F59E0B'}}/> : <Moon size={19} style={{color:'#0F766E'}}/>}
     </button>
   );
 }

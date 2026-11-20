@@ -91,7 +91,7 @@ export default function AuthShowcasePanel({
               />
               <defs>
                 <linearGradient id="prevSparkGrad" x1="0" y1="0" x2="240" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#0891B2" />
+                  <stop stopColor="#0F766E" />
                   <stop offset="0.6" stopColor="#38BDF8" />
                   <stop offset="1" stopColor="#34D399" />
                 </linearGradient>

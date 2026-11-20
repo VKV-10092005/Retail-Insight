@@ -2,7 +2,7 @@
   --payment-border: var(--border, var(--ri-border, #cbd5e1));
   --payment-surface: var(--bg-surface, var(--ri-surface, #fff));
   --payment-text: var(--text-primary, var(--ri-text, #0f172a));
-  --payment-focus: var(--accent-primary, var(--ri-focus, #2563eb));
+  --payment-focus: var(--accent-primary, var(--ri-focus, #0284c7));
 }
 
 .payment-settings-modal form#payment-settings-form > label {
@@ -75,7 +75,7 @@
 .payment-settings-modal .payment-qr-dropzone:hover,
 .payment-settings-modal .payment-qr-dropzone.is-dragging {
   border-color: var(--payment-focus) !important;
-  background: var(--ri-elevated, #eef2ff);
+  background: var(--ri-elevated, #f0f9ff);
 }
 
 .payment-settings-modal .payment-qr-preview {

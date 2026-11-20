@@ -4,7 +4,7 @@ import {
   Compass, PackagePlus, ShoppingCart, Warehouse, TrendingUp, ShieldCheck,
   ArrowRight, Search, BookOpen, Layers, Users, ChevronDown, ChevronUp,
   Store, BarChart2, BrainCircuit, Building2, Package, ClipboardList,
-  RefreshCw, AlertTriangle, CheckCircle2, XCircle, Circle
+  RefreshCw, AlertTriangle, CheckCircle2, XCircle, Circle, Lightbulb
 } from 'lucide-react';
 import { PageHeader, Card } from '../components/ui/Elements';
 
@@ -14,7 +14,7 @@ const STEP1_CARDS = [
   {
     num: 1,
     icon: Package,
-    color: '#2563EB',
+    color: '#0284C7',
     bg: 'rgba(37,99,235,0.08)',
     title: 'Thiết lập Danh mục & Sản phẩm',
     path: '/products',
@@ -59,7 +59,7 @@ const STEP1_CARDS = [
   {
     num: 4,
     icon: TrendingUp,
-    color: '#0891B2',
+    color: '#0F766E',
     bg: 'rgba(124,58,237,0.08)',
     title: 'Theo dõi & Tối ưu vận hành',
     path: '/',
@@ -171,7 +171,7 @@ const GROUPS = [
   {
     id: 'C',
     icon: BrainCircuit,
-    color: '#0891B2',
+    color: '#0F766E',
     title: 'Nhóm C — Phân tích Dự báo AI & Trợ lý ảo',
     sections: [
       {
@@ -246,7 +246,7 @@ const ROLES_DATA = [
     role: 'OWNER',
     label: 'Chủ cửa hàng',
     icon: ShieldCheck,
-    color: '#2563EB',
+    color: '#0284C7',
     bg: 'rgba(37,99,235,0.08)',
     summary: 'Toàn quyền quản trị tổ chức, chi nhánh, nhân sự, tài chính, kho vận, bán hàng và phân tích AI.',
     features: [
@@ -309,7 +309,7 @@ const ROLES_DATA = [
     role: 'INVENTORY',
     label: 'Nhân viên kho',
     icon: Warehouse,
-    color: '#0891B2',
+    color: '#0F766E',
     bg: 'rgba(124,58,237,0.08)',
     summary: 'Chuyên trách quản lý tồn kho, lập phiếu nhập hàng và thực hiện kiểm kê / điều chuyển. Bị chặn truy cập quầy thu ngân POS và báo cáo tài chính.',
     features: [
@@ -488,7 +488,7 @@ function RoleCard({ rd, query }) {
           background: rd.bg, borderRadius: 8, padding: '8px 12px',
           fontSize: '0.8rem', color: rd.color, lineHeight: 1.6,
         }}>
-          💡 {rd.note}
+          <span style={{display:'inline-flex',alignItems:'center',gap:6}}><Lightbulb size={14}/>{rd.note}</span>
         </div>
       )}
     </div>

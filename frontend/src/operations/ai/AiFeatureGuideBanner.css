@@ -1,17 +1,17 @@
-.ai-feature-guide{margin:0 0 20px;padding:16px 18px;border-radius:14px;border:1px solid #C7D2FE;background:#EEF2FF;color:#1D4ED8}
+.ai-feature-guide{margin:0 0 20px;padding:16px 18px;border-radius:14px;border:1px solid #CFFAFE;background:#F0F9FF;color:#0369A1}
 .ai-feature-guide-layout{display:flex;align-items:flex-start;gap:12px}
-.ai-feature-guide-icon{flex-shrink:0;margin-top:1px;color:#2563EB}
+.ai-feature-guide-icon{flex-shrink:0;margin-top:1px;color:#0284C7}
 .ai-feature-guide-copy{flex:1;min-width:0}
-.ai-feature-guide-copy strong{display:block;margin-bottom:5px;color:#312E81}
-.ai-feature-guide-copy p{margin:0;line-height:1.55;color:#1D4ED8}
-.ai-feature-guide-dismiss{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;border:1px solid #C7D2FE;border-radius:8px;background:var(--bg-card);color:#3730A3;padding:7px 10px;cursor:pointer;font-size:13px}
-.ai-feature-guide-dismiss:hover{border-color:#38BDF8;background:#E0E7FF}
+.ai-feature-guide-copy strong{display:block;margin-bottom:5px;color:#134E4A}
+.ai-feature-guide-copy p{margin:0;line-height:1.55;color:#0369A1}
+.ai-feature-guide-dismiss{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;border:1px solid #CFFAFE;border-radius:8px;background:var(--bg-card);color:#3730A3;padding:7px 10px;cursor:pointer;font-size:13px}
+.ai-feature-guide-dismiss:hover{border-color:#38BDF8;background:#E0F2FE}
 .ai-feature-guide-reopen-wrap{display:flex;justify-content:flex-end;margin:-12px 0 16px}
 .ai-feature-guide-reopen{border:0;background:transparent;color:var(--accent-primary);cursor:pointer;font-size:13px}
 
 :root[data-theme="dark"] .ai-feature-guide,
 :root.dark .ai-feature-guide,
-.dark .ai-feature-guide{background:rgba(37,99,235,.13);border-color:rgba(129,140,248,.26);color:#CBD5E1}
+.dark .ai-feature-guide{background:rgba(37,99,235,.13);border-color:rgba(15,118,110,.26);color:#CBD5E1}
 :root[data-theme="dark"] .ai-feature-guide-copy strong,
 :root.dark .ai-feature-guide-copy strong,
 .dark .ai-feature-guide-copy strong{color:#F8FAFC}
@@ -26,6 +26,6 @@
 .dark .ai-feature-guide-dismiss{background:rgba(15,23,42,.65);border-color:rgba(148,163,184,.25);color:#E2E8F0}
 :root[data-theme="dark"] .ai-feature-guide-dismiss:hover,
 :root.dark .ai-feature-guide-dismiss:hover,
-.dark .ai-feature-guide-dismiss:hover{background:rgba(30,41,59,.82);border-color:rgba(129,140,248,.5);color:#F8FAFC}
+.dark .ai-feature-guide-dismiss:hover{background:rgba(30,41,59,.82);border-color:rgba(15,118,110,.5);color:#F8FAFC}
 
 @media(max-width:720px){.ai-feature-guide-layout{flex-wrap:wrap}.ai-feature-guide-dismiss{margin-left:34px}}

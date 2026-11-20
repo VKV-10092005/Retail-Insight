@@ -423,9 +423,9 @@ export default function Products({
         }
       />
 
-      {activationNotice && <Card role="status" style={{ marginBottom: 18, border: '1px solid #A5F3FC', background: 'linear-gradient(120deg, #ECFEFF, #EEF2FF)', color: '#164E63' }}>
+      {activationNotice && <Card role="status" style={{ marginBottom: 18, border: '1px solid #A5F3FC', background: 'linear-gradient(120deg, #ECFEFF, #F0F9FF)', color: '#164E63' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <Sparkles size={24} style={{ color: '#2563EB', flexShrink: 0 }} />
+          <Sparkles size={24} style={{ color: '#0284C7', flexShrink: 0 }} />
           <div style={{ flex: '1 1 420px' }}><strong style={{ display: 'block', fontSize: '1.05rem', marginBottom: 4 }}>Sản phẩm đã sẵn sàng mở bán trên hệ thống!</strong><span>Bạn có thể chuyển ngay sang quầy <strong>Bán hàng POS</strong> để tạo đơn, thu tiền mặt hoặc hiển thị mã <strong>VietQR động</strong> cho khách quét chuyển khoản — hệ thống sẽ tự động trừ tồn kho và hạch toán doanh thu, tiền lãi theo thời gian thực.</span></div>
           <Link to="/sales" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>Mở quầy Bán hàng POS →</Link>
           <button type="button" onClick={() => setActivationNotice(false)} aria-label="Ẩn thông báo" style={{ border: 0, background: 'transparent', color: '#164E63', cursor: 'pointer', fontSize: 20 }}>×</button>
@@ -520,7 +520,7 @@ export default function Products({
       {selectedIds.length > 0 && (
         <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',padding:'10px 16px',marginBottom:12,background:'var(--ri-elevated)',border:'1px solid var(--ri-border)',borderRadius:9}}>
           <span style={{fontWeight:600,fontSize:14}}>Đã chọn {selectedIds.length} sản phẩm</span>
-          <button type="button" className="btn btn-sm" disabled={bulkBusy} onClick={openBulkImport} style={{display:'inline-flex',alignItems:'center',gap:6,background:'#2563EB',borderColor:'#2563EB',color:'#fff'}}><PackagePlus size={15}/> {selectedIds.length===1?'Nhập hàng':'Nhập hàng loạt'}</button>
+          <button type="button" className="btn btn-sm" disabled={bulkBusy} onClick={openBulkImport} style={{display:'inline-flex',alignItems:'center',gap:6,background:'#0284C7',borderColor:'#0284C7',color:'#fff'}}><PackagePlus size={15}/> {selectedIds.length===1?'Nhập hàng':'Nhập hàng loạt'}</button>
           {hasActiveSelected && <button type="button" className="btn btn-secondary btn-sm" disabled={bulkBusy} onClick={() => bulkUpdateStatus('DISABLED')}>Tạm ngừng</button>}
           {hasDisabledSelected && <button type="button" className="btn btn-secondary btn-sm" disabled={bulkBusy} onClick={() => bulkUpdateStatus('ACTIVE')}>Mở bán</button>}
           <button type="button" className="btn btn-secondary btn-sm" disabled={bulkBusy} style={{color:'var(--ri-danger)'}} onClick={bulkDelete}>Xóa</button>
@@ -691,7 +691,7 @@ export default function Products({
 
               {bulkImportError&&<p className="auth-error" role="alert" style={{margin:0}}>{bulkImportError}</p>}
               <div className="op-actions" style={{justifyContent:'flex-end',margin:0}}>
-                {bulkImportRows.some(row=>Number(row.quantity)>0)&&<button type="submit" className="btn btn-primary" disabled={bulkBusy} style={{display:'inline-flex',alignItems:'center',gap:7,background:'#2563EB',borderColor:'#2563EB'}}><PackagePlus size={16}/>{bulkBusy?'Đang nhập kho…':'Xác nhận nhập kho'}</button>}
+                {bulkImportRows.some(row=>Number(row.quantity)>0)&&<button type="submit" className="btn btn-primary" disabled={bulkBusy} style={{display:'inline-flex',alignItems:'center',gap:7,background:'#0284C7',borderColor:'#0284C7'}}><PackagePlus size={16}/>{bulkBusy?'Đang nhập kho…':'Xác nhận nhập kho'}</button>}
               </div>
             </form>
           </section>

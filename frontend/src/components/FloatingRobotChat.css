@@ -242,7 +242,7 @@
 /* ── Thanh Header ───────────────────────────────────────────── */
 .robot-chat-header {
   padding: 12px 16px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -352,11 +352,11 @@
 /* Banner Giới Thiệu Đầu Chat */
 .robot-welcome-banner {
   background: #edf2ff;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #cffafe;
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 12px;
-  color: #312e81;
+  color: #134e4a;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -364,7 +364,7 @@
 }
 
 .welcome-banner-icon {
-  color: #2563eb;
+  color: #0284c7;
   flex-shrink: 0;
 }
 
@@ -372,7 +372,7 @@
 .dark .robot-welcome-banner {
   background: rgba(82, 104, 219, 0.12);
   border-color: rgba(82, 104, 219, 0.28);
-  color: #c7d2fe;
+  color: #cffafe;
 }
 
 :root[data-theme="dark"] .welcome-banner-icon,
@@ -401,8 +401,8 @@
 .msg-avatar-robot {
   width: 28px;
   height: 28px;
-  background: #EEF2FF;
-  border: 1px solid #c7d2fe;
+  background: #F0F9FF;
+  border: 1px solid #cffafe;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -449,7 +449,7 @@
 
 /* Tin nhắn User */
 .robot-chat-message.user .msg-content-bubble {
-  background: #2563eb;
+  background: #0284c7;
   color: #ffffff;
   border-bottom-right-radius: 4px;
 }
@@ -492,7 +492,7 @@
 
 .chat-inline-code {
   background: rgba(82, 104, 219, 0.08);
-  color: #1d4ed8;
+  color: #0369a1;
   padding: 1px 5px;
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -502,7 +502,7 @@
 :root[data-theme="dark"] .chat-inline-code,
 .dark .chat-inline-code {
   background: rgba(129, 140, 248, 0.15);
-  color: #a5b4fc;
+  color: #99f6e4;
 }
 
 .msg-text ul {
@@ -575,9 +575,9 @@
 }
 
 .suggestion-chip:hover {
-  background: #EEF2FF;
-  border-color: #c7d2fe;
-  color: #1d4ed8;
+  background: #F0F9FF;
+  border-color: #cffafe;
+  color: #0369a1;
 }
 
 :root[data-theme="dark"] .suggestion-chip,
@@ -591,12 +591,12 @@
 .dark .suggestion-chip:hover {
   background: #2D3748;
   border-color: #38bdf8;
-  color: #a5b4fc;
+  color: #99f6e4;
 }
 
 .chip-icon {
   flex-shrink: 0;
-  color: #2563eb;
+  color: #0284c7;
 }
 
 .chip-icon.warning {
@@ -628,7 +628,7 @@
 
 :root[data-theme="dark"] .chip-icon.primary,
 .dark .chip-icon.primary {
-  color: #a5b4fc;
+  color: #99f6e4;
 }
 
 /* ── Thanh Nhập Liệu (Chat Footer) ──────────────────────────── */
@@ -678,7 +678,7 @@
 }
 
 .robot-chat-input:focus {
-  border-color: #2563eb;
+  border-color: #0284c7;
   box-shadow: 0 0 0 3px rgba(82, 104, 219, 0.15);
 }
 
@@ -689,7 +689,7 @@
 }
 
 .robot-send-btn {
-  background: #2563eb;
+  background: #0284c7;
   border: none;
   color: #ffffff;
   width: 36px;
@@ -703,7 +703,7 @@
 }
 
 .robot-send-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #0369a1;
 }
 
 .robot-send-btn:active:not(:disabled) {

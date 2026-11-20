@@ -19,7 +19,7 @@
 .pos-product-card{position:relative;min-width:0;min-height:220px;height:220px;gap:5px;padding:10px;border-radius:14px;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
 .pos-product-card:active:not(:disabled){transform:scale(.985)}
 .pos-product-card.in-cart{border-color:color-mix(in srgb,var(--ri-primary) 58%,var(--ri-border));box-shadow:0 0 0 2px color-mix(in srgb,var(--ri-primary) 13%,transparent)}
-.pos-product-image{position:relative;flex:0 0 112px;height:112px;width:100%;border-radius:12px;background:linear-gradient(145deg,#f8fafc,#eef2ff);color:#2563eb}
+.pos-product-image{position:relative;flex:0 0 112px;height:112px;width:100%;border-radius:12px;background:linear-gradient(145deg,#f8fafc,#f0f9ff);color:#0284c7}
 .pos-product-image>span{font-size:42px;filter:drop-shadow(0 4px 4px rgba(15,23,42,.12))}
 .pos-product-image-stationery{background:linear-gradient(145deg,#eff6ff,#dbeafe)}
 .pos-product-image-bags{background:linear-gradient(145deg,#fef3c7,#ffedd5)}
@@ -30,7 +30,7 @@
 .pos-product-cart-qty{position:absolute;top:8px;right:8px;display:grid;min-width:25px;height:25px;padding:0 6px;place-items:center;border:2px solid var(--ri-surface);border-radius:999px;background:var(--ri-primary);color:var(--ri-on-primary);font-size:12px;font-weight:900;box-shadow:0 3px 10px rgba(15,23,42,.2)}
 .pos-product-name{display:-webkit-box;min-height:40px;height:40px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:20px;font-weight:800;color:var(--ri-text)}
 .pos-product-sku{align-self:stretch;font-size:.68rem;color:var(--ri-muted);text-align:left}
-.pos-product-card>strong{font-size:.95rem;color:#2563eb}
+.pos-product-card>strong{font-size:.95rem;color:#0284c7}
 .pos-stock{margin-left:auto;font-size:.64rem;white-space:nowrap}
 .pos-cart-panel{position:sticky;top:84px;align-self:start;max-height:calc(100dvh - 100px)}
 @media(max-width:1180px){.pos-product-grid,.cashier-mode .pos-product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}}
@@ -60,6 +60,6 @@
 .pos-product-card-footer{display:flex;flex:1;min-height:0;flex-direction:column;justify-content:flex-end;gap:4px;margin-top:auto}
 .pos-product-card-footer .pos-product-sku{display:block;width:100%;overflow:hidden;text-align:left;text-overflow:ellipsis;white-space:nowrap;color:#64748b;font-size:11px}
 .pos-product-price-stock{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
-.pos-product-price-stock>strong{min-width:0;color:#2563eb;font-size:14px;line-height:1.2;white-space:nowrap}
+.pos-product-price-stock>strong{min-width:0;color:#0284c7;font-size:14px;line-height:1.2;white-space:nowrap}
 .pos-product-price-stock .pos-stock{flex:0 0 auto;margin-left:auto;max-width:58%;padding:3px 7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:640px){.pos-product-grid,.cashier-mode .pos-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.pos-product-card{height:243px;min-height:243px}}

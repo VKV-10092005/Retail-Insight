@@ -15,7 +15,7 @@ export default function AiRobotMascot() {
 
       {/* Thẻ nổi 1: Dự báo nhu cầu AI (Góc trên phải) */}
       <div className="floating-card card-top-right">
-        <div className="floating-card-icon violet">
+        <div className="floating-card-icon teal">
           <Sparkles size={16} />
         </div>
         <div className="floating-card-body">

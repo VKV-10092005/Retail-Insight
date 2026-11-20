@@ -124,7 +124,7 @@ export default function Welcome(){
           </div>
 
           <div className="pillar-card">
-            <div className="pillar-icon purple">
+            <div className="pillar-icon teal">
               <BrainCircuit size={26}/>
             </div>
             <h3>Dự báo AI & Gợi ý Bổ sung</h3>

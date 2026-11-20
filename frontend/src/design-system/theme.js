@@ -9,7 +9,7 @@ export function applyTheme(v,dark,root=document.documentElement){
  root.dataset.theme=theme;
  root.dataset.themePreference=normalizeTheme(v);
  root.style.colorScheme=theme;
- root.ownerDocument.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#080D1B':'#F6F8FC');
+  root.ownerDocument.querySelector('meta[name="theme-color"]')?.setAttribute('content',theme==='dark'?'#0B1120':'#F8FAFC');
  return theme;
 }
 

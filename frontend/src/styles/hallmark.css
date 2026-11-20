@@ -1,0 +1,51 @@
+:root{font-variant-numeric:lining-nums tabular-nums}
+body{background:var(--ri-bg);color:var(--ri-text);font-variant-numeric:lining-nums tabular-nums}
+.sidebar,.topbar,.card,.ri-card,.modal,.ri-dialog,.ri-popover,.ri-dropdown-menu,.ri-table,.data-table,.searchbox,.select,.ri-control{background-color:var(--ri-surface);color:var(--ri-text);border-color:var(--ri-border)}
+.sidebar{border-right:1px solid var(--ri-border)!important;box-shadow:none!important}
+.topbar{border-bottom:1px solid var(--ri-border)!important;box-shadow:none!important}
+.card,.ri-card{border:1px solid var(--ri-border);border-radius:12px;box-shadow:none}
+.system-card,.system-overview{border-radius:12px;box-shadow:none;background:var(--ri-surface)}
+.page-header h1,.page-title,.section-header h2,.card h2,.card h3{color:var(--ri-text)}
+.nav-item.active{background:var(--ri-primary-bg);color:var(--ri-primary);box-shadow:inset 3px 0 var(--ri-primary)}
+.btn-primary,.ri-btn-primary{background:var(--ri-primary);border-color:var(--ri-primary);color:var(--ri-on-primary)}
+.btn-primary:hover,.ri-btn-primary:hover{background:var(--ri-primary-hover);border-color:var(--ri-primary-hover)}
+.badge-info{background:var(--ri-primary-bg);color:var(--ri-primary)}
+.data-table thead,.ri-table thead{background:var(--ri-elevated)}
+.data-table td,.ri-table td,.data-table th,.ri-table th{border-color:var(--ri-border)}
+.data-table tbody tr:hover,.ri-table tbody tr:hover{background:color-mix(in srgb,var(--ri-elevated) 70%,var(--ri-surface))}
+.stat strong,.stat small,.section-header p,.data-table td,.ri-table td{font-variant-numeric:lining-nums tabular-nums}
+.stat-icon.teal{background:color-mix(in srgb,var(--ri-brand) 11%,var(--ri-surface));color:var(--ri-brand)}
+.stat-icon.blue{background:color-mix(in srgb,var(--ri-primary) 10%,var(--ri-surface));color:var(--ri-primary)}
+.support-chat-header{background:var(--ri-brand)}
+.support-message.mine{background:var(--ri-primary)}
+.welcome-gradient-blue,.welcome-gradient-cyan{background:none;-webkit-text-fill-color:currentColor;color:inherit}
+.welcome-register,.welcome-primary,.welcome-logo-box{background:var(--ri-primary);box-shadow:none}
+.welcome-register:hover,.welcome-primary:hover{background:var(--ri-primary-hover);box-shadow:none}
+.welcome-page::before{filter:none;opacity:.25}
+.welcome-glow,.welcome-page .feature-float-badge{display:none!important}
+.brand-logo,.welcome-logo-box,.welcome-register,.welcome-primary,.welcome-gradient-blue,.welcome-gradient-cyan{background-image:none!important}
+.nav-item.active,.badge-info,.stat-icon.blue,.stat-icon.teal{border-color:color-mix(in srgb,var(--ri-primary) 18%,var(--ri-border))}
+.welcome-badge{border-color:rgba(15,118,110,.28);background:rgba(15,118,110,.08);color:#99f6e4}
+.welcome-brand strong,.welcome-trust-list svg,.feature-order>div:first-child>svg:last-child,.feature-float-badge svg{color:var(--ri-brand)}
+.welcome-feature-visual,.feature-window,.service-browser{box-shadow:none}
+.feature-window,.service-browser{border:1px solid rgba(148,163,184,.2)}
+.period-chip,.research-card,.model-highlight,.formula,.detail-hero,.step-icon{background:var(--ri-elevated);color:var(--ri-text)}
+.donut>div{background:var(--ri-surface)}
+.btn,.ri-btn,.icon-button{box-shadow:none}
+:root[data-theme="dark"] .welcome-feature-visual,:root[data-theme="dark"] .welcome-interactive-card,:root[data-theme="dark"] .welcome-ai-card,:root[data-theme="dark"] .welcome-comparison-table{background:#111827;border-color:var(--ri-border);box-shadow:none}
+:root[data-theme="dark"] .welcome-page{background:#0B1120;color:#F1F5F9}
+:root[data-theme="dark"] .welcome-page::before{background-image:none;background-color:#0B1120}
+:root[data-theme="dark"] .welcome-page h1,:root[data-theme="dark"] .welcome-page h2,:root[data-theme="dark"] .welcome-page h3{color:#F1F5F9}
+.interactive-tour-badge{background:var(--ri-primary-bg)!important;color:var(--ri-brand)!important}
+:root[data-theme="dark"] body{background:#0B1120;color:#F1F5F9}
+:root[data-theme="dark"] .sidebar,:root[data-theme="dark"] .topbar,:root[data-theme="dark"] .card,:root[data-theme="dark"] .ri-card,:root[data-theme="dark"] .modal,:root[data-theme="dark"] .ri-dialog,:root[data-theme="dark"] .ri-popover,:root[data-theme="dark"] .ri-dropdown-menu,:root[data-theme="dark"] .data-table,:root[data-theme="dark"] .ri-table{background-color:#111827;color:#F1F5F9;border-color:var(--ri-border)}
+:root[data-theme="dark"] .page-header h1,:root[data-theme="dark"] .page-title,:root[data-theme="dark"] .section-header h2,:root[data-theme="dark"] .card h2,:root[data-theme="dark"] .card h3,:root[data-theme="dark"] .stat strong,:root[data-theme="dark"] .data-table td,:root[data-theme="dark"] .ri-table td{color:#F1F5F9}
+:root[data-theme="dark"] .data-table thead,:root[data-theme="dark"] .ri-table thead,:root[data-theme="dark"] .searchbox,:root[data-theme="dark"] .select,:root[data-theme="dark"] .ri-control{background-color:#172033;color:#F1F5F9;border-color:var(--ri-border)}
+:root[data-theme="dark"] .data-table tbody tr:hover,:root[data-theme="dark"] .ri-table tbody tr:hover{background:#172033}
+:root[data-theme="dark"] .modal-overlay{background:rgb(2 6 23 / .78)}
+:root[data-theme="dark"] .support-thread-list,:root[data-theme="dark"] .support-chat-history{background:#0B1120}
+:root[data-theme="dark"] .system-card,:root[data-theme="dark"] .system-overview,:root[data-theme="dark"] .system-resource-card,:root[data-theme="dark"] .admin-ticket-modal,:root[data-theme="dark"] .admin-ticket-detail,:root[data-theme="dark"] .account-lock-card,:root[data-theme="dark"] .support-website-form,:root[data-theme="dark"] .support-contact-modal,:root[data-theme="dark"] .payment-settings-modal{background:#111827!important;color:#F1F5F9!important;border-color:var(--ri-border)!important}
+:root[data-theme="dark"] .system-card h2,:root[data-theme="dark"] .admin-ticket-modal h2,:root[data-theme="dark"] .admin-ticket-detail>div,:root[data-theme="dark"] .support-contact-modal h2{color:#F1F5F9}
+:root[data-theme="dark"] input,:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{background-color:#172033;color:#F1F5F9;border-color:var(--ri-border)}
+:root[data-theme="dark"] .page-content [style*="background: rgb(255, 255, 255)"],:root[data-theme="dark"] .page-content [style*="background: white"]{background:#111827!important;color:#F1F5F9!important;border-color:var(--ri-border)!important}
+@media(max-width:768px){.page-content{min-width:0}.table-scroll,.table-wrap,.ri-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.data-table,.ri-table{min-width:max-content}.card,.ri-card{min-width:0}}

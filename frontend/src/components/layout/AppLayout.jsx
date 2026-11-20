@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect} from 'react';
 import {Outlet,useLocation,useNavigate} from 'react-router-dom';
-import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,HelpCircle} from 'lucide-react';
+import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,HelpCircle,PartyPopper} from 'lucide-react';
 import {useAuth} from '../../auth/AuthContext';
 import {useBranch} from '../../branches/BranchContext';
 import {ROLE_LABELS,ROLES} from '../../config/roles';
@@ -236,7 +236,7 @@ export default function AppLayout(){
           <div className="interactive-tour-layer" role="dialog" aria-modal="true" onMouseDown={event=>{if(event.target===event.currentTarget)closeCelebration();}} style={{background:'rgba(15,23,42,0.6)',display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'auto',zIndex:10000}}>
             <section className="interactive-tour-card" style={{position:'relative',top:'auto',left:'auto',width:'min(440px,calc(100vw - 32px))',textAlign:'center',padding:'28px 24px'}}>
               <div className="interactive-tour-badge" style={{fontSize:'13px',padding:'6px 14px',marginBottom:'12px',background:'#ecfdf5',color:'#065f46'}}>
-                🎉 Chúc mừng!
+                <PartyPopper size={14} aria-hidden="true"/> Chúc mừng!
               </div>
               <h3 style={{margin:'0 0 10px',fontSize:'1.25rem',fontWeight:700,color:'var(--ri-text,#0f172a)'}}>
                 Đã hoàn tất đơn hàng đầu tiên!
