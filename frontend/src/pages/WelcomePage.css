@@ -1,4 +1,4 @@
-/* Retail Insight original two-column welcome hero */
+﻿/* Retail Insight original two-column welcome hero */
 .welcome-page{--welcome-ink:#f8fafc;--welcome-muted:#a6b2c8;position:relative;isolation:isolate;display:flex;min-height:100vh;min-height:100svh;flex-direction:column;overflow:hidden;background:#080c17;color:var(--welcome-ink);font-family:var(--ri-font,'Be Vietnam Pro',system-ui,sans-serif)}
 .welcome-page::before{position:absolute;z-index:-2;inset:0;content:"";pointer-events:none;background:radial-gradient(ellipse at 74% 40%,rgba(37,99,235,.18),transparent 32%),radial-gradient(ellipse at 86% 20%,rgba(37,99,235,.10),transparent 38%),linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px),#080c17;background-size:auto,auto,44px 44px,44px 44px,auto}
 .welcome-page *{box-sizing:border-box}.welcome-grid-pattern{position:absolute;z-index:-1;inset:0;pointer-events:none}.welcome-glow{position:absolute;z-index:-1;width:390px;height:390px;border-radius:50%;filter:blur(110px);pointer-events:none}.welcome-glow-one{top:18%;right:12%;background:rgba(37,99,235,.16)}.welcome-glow-two{top:42%;right:32%;width:250px;height:250px;background:rgba(56,189,248,.09)}
@@ -122,3 +122,52 @@
 @media(hover:none){.welcome-interactive-card:hover{transform:none;box-shadow:inherit}}
 @media(prefers-reduced-motion:reduce){.welcome-interactive-card,.welcome-reveal-up,.welcome-reveal-up.is-visible,.welcome-btn{transition:none!important;transform:none!important;will-change:auto}}
 .welcome-reveal-up.is-visible.welcome-interactive-card:hover{transform:translateY(-10px) scale(1.035)}
+
+
+/* AI Feature Cards - Icon wrapper & Crisp Light Mode styles */
+.welcome-ai-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 12px 0 14px;
+  border-radius: 12px;
+  background: rgba(15, 118, 110, 0.18);
+  color: #99f6e4;
+  transition: transform .28s cubic-bezier(.34, 1.56, .64, 1), background .25s ease, color .25s ease;
+}
+.welcome-ai-icon-wrap svg {
+  width: 22px;
+  height: 22px;
+}
+.welcome-ai-card:hover .welcome-ai-icon-wrap {
+  transform: scale(1.1) rotate(-3deg);
+}
+
+:root[data-theme="light"] .welcome-ai-card {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+}
+:root[data-theme="light"] .welcome-ai-card:hover {
+  border-color: #0284c7 !important;
+  box-shadow: 0 16px 32px -4px rgba(2, 132, 199, 0.16) !important;
+}
+:root[data-theme="light"] .welcome-ai-number {
+  color: #94a3b8;
+}
+:root[data-theme="light"] .welcome-ai-card:hover .welcome-ai-number {
+  color: #0284c7;
+}
+
+:root[data-theme="light"] .welcome-ai-icon-wrap {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.15);
+}
+:root[data-theme="light"] .welcome-ai-card:nth-child(even) .welcome-ai-icon-wrap {
+  background: #ccfbf1;
+  color: #0f766e;
+  border-color: rgba(15, 118, 110, 0.15);
+}

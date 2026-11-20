@@ -1,4 +1,4 @@
-import React,{useEffect} from 'react';
+﻿import React,{useEffect} from 'react';
 import {Link,Navigate} from 'react-router-dom';
 import {Activity,ArrowRight,BarChart3,BrainCircuit,CheckCircle2,Layers3,PackageCheck,ShieldCheck,ShoppingCart,Store,TrendingUp,Warehouse,Zap} from 'lucide-react';
 import {useAuth} from '../auth/AuthContext';
@@ -58,7 +58,7 @@ export default function WelcomePage(){
   </section>
   <section id="du-bao-ai" className="welcome-section welcome-ai-section">
    <div className="welcome-section-heading welcome-reveal-up"><span className="welcome-section-kicker">DỰ BÁO AI</span><h2>5 công cụ AI hỗ trợ quyết định nhập hàng</h2><p>Từ nhu cầu từng mặt hàng đến lượng đặt tối ưu, dự báo giúp cửa hàng chủ động hơn với hàng hóa và dòng vốn.</p></div>
-   <div className="welcome-ai-grid">{aiModels.map((model,index)=>{const Icon=model.icon;return <article className={'welcome-ai-card welcome-interactive-card welcome-reveal-up'} style={{'--reveal-delay':(index*90)+'ms'}} key={model.title}><span className="welcome-ai-number">{String(index+1).padStart(2,'0')}</span><Icon size={22}/><h3>{model.title}</h3><p>{model.text}</p></article>;})}</div>
+   <div className="welcome-ai-grid">{aiModels.map((model,index)=>{const Icon=model.icon;return <article className={'welcome-ai-card welcome-interactive-card welcome-reveal-up'} style={{'--reveal-delay':(index*90)+'ms'}} key={model.title}><span className="welcome-ai-number">{String(index+1).padStart(2,'0')}</span><div className="welcome-ai-icon-wrap"><Icon size={22}/></div><h3>{model.title}</h3><p>{model.text}</p></article>;})}</div>
   </section>
   <section id="so-sanh-hieu-qua" className="welcome-section welcome-comparison-section">
    <div className="welcome-section-heading welcome-reveal-up"><span className="welcome-section-kicker">ĐỐI CHIẾU THỰC NGHIỆM</span><h2>Excel thủ công và Retail Insight AI</h2><p>Thay thao tác rời rạc bằng quy trình bán lẻ có dữ liệu cập nhật và phân quyền rõ ràng.</p></div>
