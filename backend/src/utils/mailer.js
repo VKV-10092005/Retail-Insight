@@ -60,13 +60,17 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
   }
 
   const safePurpose = cleanHeader(purpose);
+  const normalizedPurpose = safePurpose.toLocaleLowerCase('vi-VN');
+  const emailPurpose = normalizedPurpose.includes('google') && normalizedPurpose.includes('cửa hàng')
+    ? 'thiết lập cửa hàng mới trên Retail Insight'
+    : safePurpose;
   const subject = subjectForPurpose(safePurpose);
   const subjectEncoded = `=?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`;
   const recipientName = cleanHeader(fullName) || 'Quý khách';
   const textBody = [
     `Xin chào ${recipientName},`,
     '',
-    `Bạn vừa yêu cầu ${safePurpose} trên Retail Insight.`,
+    `Bạn vừa yêu cầu ${emailPurpose}.`,
     `Mã xác thực của bạn: ${otpCode}`,
     '',
     'Mã này có hiệu lực trong 5 phút và chỉ được sử dụng một lần.',
@@ -86,7 +90,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
   <div style="max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;">
     <h1 style="margin:0 0 24px;color:#0369a1;font-size:22px;">Retail Insight</h1>
     <p style="margin:0 0 16px;line-height:1.6;">Xin chào <strong>${escapeHtml(recipientName)}</strong>,</p>
-    <p style="margin:0 0 20px;line-height:1.6;">Bạn vừa yêu cầu ${escapeHtml(safePurpose)}. Sử dụng mã dưới đây để tiếp tục:</p>
+    <p style="margin:0 0 20px;line-height:1.6;">Bạn vừa yêu cầu ${escapeHtml(emailPurpose)}. Sử dụng mã dưới đây để tiếp tục:</p>
     <p style="margin:20px 0;padding:14px;text-align:center;background:#f0f9ff;border-radius:6px;color:#0369a1;font-size:28px;font-weight:700;letter-spacing:6px;">${escapeHtml(otpCode)}</p>
     <p style="margin:0 0 16px;line-height:1.6;">Mã này có hiệu lực trong 5 phút và chỉ được sử dụng một lần.</p>
     <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6;">Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>
