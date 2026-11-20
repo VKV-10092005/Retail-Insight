@@ -91,7 +91,7 @@ export default function AuthShowcasePanel({
               />
               <defs>
                 <linearGradient id="prevSparkGrad" x1="0" y1="0" x2="240" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#6366F1" />
+                  <stop stopColor="#0891B2" />
                   <stop offset="0.6" stopColor="#38BDF8" />
                   <stop offset="1" stopColor="#34D399" />
                 </linearGradient>
@@ -107,7 +107,7 @@ export default function AuthShowcasePanel({
           <div className="preview-widget ai-widget">
             <div className="preview-widget-head">
               <span className="widget-label flex-label">
-                <Sparkles size={12} style={{ color: '#818CF8' }} /> CẢNH BÁO TỒN KHO THÔNG MINH (AI ROP)
+                <Sparkles size={12} style={{ color: '#38BDF8' }} /> CẢNH BÁO TỒN KHO THÔNG MINH (AI ROP)
               </span>
               <span className="widget-pill amber">Cần nhập sớm</span>
             </div>

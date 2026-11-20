@@ -2,7 +2,7 @@
   --payment-border: var(--border, var(--ri-border, #cbd5e1));
   --payment-surface: var(--bg-surface, var(--ri-surface, #fff));
   --payment-text: var(--text-primary, var(--ri-text, #0f172a));
-  --payment-focus: var(--accent-primary, var(--ri-focus, #4f46e5));
+  --payment-focus: var(--accent-primary, var(--ri-focus, #2563eb));
 }
 
 .payment-settings-modal form#payment-settings-form > label {

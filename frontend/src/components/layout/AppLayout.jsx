@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect} from 'react';
 import {Outlet,useLocation,useNavigate} from 'react-router-dom';
-import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,PanelLeft,HelpCircle} from 'lucide-react';
+import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,HelpCircle} from 'lucide-react';
 import {useAuth} from '../../auth/AuthContext';
 import {useBranch} from '../../branches/BranchContext';
 import {ROLE_LABELS,ROLES} from '../../config/roles';
@@ -64,6 +64,7 @@ export default function AppLayout(){
   const [pageTour,setPageTour]=useState(null);
   const [tourState,setTourState]=useState({userId:null,pending:false,completed:false,shown:false});
   const [celebration,setCelebration]=useState(false);
+  const celebrationKey=`retail_insight_first_order_celebrated_${user?.organization_id||user?.organization?.id||user?.id||'unknown'}`;
   const [clickedNavItems,setClickedNavItems]=useState([]);
   const location=useLocation();
   const navigate=useNavigate();
@@ -113,13 +114,15 @@ export default function AppLayout(){
   useEffect(() => {
     if (!user?.id) return;
     const onTourAction = event => {
-      if (event.detail === 'sale-completed') {
+      if (event.detail?.type === 'sale-completed' && Number(event.detail.previousOrderCount) === 0) {
+        try{if(localStorage.getItem(celebrationKey))return;}catch{}
         setCelebration(true);
       }
     };
     document.addEventListener('retail-tour', onTourAction);
     return () => document.removeEventListener('retail-tour', onTourAction);
-  }, [user?.id]);
+  }, [user?.id,celebrationKey]);
+  const closeCelebration=()=>{try{localStorage.setItem(celebrationKey,'true');}catch{}setCelebration(false);};
 
   useEffect(() => {
     setPageTour(null);
@@ -230,7 +233,7 @@ export default function AppLayout(){
           />
         )}
         {celebration&&(
-          <div className="interactive-tour-layer" role="dialog" aria-modal="true" style={{background:'rgba(15,23,42,0.6)',display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'auto',zIndex:10000}}>
+          <div className="interactive-tour-layer" role="dialog" aria-modal="true" onMouseDown={event=>{if(event.target===event.currentTarget)closeCelebration();}} style={{background:'rgba(15,23,42,0.6)',display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'auto',zIndex:10000}}>
             <section className="interactive-tour-card" style={{position:'relative',top:'auto',left:'auto',width:'min(440px,calc(100vw - 32px))',textAlign:'center',padding:'28px 24px'}}>
               <div className="interactive-tour-badge" style={{fontSize:'13px',padding:'6px 14px',marginBottom:'12px',background:'#ecfdf5',color:'#065f46'}}>
                 🎉 Chúc mừng!
@@ -245,7 +248,7 @@ export default function AppLayout(){
                 type="button"
                 className="btn btn-primary"
                 style={{width:'100%',padding:'10px',fontWeight:600}}
-                onClick={()=>setCelebration(false)}
+                onClick={()=>{closeCelebration();navigate('/');}}
               >
                 Khám phá hệ thống ngay
               </button>
@@ -268,7 +271,7 @@ export default function AppLayout(){
               aria-label={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
               title={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
             >
-              <PanelLeft size={18} />
+              <Menu size={19} />
             </button>
             <div className="breadcrumb">
               Hệ thống <ChevronRight size={14}/> <strong>{titleMap[location.pathname]||'Trang làm việc'}</strong>

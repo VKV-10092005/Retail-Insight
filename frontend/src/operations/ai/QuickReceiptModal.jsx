@@ -59,7 +59,7 @@ export default function QuickReceiptModal({ item, branchId, branchName, onClose,
         </div>
         {error && <p className="auth-error" role="alert" style={{ margin: 0 }}>{error}</p>}
         <div className="op-actions" style={{ justifyContent: 'flex-end', margin: 0 }}>
-          {Number(quantity) > 0 && <button type="submit" className="btn btn-primary" disabled={busy} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#4F46E5', borderColor: '#4F46E5' }}><PackagePlus size={16} />{busy ? 'Đang nhập kho…' : 'Xác nhận nhập kho'}</button>}
+          {Number(quantity) > 0 && <button type="submit" className="btn btn-primary" disabled={busy} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#2563EB', borderColor: '#2563EB' }}><PackagePlus size={16} />{busy ? 'Đang nhập kho…' : 'Xác nhận nhập kho'}</button>}
         </div>
       </form>
     </section>

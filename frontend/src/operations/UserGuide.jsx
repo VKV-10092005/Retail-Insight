@@ -14,8 +14,8 @@ const STEP1_CARDS = [
   {
     num: 1,
     icon: Package,
-    color: '#4F46E5',
-    bg: 'rgba(79,70,229,0.08)',
+    color: '#2563EB',
+    bg: 'rgba(37,99,235,0.08)',
     title: 'Thiết lập Danh mục & Sản phẩm',
     path: '/products',
     btnLabel: 'Mở Sản phẩm →',
@@ -59,7 +59,7 @@ const STEP1_CARDS = [
   {
     num: 4,
     icon: TrendingUp,
-    color: '#7C3AED',
+    color: '#0891B2',
     bg: 'rgba(124,58,237,0.08)',
     title: 'Theo dõi & Tối ưu vận hành',
     path: '/',
@@ -171,7 +171,7 @@ const GROUPS = [
   {
     id: 'C',
     icon: BrainCircuit,
-    color: '#7C3AED',
+    color: '#0891B2',
     title: 'Nhóm C — Phân tích Dự báo AI & Trợ lý ảo',
     sections: [
       {
@@ -246,8 +246,8 @@ const ROLES_DATA = [
     role: 'OWNER',
     label: 'Chủ cửa hàng',
     icon: ShieldCheck,
-    color: '#4F46E5',
-    bg: 'rgba(79,70,229,0.08)',
+    color: '#2563EB',
+    bg: 'rgba(37,99,235,0.08)',
     summary: 'Toàn quyền quản trị tổ chức, chi nhánh, nhân sự, tài chính, kho vận, bán hàng và phân tích AI.',
     features: [
       { label: 'Tổng quan & Báo cáo BI', ok: true },
@@ -309,7 +309,7 @@ const ROLES_DATA = [
     role: 'INVENTORY',
     label: 'Nhân viên kho',
     icon: Warehouse,
-    color: '#7C3AED',
+    color: '#0891B2',
     bg: 'rgba(124,58,237,0.08)',
     summary: 'Chuyên trách quản lý tồn kho, lập phiếu nhập hàng và thực hiện kiểm kê / điều chuyển. Bị chặn truy cập quầy thu ngân POS và báo cáo tài chính.',
     features: [

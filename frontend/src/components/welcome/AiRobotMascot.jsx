@@ -41,11 +41,11 @@ export default function AiRobotMascot() {
             />
             <defs>
               <linearGradient id="sparkGrad" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#818CF8" />
+                <stop stopColor="#38BDF8" />
                 <stop offset="1" stopColor="#38BDF8" />
               </linearGradient>
               <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="24" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#818CF8" />
+                <stop stopColor="#38BDF8" />
                 <stop offset="1" stopColor="#38BDF8" stopOpacity="0" />
               </linearGradient>
             </defs>

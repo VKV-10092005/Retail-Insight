@@ -22,13 +22,13 @@ import {
 } from 'lucide-react';
 
 
-const branchColors=['#4F46E5','#10B981','#0EA5E9','#F59E0B','#8B5CF6','#F97316'];
+const branchColors=['#2563EB','#10B981','#0EA5E9','#F59E0B','#8B5CF6','#F97316'];
 const reportMoney=value=>money(Number(value||0));
 const compactMoney=value=>{const n=Number(value||0);if(n>=1e6)return `${(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})}Tr`;if(n>=1e3)return `${Math.round(n/1e3)}k`;return String(Math.round(n));};
 function CategoryRevenueChart({rows=[]}){
- const colors=['#4F46E5','#0EA5E9','#10B981','#14B8A6','#8B5CF6','#F59E0B'];
+ const colors=['#2563EB','#0EA5E9','#10B981','#14B8A6','#8B5CF6','#F59E0B'];
  return <div className="op-chart reports-category-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={rows} layout="vertical" margin={{top:8,right:54,bottom:8,left:4}}>
-  <defs><linearGradient id="categoryRevenueGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#4F46E5"/><stop offset="55%" stopColor="#0EA5E9"/><stop offset="100%" stopColor="#10B981"/></linearGradient></defs>
+  <defs><linearGradient id="categoryRevenueGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#2563EB"/><stop offset="55%" stopColor="#0EA5E9"/><stop offset="100%" stopColor="#10B981"/></linearGradient></defs>
   <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--ri-border)"/><XAxis type="number" domain={[0,'dataMax * 1.15']} tickFormatter={compactMoney} axisLine={false} tickLine={false} tick={{fontSize:10,fill:'var(--ri-muted)'}}/><YAxis type="category" dataKey="name" width={160} axisLine={false} tickLine={false} tick={{fontSize:11,fill:'var(--ri-text)'}}/><Tooltip formatter={value=>[reportMoney(value),'Doanh thu']} contentStyle={{background:'var(--ri-surface)',border:'1px solid var(--ri-border)',borderRadius:12,boxShadow:'var(--ri-shadow-md)'}}/><Bar dataKey="revenue" name="Doanh thu" barSize={22} radius={[0,7,7,0]} isAnimationActive={false}>{rows.map((row,index)=><Cell key={row.id||row.name} fill={colors[index%colors.length]}/>) }<LabelList dataKey="revenue" position="right" formatter={compactMoney} style={{fontSize:10,fill:'var(--ri-text)',fontWeight:700}}/></Bar>
  </BarChart></ResponsiveContainer></div>;
 }
@@ -241,7 +241,7 @@ export default function ReportsBI() {
                   <div className="op-grid" style={{ marginBottom: '24px' }}>
                     <Card>
                       <h2>{'Xu h\u01b0\u1edbng doanh thu thu\u1ea7n & l\u1ee3i nhu\u1eadn theo th\u1eddi gian'}</h2>
-                      <Trend rows={data.trend} x="period" series={[["revenue","Doanh thu thu\u1ea7n","#4F46E5"]]} tooltipSeries={[["revenue","Doanh thu thu\u1ea7n"],["total_cogs","Gi\u00e1 v\u1ed1n"],["gross_profit","L\u1ee3i nhu\u1eadn g\u1ed9p"],["orders","S\u1ed1 \u0111\u01a1n h\u00e0ng"]]} />
+                      <Trend rows={data.trend} x="period" series={[["revenue","Doanh thu thu\u1ea7n","#2563EB"]]} tooltipSeries={[["revenue","Doanh thu thu\u1ea7n"],["total_cogs","Gi\u00e1 v\u1ed1n"],["gross_profit","L\u1ee3i nhu\u1eadn g\u1ed9p"],["orders","S\u1ed1 \u0111\u01a1n h\u00e0ng"]]} />
                     </Card>
 
                     <Card>

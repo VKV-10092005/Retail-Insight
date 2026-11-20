@@ -1,6 +1,6 @@
 
 .reports-executive-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:0 0 20px}
-.reports-exec-kpi{display:grid;min-width:0;gap:12px;padding:17px 18px;border:1px solid var(--ri-border);border-radius:14px;background:var(--ri-surface);box-shadow:var(--ri-shadow-sm);border-top:3px solid #4f46e5}
+.reports-exec-kpi{display:grid;min-width:0;gap:12px;padding:17px 18px;border:1px solid var(--ri-border);border-radius:14px;background:var(--ri-surface);box-shadow:var(--ri-shadow-sm);border-top:3px solid #2563eb}
 .reports-exec-kpi.tone-positive{border-top-color:#10b981}.reports-exec-kpi.tone-negative{border-top-color:#ef4444}.reports-exec-kpi.tone-info{border-top-color:#0ea5e9}.reports-exec-kpi.tone-neutral{border-top-color:#94a3b8}
 .reports-exec-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--ri-muted);font-size:12px;font-weight:700}
 .reports-exec-kpi-top i{color:var(--ri-muted);font-size:10px;font-style:normal;opacity:.65}

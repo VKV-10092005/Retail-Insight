@@ -32,7 +32,7 @@ export function makeForecastTimeline(history, forecasts) {
 
 export function ForecastKpis({ items }) {
   return <div className="stat-grid three forecast-bi-kpis" style={{ marginBottom: 24 }}>
-    {items.map(item => <Card className="stat" key={item.label} style={{ borderTop: `3px solid ${item.color || '#4F46E5'}` }}>
+    {items.map(item => <Card className="stat" key={item.label} style={{ borderTop: `3px solid ${item.color || '#2563EB'}` }}>
       <div className="stat-top">{item.label}</div><strong style={{ color: item.color || 'var(--ri-text)' }}>{item.value}</strong><small>{item.detail}</small>
     </Card>)}
   </div>;
@@ -42,17 +42,17 @@ export function ForecastBIChart({ data, height = 340, xKey = 'period' }) {
   const currentPeriod = data.some(row => row.period === 'T-1') ? 'T-1' : null;
   return <div style={{ width: '100%', height }}>
     <ResponsiveContainer width="100%" height="100%"><ComposedChart data={data} margin={{ top: 16, right: 22, left: 4, bottom: 4 }}>
-      <defs><linearGradient id="forecastAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#4F46E5" stopOpacity={0.26}/><stop offset="95%" stopColor="#4F46E5" stopOpacity={0.015}/></linearGradient></defs>
+      <defs><linearGradient id="forecastAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2563EB" stopOpacity={0.26}/><stop offset="95%" stopColor="#2563EB" stopOpacity={0.015}/></linearGradient></defs>
       <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--ri-border)"/>
       <XAxis dataKey={xKey} interval="preserveStartEnd" minTickGap={18} tick={{ fontSize: 11, fill: 'var(--ri-muted)' }} axisLine={false} tickLine={false}/>
       <YAxis tickFormatter={number} tick={{ fontSize: 11, fill: 'var(--ri-muted)' }} axisLine={false} tickLine={false}/>
       <Tooltip content={glassTooltip}/>
-      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} content={()=><div style={{display:'flex',justifyContent:'center',gap:18,flexWrap:'wrap',fontSize:10,paddingTop:8}}><span><i style={{display:'inline-block',width:9,height:9,borderRadius:9,background:'#10B981',marginRight:6}}/>Thực tế bán</span><span><i style={{display:'inline-block',width:9,height:9,borderRadius:9,background:'#4F46E5',marginRight:6}}/>Dự báo AI</span><span><i style={{display:'inline-block',width:9,height:9,borderRadius:9,background:'#C7D2FE',marginRight:6}}/>Khoảng tham chiếu ±1σ lịch sử</span></div>}/>
+      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} content={()=><div style={{display:'flex',justifyContent:'center',gap:18,flexWrap:'wrap',fontSize:10,paddingTop:8}}><span><i style={{display:'inline-block',width:9,height:9,borderRadius:9,background:'#10B981',marginRight:6}}/>Thực tế bán</span><span><i style={{display:'inline-block',width:9,height:9,borderRadius:9,background:'#2563EB',marginRight:6}}/>Dự báo AI</span><span><i style={{display:'inline-block',width:9,height:9,borderRadius:9,background:'#C7D2FE',marginRight:6}}/>Khoảng tham chiếu ±1σ lịch sử</span></div>}/>
       {currentPeriod&&<ReferenceLine x={currentPeriod} stroke="#64748B" strokeDasharray="5 5" strokeWidth={1.5}/>}
       <Area type="monotone" dataKey="confidenceBand" name="Khoảng tham chiếu ±1σ lịch sử" stroke="none" fill="#A5B4FC" fillOpacity={0.28} connectNulls isAnimationActive={false}/>
       <Area type="monotone" dataKey="forecast" name="Dự báo AI" stroke="none" fill="url(#forecastAreaGradient)" connectNulls isAnimationActive={false}/>
       <Line type="monotone" dataKey="actual" name="Thực tế bán" stroke="#10B981" strokeWidth={2.5} dot={{r:4,fill:'#10B981',stroke:'#fff',strokeWidth:2}} activeDot={{ r: 5 }}/>
-      <Line type="monotone" dataKey="forecast" name="Dự báo AI" stroke="#4F46E5" strokeWidth={3} strokeDasharray="6 4" dot={{r:5,fill:'#4F46E5',stroke:'#fff',strokeWidth:2}} activeDot={{ r: 6 }}/>
+      <Line type="monotone" dataKey="forecast" name="Dự báo AI" stroke="#2563EB" strokeWidth={3} strokeDasharray="6 4" dot={{r:5,fill:'#2563EB',stroke:'#fff',strokeWidth:2}} activeDot={{ r: 6 }}/>
     </ComposedChart></ResponsiveContainer>
   </div>;
 }
@@ -64,7 +64,7 @@ export function ForecastMultiChart({ items }) {
   const chartWidth = isScrollable ? chartItems.length * 115 : '100%';
   const barSize = isScrollable ? 18 : 24;
   const horizons = [1,2,3];
-  const periods = horizons.map(horizon=>({key:`h${horizon}`,horizon,label:`Kỳ T+${horizon}`,color:['#3730A3','#4F46E5','#0EA5E9'][horizon-1]}));
+  const periods = horizons.map(horizon=>({key:`h${horizon}`,horizon,label:`Kỳ T+${horizon}`,color:['#3730A3','#2563EB','#0EA5E9'][horizon-1]}));
   const data = products.map(({item,label})=>{
     const row={product:label};
     periods.forEach(({key,horizon})=>{

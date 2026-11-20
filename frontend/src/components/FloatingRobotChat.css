@@ -242,7 +242,7 @@
 /* ── Thanh Header ───────────────────────────────────────────── */
 .robot-chat-header {
   padding: 12px 16px;
-  background: linear-gradient(135deg, #5268db 0%, #4357ba 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -364,7 +364,7 @@
 }
 
 .welcome-banner-icon {
-  color: #5268db;
+  color: #2563eb;
   flex-shrink: 0;
 }
 
@@ -377,7 +377,7 @@
 
 :root[data-theme="dark"] .welcome-banner-icon,
 .dark .welcome-banner-icon {
-  color: #818cf8;
+  color: #38bdf8;
 }
 
 /* Tin Nhắn */
@@ -449,7 +449,7 @@
 
 /* Tin nhắn User */
 .robot-chat-message.user .msg-content-bubble {
-  background: #5268db;
+  background: #2563eb;
   color: #ffffff;
   border-bottom-right-radius: 4px;
 }
@@ -492,7 +492,7 @@
 
 .chat-inline-code {
   background: rgba(82, 104, 219, 0.08);
-  color: #4357ba;
+  color: #1d4ed8;
   padding: 1px 5px;
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -577,7 +577,7 @@
 .suggestion-chip:hover {
   background: #EEF2FF;
   border-color: #c7d2fe;
-  color: #4357ba;
+  color: #1d4ed8;
 }
 
 :root[data-theme="dark"] .suggestion-chip,
@@ -590,13 +590,13 @@
 :root[data-theme="dark"] .suggestion-chip:hover,
 .dark .suggestion-chip:hover {
   background: #2D3748;
-  border-color: #818cf8;
+  border-color: #38bdf8;
   color: #a5b4fc;
 }
 
 .chip-icon {
   flex-shrink: 0;
-  color: #5268db;
+  color: #2563eb;
 }
 
 .chip-icon.warning {
@@ -608,12 +608,12 @@
 }
 
 .chip-icon.primary {
-  color: #818cf8;
+  color: #38bdf8;
 }
 
 :root[data-theme="dark"] .chip-icon,
 .dark .chip-icon {
-  color: #818cf8;
+  color: #38bdf8;
 }
 
 :root[data-theme="dark"] .chip-icon.warning,
@@ -678,18 +678,18 @@
 }
 
 .robot-chat-input:focus {
-  border-color: #5268db;
+  border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(82, 104, 219, 0.15);
 }
 
 :root[data-theme="dark"] .robot-chat-input:focus,
 .dark .robot-chat-input:focus {
-  border-color: #818cf8;
+  border-color: #38bdf8;
   box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
 }
 
 .robot-send-btn {
-  background: #5268db;
+  background: #2563eb;
   border: none;
   color: #ffffff;
   width: 36px;
@@ -703,7 +703,7 @@
 }
 
 .robot-send-btn:hover:not(:disabled) {
-  background: #4357ba;
+  background: #1d4ed8;
 }
 
 .robot-send-btn:active:not(:disabled) {

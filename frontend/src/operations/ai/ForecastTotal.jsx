@@ -91,7 +91,7 @@ export default function ForecastTotal() {
                 <AiResultNotice result={result} />
                 {/* 3 THẺ KPI TỔNG HỢP */}
                 <ForecastKpis items={[
-                  {label:'Tổng sản lượng dự báo kỳ tới',value:number(totalForecast),detail:'Toàn chi nhánh · sau hiệu chỉnh',color:'#4F46E5'},
+                  {label:'Tổng sản lượng dự báo kỳ tới',value:number(totalForecast),detail:'Toàn chi nhánh · sau hiệu chỉnh',color:'#2563EB'},
                   {label:'Trung bình mỗi kỳ',value:number(averageForecast),detail:`Hệ số hiệu chỉnh gần nhất: ${factor.toFixed(3)}x`,color:'#0EA5E9'},
                   {label:'Biến động so với kỳ trước',value:percentChange==null?'Chưa đủ 2 kỳ':`${percentChange>=0?'+':''}${percentChange.toFixed(1)}%`,detail:'So với sản lượng thực tế tháng gần nhất',color:percentChange==null?'#64748B':percentChange>=0?'#10B981':'#EF4444'}
                 ]}/>

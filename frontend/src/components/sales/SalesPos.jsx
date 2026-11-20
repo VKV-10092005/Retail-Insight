@@ -320,6 +320,7 @@ export default function SalesPos(){
  const [cashReceived,setCashReceived]=useState('');
  const [busy,setBusy]=useState(false);
  const submitLock=useRef(false),draftRequestKey=useRef(null);
+ const previousOrderCount=useRef(null);
  const [toast,setToast]=useState(null);
  useEffect(()=>{
   if(!toast)return;
@@ -533,13 +534,14 @@ export default function SalesPos(){
   const enqueueOfflineSale=()=>{const queue=readOfflineQueue(queueKey);queue.push({body,failed:null,retryMessage:null});writeOfflineQueue(queueKey,queue);setOfflineQueue(queue);setOfflineCount(queue.length);applyOptimisticStock(body.items);resetDraft();setToast({tone:'warning',title:'\u0110\u00e3 l\u01b0u \u0111\u01a1n offline',message:'\u0110\u01a1n s\u1ebd \u0111\u01b0\u1ee3c \u0111\u1ed3ng b\u1ed9 khi k\u1ebft n\u1ed1i m\u1ea1ng tr\u1edf l\u1ea1i.'});};
   try{
    if(!isEditing&&navigator.onLine===false){enqueueOfflineSale();return;}
+   if(!isEditing&&!saveOpen){try{const prior=await request('/sales?limit=1');previousOrderCount.current=Number(prior.total)||0;}catch{previousOrderCount.current=null;}}
    const updateBody={note:body.note||null,customer_id:body.customer_id||null,order_discount:body.order_discount,payment_method:paymentMethod,items:body.items};
    const result=isEditing?await request(`/documents/sales/${editing}`,{method:'PUT',body:updateBody}):await postSaleWithRetry(body);
    if(isEditing&&!saveOpen&&paymentMethod==='CASH')await request(`/sales/${result.id}/confirm-payment`,{method:'POST',body:{}});
    if(!isEditing)applyOptimisticStock(body.items);
    refetchProducts();refreshOpenOrders();
    if(saveOpen){resetDraft();setToast({tone:'success',title:isEditing?'Đã cập nhật đơn':'Đã gửi đơn #'+result.id+' thành công',message:isEditing?'Đơn #'+result.id+' đã cập nhật.':'Giỏ hàng đã sẵn sàng cho khách tiếp theo.'});}
-   else{const detail=await request(`/sales/${result.id}`);setReceipt(detail);resetDraft();setToast({tone:'success',title:detail.document.payment_status==='WAITING_PAYMENT'?'Đang chờ thanh toán':'Đã tạo hóa đơn',message:`Mã #${result.id}`});if(!isEditing&&detail.document.payment_status!=='WAITING_PAYMENT')document.dispatchEvent(new CustomEvent('retail-tour',{detail:'sale-completed'}));}
+   else{const detail=await request(`/sales/${result.id}`);setReceipt(detail);resetDraft();setToast({tone:'success',title:detail.document.payment_status==='WAITING_PAYMENT'?'Đang chờ thanh toán':'Đã tạo hóa đơn',message:`Mã #${result.id}`});if(!isEditing&&detail.document.payment_status!=='WAITING_PAYMENT')document.dispatchEvent(new CustomEvent('retail-tour',{detail:{type:'sale-completed',previousOrderCount:previousOrderCount.current}}));}
   }catch(error){
    const temporarilyUnavailable=isTemporaryConnectionError(error)||(navigator.onLine===false&&!Number(error?.status||0));
    if(!isEditing&&navigator.onLine===false&&temporarilyUnavailable)enqueueOfflineSale();
@@ -549,7 +551,7 @@ export default function SalesPos(){
  };
  const confirmTransfer=async()=>{
   if(!receipt||busy)return;setBusy(true);
-  try{await request(`/sales/${receipt.document.id}/confirm-payment`,{method:'POST',body:{}});const detail=await request(`/sales/${receipt.document.id}`);setReceipt(detail);refetchProducts();refreshOpenOrders();setToast({tone:'success',title:'Đã xác nhận chuyển khoản',message:`Hóa đơn #${receipt.document.id} đã thanh toán.`});document.dispatchEvent(new CustomEvent('retail-tour',{detail:'sale-completed'}));}
+  try{await request(`/sales/${receipt.document.id}/confirm-payment`,{method:'POST',body:{}});const detail=await request(`/sales/${receipt.document.id}`);setReceipt(detail);refetchProducts();refreshOpenOrders();setToast({tone:'success',title:'Đã xác nhận chuyển khoản',message:`Hóa đơn #${receipt.document.id} đã thanh toán.`});document.dispatchEvent(new CustomEvent('retail-tour',{detail:{type:'sale-completed',previousOrderCount:previousOrderCount.current}}));}
   catch(error){setToast({tone:'danger',title:'Chưa thể xác nhận',message:error.message});}
   finally{setBusy(false);}
  };

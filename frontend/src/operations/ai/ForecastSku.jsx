@@ -167,7 +167,7 @@ export default function ForecastSku() {
                 <AiResultNotice result={result} />
                 {/* THẺ TÓM TẮT DỰ BÁO CỦA RIÊNG SẢN PHẨM */}
                 <ForecastKpis items={[
-                  {label:'Tổng sản lượng dự báo kỳ tới',value:number(totalForecast),detail:`${selectedProduct?.sku||item?.sku||''} · ${selectedProduct?.name||item?.name||'Sản phẩm đã chọn'}`,color:'#4F46E5'},
+                  {label:'Tổng sản lượng dự báo kỳ tới',value:number(totalForecast),detail:`${selectedProduct?.sku||item?.sku||''} · ${selectedProduct?.name||item?.name||'Sản phẩm đã chọn'}`,color:'#2563EB'},
                   {label:'Trung bình mỗi kỳ',value:number(averageForecast),detail:`Tồn hiện tại: ${typeof currentStock==='number'?number(currentStock):currentStock} · Tồn an toàn: ${number(safetyStock)}`,color:'#0EA5E9'},
                   {label:'Xu hướng so với thực tế gần nhất',value:trend==null?'Chưa đủ dữ liệu':`${trend>=0?'+':''}${trend.toFixed(1)}%`,detail:'So với kỳ bán thực tế gần nhất',color:trend==null?'#64748B':trend>=0?'#10B981':'#EF4444'}
                 ]}/>
