@@ -649,7 +649,9 @@ export default function FloatingRobotChat() {
             onLostPointerCapture={handleResizePointerUp}
             title="Kéo để thay đổi kích thước hộp thoại"
           >
-            <div className="resize-indicator-lines"><span /><span /></div>
+            <svg className="resize-corner-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M13 3H7.5A4.5 4.5 0 0 0 3 7.5V13" />
+            </svg>
           </div>
 
           {/* Thanh Header */}

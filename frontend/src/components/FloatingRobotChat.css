@@ -252,8 +252,8 @@
 /* ── Tay nắm kéo chỉnh kích thước ở góc trên bên trái ───── */
 .chat-resize-handle-tl {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  top: 7px;
+  left: 7px;
   width: 22px;
   height: 22px;
   border-radius: 10px 4px 6px 4px;
@@ -272,20 +272,15 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-.resize-indicator-lines {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  transform: rotate(-45deg);
-  transform-origin: center;
-}
-
-.resize-indicator-lines span {
-  display: block;
-  width: 6px;
-  height: 2px;
-  border-radius: 2px;
-  background: #ffffff;
+.resize-corner-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 :root[data-theme="dark"] .chat-resize-handle-tl,

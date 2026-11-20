@@ -8,6 +8,7 @@ import {assertBranch} from './common.js';
 const router=Router();
 const eligibleRoles=['OWNER','MANAGER','INVENTORY'];
 const CACHE_HOURS=24;
+const FALLBACK_CACHE_HOURS=1;
 const MIN_MARGIN_RATE=0.15;
 const inFlight=new Map();
 let tableReady;
@@ -56,14 +57,12 @@ router.get('/products',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=
 
 const generatedSchema={type:'object',properties:{market_observations:{type:'array',items:{type:'object',properties:{retailer:{type:'string'},listing_title:{type:'string'},price:{type:'number'},url:{type:'string'},price_note:{type:'string'}},required:['retailer','listing_title','price','url','price_note']}},sourcing_suggestions:{type:'array',items:{type:'object',properties:{supplier_name:{type:'string'},channel:{type:'string'},indicative_unit_price:{type:'number'},minimum_order:{type:'string'},discount_terms:{type:'string'},quality_notes:{type:'string'},url:{type:'string'}},required:['supplier_name','channel','indicative_unit_price','minimum_order','discount_terms','quality_notes','url']}},market_summary:{type:'string'},sourcing_note:{type:'string'}},required:['market_observations','sourcing_suggestions','market_summary','sourcing_note']};
 
-function collectGroundingSources(interaction){
+function collectGroundingSources(response){
  const sources=[],seen=new Set();
- for(const step of interaction?.steps||[]){
-  for(const block of step?.content||[]){
-   for(const annotation of block?.annotations||[]){
-    if(annotation?.type!=='url_citation'||typeof annotation.url!=='string')continue;
-    try{const url=new URL(annotation.url);if(!['https:','http:'].includes(url.protocol)||seen.has(url.href))continue;seen.add(url.href);sources.push({title:String(annotation.title||url.hostname).slice(0,180),url:url.href});}catch{}
-   }
+ for(const candidate of response?.candidates||[]){
+  for(const chunk of candidate?.groundingMetadata?.groundingChunks||[]){
+   if(typeof chunk?.web?.uri!=='string')continue;
+   try{const url=new URL(chunk.web.uri);if(!['https:','http:'].includes(url.protocol)||seen.has(url.href))continue;seen.add(url.href);sources.push({title:String(chunk.web.title||url.hostname).slice(0,180),url:url.href});}catch{}
   }
  }
  return sources;
@@ -93,23 +92,72 @@ function withProductPricing(result,product){
  else if(avg!=null&&sale>avg*1.05)competitiveness='ABOVE_MARKET';
  return {...result,price_competitiveness:competitiveness,optimal_selling_price:optimal,minimum_viable_price:minimumViable,product:{id:Number(product.id),sku:product.sku,name:product.name,cost_price:cost,selling_price:sale},minimum_margin_rate:MIN_MARGIN_RATE};
 }
+function categoryMargin(categoryName){
+ const category=String(categoryName||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ if(/dien tu|cong nghe|gia dung|thiet bi/.test(category))return 0.18;
+ if(/my pham|lam dep|thoi trang|phu kien/.test(category))return 0.32;
+ if(/thuc pham|do uong|bach hoa|tieu dung/.test(category))return 0.22;
+ if(/duoc|suc khoe|me va be/.test(category))return 0.25;
+ return 0.24;
+}
+
+function localFallbackAnalysis(product,quantity,error){
+ const cost=Math.max(0,Number(product.cost_price)||0),sale=Math.max(0,Number(product.sale_price)||0);
+ const margin=categoryMargin(product.category_name);
+ const costBased=cost>0?Math.ceil(cost/(1-margin)):0;
+ const reference=sale>0&&costBased>0?Math.round(sale*0.6+costBased*0.4):(sale||costBased||0);
+ const minPrice=reference>0?Math.max(cost>0?Math.ceil(cost/(1-MIN_MARGIN_RATE)):1,Math.round(reference*0.9)):null;
+ const avgPrice=reference>0?Math.max(minPrice,Math.round(reference)):null;
+ const maxPrice=reference>0?Math.max(avgPrice,Math.round(reference*1.12)):null;
+ const keyword=encodeURIComponent(`${product.name} ${product.category_name||''}`.trim());
+ const supplierPrice=cost>0?Math.round(cost):avgPrice?Math.round(avgPrice*(1-margin)):null;
+ const requested=quantity>0?`${quantity.toLocaleString('vi-VN')} sản phẩm`:'Liên hệ để xác nhận';
+ const reason=error?.message?'Dịch vụ tra cứu trực tuyến tạm thời không khả dụng. ':'';
+ return {
+  min_market_price:minPrice,avg_market_price:avgPrice,max_market_price:maxPrice,
+  market_observations:[],
+  sourcing_suggestions:[
+   {supplier_name:'Nhà phân phối chính hãng',channel:'Kênh phân phối theo danh mục',indicative_unit_price:supplierPrice,minimum_order:requested,discount_terms:'Yêu cầu báo giá theo số lượng và điều kiện giao hàng',quality_notes:'Ưu tiên đơn vị có hóa đơn, chứng từ nguồn gốc và chính sách đổi trả; cần xác minh báo giá trước khi nhập.',url:`https://www.google.com/search?q=${keyword}+nh%C3%A0+ph%C3%A2n+ph%E1%BB%91i+ch%C3%ADnh+h%C3%A3ng`},
+   {supplier_name:'Sàn bán sỉ và đại lý khu vực',channel:'So sánh nhiều nguồn cung',indicative_unit_price:supplierPrice,minimum_order:requested,discount_terms:'Đàm phán chiết khấu theo số lượng thực nhập',quality_notes:'Đối chiếu uy tín người bán, phí vận chuyển, hạn dùng và quy cách đóng gói trước khi đặt hàng.',url:`https://www.google.com/search?q=${keyword}+ngu%E1%BB%93n+s%E1%BB%89+Vi%E1%BB%87t+Nam`}
+  ],
+  market_summary:`${reason}Khoảng giá trên là ước tính nội bộ từ giá nhập ${cost>0?cost.toLocaleString('vi-VN')+' ₫':'chưa có'}, giá bán ${sale>0?sale.toLocaleString('vi-VN')+' ₫':'chưa có'} và biên giá tham khảo ${(margin*100).toFixed(0)}% của danh mục ${product.category_name||'chung'}. Cần đối chiếu listing thực tế trước khi quyết định giá.`,
+  sourcing_note:'Đây là gợi ý kênh tìm nguồn dự phòng, không phải báo giá đã được xác minh. Hãy yêu cầu báo giá, hóa đơn và điều kiện giao hàng trực tiếp từ nhà cung cấp.',
+  sources:[],confidence:'LOW',source_count:0,observation_count:0,minimum_margin_rate:MIN_MARGIN_RATE,fallback:true,analysis_mode:'LOCAL_ESTIMATE'
+ };
+}
+
+function parseJsonText(text){
+ const cleaned=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+ return JSON.parse(cleaned);
+}
+
 async function requestGroundedAnalysis(product,quantity){
  const apiKey=String(process.env.GEMINI_API_KEY||'').trim();
- if(!apiKey)throw new HttpError(503,'Chưa cấu hình GEMINI_API_KEY để tra cứu giá trực tuyến.');
- const model=String(process.env.GEMINI_MARKET_MODEL||'gemini-3.8-flash').trim();
+ if(!apiKey)throw new Error('Chưa cấu hình GEMINI_API_KEY.');
+ const configuredModel=String(process.env.GEMINI_MARKET_MODEL||'').trim();
+ const model=['gemini-2.5-flash','gemini-flash-latest'].includes(configuredModel)?configuredModel:'gemini-flash-latest';
  const prompt=`Tra cứu trên Google Search bằng tiếng Việt mặt bằng bán lẻ hiện tại tại Việt Nam cho đúng mặt hàng sau. Tên: ${product.name}. Mã nội bộ: ${product.sku}. Danh mục: ${product.category_name||'chưa phân loại'}. Quy cách/đơn vị đã biết: ${product.unit||'không có dữ liệu quy cách'}.
 Tìm các trang sản phẩm hiện đang bán từ Shopee, Lazada, Tiki, Bách Hóa Xanh, WinMart hoặc cửa hàng/nhà phân phối có uy tín. Chỉ ghi listing có đúng sản phẩm và quy cách có thể xác minh; giá phải là giá bán hiện tại bằng VND, không tự quy đổi giá khuyến mãi/voucher không áp dụng rộng rãi. Nếu không tìm được đủ listing đáng tin cậy, trả về mảng rỗng thay vì ước đoán. Với mỗi observation và supplier phải dùng URL lấy từ kết quả Google Search grounding, tuyệt đối không tạo URL, tên nhà bán hay báo giá không tìm thấy.
 Đồng thời đề xuất nguồn nhập sỉ phù hợp sản phẩm. Ưu tiên nhà phân phối chính hãng, chợ đầu mối hoặc sàn B2B có trang nguồn kiểm chứng. Chỉ đưa ra giá tham khảo/điều kiện chiết khấu khi trang tìm được có căn cứ; nếu chưa rõ ghi 'Chưa công bố'. Số lượng dự kiến cần nhập: ${quantity||'chưa cung cấp'}.
 Trả về JSON đúng schema. Không đưa ra URL nếu URL đó không xuất hiện trong citations của Google Search. Mô tả sự không chắc chắn trong market_summary/sourcing_note.`;
  let response;
  try{
-  response=await fetch('https://generativelanguage.googleapis.com/v1beta/interactions',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey,'Api-Revision':'2026-05-20'},body:JSON.stringify({model,input:prompt,tools:[{type:'google_search'}],response_format:{type:'text',mime_type:'application/json',schema:generatedSchema}}),signal:AbortSignal.timeout(35000)});
- }catch(error){throw new HttpError(503,error.name==='TimeoutError'?'Tra cứu thị trường hết thời gian chờ. Vui lòng thử lại.':'Không kết nối được dịch vụ tra cứu thị trường.');}
- if(!response.ok){const status=response.status;try{await response.arrayBuffer();}catch{}throw new HttpError(status===429?503:502,status===429?'Dịch vụ tra cứu đang quá tải. Vui lòng thử lại sau.':'Dịch vụ tra cứu giá thị trường tạm thời không khả dụng.');}
- let interaction;try{interaction=await response.json();}catch{throw new HttpError(502,'Dịch vụ tra cứu trả về dữ liệu không hợp lệ.');}
- let raw;try{raw=JSON.parse(String(interaction.output_text||''));}catch{throw new HttpError(502,'Không đọc được kết quả cấu trúc từ dịch vụ tra cứu.');}
- const sources=collectGroundingSources(interaction);
+  response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],tools:[{google_search:{}}],generationConfig:{temperature:0.2,responseMimeType:'application/json',responseJsonSchema:generatedSchema}}),signal:AbortSignal.timeout(25000)});
+ }catch(error){throw new Error(error.name==='TimeoutError'?'Tra cứu thị trường hết thời gian chờ.':'Không kết nối được Gemini API.');}
+ if(!response.ok){const status=response.status;try{await response.arrayBuffer();}catch{}throw new Error(`Gemini API trả về HTTP ${status}.`);}
+ let payload;try{payload=await response.json();}catch{throw new Error('Gemini API trả về dữ liệu không hợp lệ.');}
+ const outputText=(payload.candidates?.[0]?.content?.parts||[]).map(part=>part?.text||'').join('');
+ let raw;try{raw=parseJsonText(outputText);}catch{throw new Error('Không đọc được JSON từ Gemini API.');}
+ const sources=collectGroundingSources(payload);
  return {result:normaliseGroundedResult(raw,sources),model};
+}
+
+async function resolveMarketAnalysis(product,quantity){
+ try{return await requestGroundedAnalysis(product,quantity);}
+ catch(error){
+  console.warn('[Market Intelligence] Gemini unavailable, using local estimate:',error?.message||error);
+  return {result:localFallbackAnalysis(product,quantity,error),model:'local-pricing-fallback'};
+ }
 }
 
 router.post('/check',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{
@@ -123,8 +171,9 @@ router.post('/check',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{
  const key=`${org}:${product.id}`;
  const attributes=typeof product.attributes==='string'?(()=>{try{return JSON.parse(product.attributes);}catch{return {};}})():(product.attributes||{});
  const checkedBy=req.user.id;
- if(!inFlight.has(key))inFlight.set(key,requestGroundedAnalysis({...product,unit:attributes.unit},body.quantity).then(async response=>{
-  const expiresAt=new Date(Date.now()+CACHE_HOURS*60*60*1000);
+ if(!inFlight.has(key))inFlight.set(key,resolveMarketAnalysis({...product,unit:attributes.unit},body.quantity).then(async response=>{
+  const cacheHours=response.result.fallback?FALLBACK_CACHE_HOURS:CACHE_HOURS;
+  const expiresAt=new Date(Date.now()+cacheHours*60*60*1000);
   await pool.execute(`INSERT INTO market_price_checks(organization_id,product_id,checked_by,result_json,source_count,model_name,checked_at,expires_at) VALUES (?,?,?,?,?,?,UTC_TIMESTAMP(),?) ON DUPLICATE KEY UPDATE checked_by=VALUES(checked_by),result_json=VALUES(result_json),source_count=VALUES(source_count),model_name=VALUES(model_name),checked_at=UTC_TIMESTAMP(),expires_at=VALUES(expires_at)`,[org,product.id,checkedBy,JSON.stringify(response.result),response.result.source_count,response.model,expiresAt]);
   return response;
  }).finally(()=>inFlight.delete(key)));
