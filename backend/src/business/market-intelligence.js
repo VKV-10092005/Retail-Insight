@@ -35,7 +35,15 @@ export async function ensureMarketPriceChecksTable(){
 }
 
 const listQuery=z.object({q:z.string().trim().max(100).default(''),branch_id:z.coerce.number().int().positive().optional(),mode:z.enum(['all','priority']).default('all'),limit:z.coerce.number().int().min(1).max(200).default(100)});
-const checkBody=z.object({product_id:z.coerce.number().int().positive(),quantity:z.coerce.number().int().min(0).max(1000000).default(0),refresh:z.boolean().default(false)}).strict();
+const checkBody=z.object({
+ product_id:z.coerce.number().int().positive().optional(),
+ product_ids:z.array(z.coerce.number().int().positive()).min(2).max(10).optional(),
+ quantity:z.coerce.number().int().min(0).max(1000000).default(0),
+ refresh:z.boolean().default(false)
+}).strict().superRefine((value,ctx)=>{
+ if(Boolean(value.product_id)===Boolean(value.product_ids))ctx.addIssue({code:'custom',message:'Chỉ gửi product_id hoặc product_ids.'});
+ if(value.product_ids&&new Set(value.product_ids).size<2)ctx.addIssue({code:'custom',path:['product_ids'],message:'Cần ít nhất 2 sản phẩm khác nhau.'});
+});
 
 router.get('/products',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{
  const query=listQuery.parse(req.query),org=req.organizationId,filterArgs=[],where=["p.organization_id=?","p.status='ACTIVE'"];
@@ -160,18 +168,13 @@ async function resolveMarketAnalysis(product,quantity){
  }
 }
 
-router.post('/check',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{
- await ensureMarketPriceChecksTable();
- const body=checkBody.parse(req.body),org=req.organizationId;
- const [[product]]=await pool.execute(`SELECT p.id,p.sku,p.name,p.category_id,c.name category_name,p.cost_price,p.sale_price,p.attributes FROM products p LEFT JOIN categories c ON c.organization_id=p.organization_id AND c.id=p.category_id WHERE p.id=? AND p.organization_id=? AND p.status='ACTIVE'`,[body.product_id,org]);
- if(!product)throw new HttpError(404,'Không tìm thấy sản phẩm đang kinh doanh trong kho.');
+async function checkProductMarket({product,org,checkedBy,quantity,refresh}){
  let cached=null;
- if(!body.refresh){const [rows]=await pool.execute('SELECT result_json,checked_at,expires_at FROM market_price_checks WHERE organization_id=? AND product_id=? AND expires_at>UTC_TIMESTAMP() LIMIT 1',[org,product.id]);if(rows[0])cached={result:typeof rows[0].result_json==='string'?JSON.parse(rows[0].result_json):rows[0].result_json,checked_at:rows[0].checked_at,expires_at:rows[0].expires_at};}
- if(cached){res.json({...withProductPricing(cached.result,product),checked_at:cached.checked_at,expires_at:cached.expires_at,cached:true,requested_quantity:body.quantity});return;}
+ if(!refresh){const [rows]=await pool.execute('SELECT result_json,checked_at,expires_at FROM market_price_checks WHERE organization_id=? AND product_id=? AND expires_at>UTC_TIMESTAMP() LIMIT 1',[org,product.id]);if(rows[0])cached={result:typeof rows[0].result_json==='string'?JSON.parse(rows[0].result_json):rows[0].result_json,checked_at:rows[0].checked_at,expires_at:rows[0].expires_at};}
+ if(cached)return {...withProductPricing(cached.result,product),checked_at:cached.checked_at,expires_at:cached.expires_at,cached:true,requested_quantity:quantity};
  const key=`${org}:${product.id}`;
  const attributes=typeof product.attributes==='string'?(()=>{try{return JSON.parse(product.attributes);}catch{return {};}})():(product.attributes||{});
- const checkedBy=req.user.id;
- if(!inFlight.has(key))inFlight.set(key,resolveMarketAnalysis({...product,unit:attributes.unit},body.quantity).then(async response=>{
+ if(!inFlight.has(key))inFlight.set(key,resolveMarketAnalysis({...product,unit:attributes.unit},quantity).then(async response=>{
   const cacheHours=response.result.fallback?FALLBACK_CACHE_HOURS:CACHE_HOURS;
   const expiresAt=new Date(Date.now()+cacheHours*60*60*1000);
   await pool.execute(`INSERT INTO market_price_checks(organization_id,product_id,checked_by,result_json,source_count,model_name,checked_at,expires_at) VALUES (?,?,?,?,?,?,UTC_TIMESTAMP(),?) ON DUPLICATE KEY UPDATE checked_by=VALUES(checked_by),result_json=VALUES(result_json),source_count=VALUES(source_count),model_name=VALUES(model_name),checked_at=UTC_TIMESTAMP(),expires_at=VALUES(expires_at)`,[org,product.id,checkedBy,JSON.stringify(response.result),response.result.source_count,response.model,expiresAt]);
@@ -179,7 +182,21 @@ router.post('/check',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{
  }).finally(()=>inFlight.delete(key)));
  const response=await inFlight.get(key);
  const [rows]=await pool.execute('SELECT checked_at,expires_at FROM market_price_checks WHERE organization_id=? AND product_id=? LIMIT 1',[org,product.id]);
- res.json({...withProductPricing(response.result,product),checked_at:rows[0]?.checked_at??new Date(),expires_at:rows[0]?.expires_at??new Date(Date.now()+CACHE_HOURS*60*60*1000),cached:false,requested_quantity:body.quantity});
+ return {...withProductPricing(response.result,product),checked_at:rows[0]?.checked_at??new Date(),expires_at:rows[0]?.expires_at??new Date(Date.now()+CACHE_HOURS*60*60*1000),cached:false,requested_quantity:quantity};
+}
+
+router.post('/check',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{
+ await ensureMarketPriceChecksTable();
+ const body=checkBody.parse(req.body),org=req.organizationId;
+ const ids=body.product_ids?[...new Set(body.product_ids)]:[body.product_id];
+ const placeholders=ids.map(()=>'?').join(',');
+ const [rows]=await pool.execute(`SELECT p.id,p.sku,p.name,p.category_id,c.name category_name,p.cost_price,p.sale_price,p.attributes FROM products p LEFT JOIN categories c ON c.organization_id=p.organization_id AND c.id=p.category_id WHERE p.id IN (${placeholders}) AND p.organization_id=? AND p.status='ACTIVE'`,[...ids,org]);
+ const byId=new Map(rows.map(product=>[Number(product.id),product]));
+ const missing=ids.filter(id=>!byId.has(Number(id)));
+ if(missing.length)throw new HttpError(404,`Không tìm thấy sản phẩm đang kinh doanh: ${missing.join(', ')}.`);
+ const items=await Promise.all(ids.map(id=>checkProductMarket({product:byId.get(Number(id)),org,checkedBy:req.user.id,quantity:body.quantity,refresh:body.refresh})));
+ if(body.product_id){res.json(items[0]);return;}
+ res.json({batch:true,count:items.length,items,requested_product_ids:ids,requested_quantity:body.quantity});
 }));
 
 router.get('/history',requireRoles(...eligibleRoles),asyncRoute(async(req,res)=>{

@@ -104,6 +104,19 @@ export default function Ledger({
   const movements = useResource(activeMode === 'inventory'&&branch ? ('/inventory/movements?' + params(scopedFilters)) : null);
 
   useEffect(()=>{
+    if(activeMode!=='receipts'||products.loading||!branch||new URLSearchParams(location.search).get('source')!=='market-batch')return;
+    let draft=[];try{draft=JSON.parse(sessionStorage.getItem('market_receipt_batch_draft')||'[]');}catch{}
+    const hydrated=(Array.isArray(draft)?draft:[]).flatMap(row=>{
+      const product=products.data?.items?.find(item=>Number(item.id)===Number(row.product_id));
+      if(!product)return [];
+      return [{product_id:String(product.id),product_search:`${product.sku} · ${product.name}`,quantity:Math.max(1,Number(row.quantity)||1),unit_price:String(Number(row.unit_cost)||Number(product.cost_price)||''),sale_price:String(Number(row.sale_price)||Number(product.sale_price)||''),new_product:false,sku:product.sku,name:product.name,category_name:'',image_url:product.image_url||''}];
+    });
+    if(hydrated.length){setReceiptTab('single');setLines(hydrated);marketPrefillApplied.current='market-batch';}
+    sessionStorage.removeItem('market_receipt_batch_draft');
+    navigate('/receipts',{replace:true});
+  },[activeMode,branch,products.loading,products.data,location.search,navigate]);
+
+  useEffect(()=>{
     if(activeMode!=='receipts'||products.loading||!branch)return;
     const search=new URLSearchParams(location.search),productId=search.get('product_id');
     if(!productId||marketPrefillApplied.current===productId)return;
