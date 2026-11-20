@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {useSearchParams,useNavigate} from 'react-router-dom';
-import {ArrowUpRight,Boxes,ChartNoAxesCombined,Clock3,PackagePlus,RefreshCw,Search,ShieldCheck,TrendingDown,TrendingUp} from 'lucide-react';
+import {ArrowUpRight,Boxes,ChartNoAxesCombined,Clock3,PackagePlus,RefreshCw,Search,ShieldCheck,TrendingDown,TrendingUp,X} from 'lucide-react';
 import {useBranch} from '../branches/BranchContext';
 import {PageHeader,Card,Badge} from '../components/ui/Elements';
 import {request,useResource,money} from '../operations/shared';
@@ -19,7 +19,7 @@ export default function MarketIntelligence(){
  const [result,setResult]=useState(null);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
- const products=useResource(`/market-intelligence/products?${activeBranchId?`branch_id=${encodeURIComponent(activeBranchId)}&`:''}mode=${productId?'all':mode}&q=${encodeURIComponent(query)}&limit=150`);
+ const products=useResource(`/market-intelligence/products?${activeBranchId?`branch_id=${encodeURIComponent(activeBranchId)}&`:''}mode=${mode}&q=${encodeURIComponent(query)}&limit=150`);
  const selected=useMemo(()=>products.data?.items?.find(item=>String(item.id)===String(productId))||null,[products.data,productId]);
  useEffect(()=>{setResult(null);setError('');},[productId]);
  useEffect(()=>{if(productId&&selected)setQuantity(String(Math.max(1,Number(selected.min_stock||1)-Number(selected.stock_quantity||0))));},[productId,selected]);
@@ -31,7 +31,9 @@ export default function MarketIntelligence(){
   catch(err){setError(err.message||'Không thể tra cứu giá lúc này.');}
   finally{setBusy(false);}
  }
- const choose=id=>{setResult(null);setSearchParams({product_id:String(id)});};
+ const clearSelection=()=>{setResult(null);setError('');setQuantity('');setSearchParams(current=>{const next=new URLSearchParams(current);next.delete('product_id');return next;});};
+ const choose=id=>{if(String(id)===productId){clearSelection();return;}setResult(null);setSearchParams(current=>{const next=new URLSearchParams(current);next.set('product_id',String(id));return next;});};
+ const changeMode=nextMode=>{if(nextMode===mode)return;setMode(nextMode);clearSelection();};
  const moveToReceipt=supplier=>{
   const incoming=Math.max(1,Number(quantity)||1),price=Number(supplier?.indicative_unit_price||selected?.cost_price||0);
   navigate(`/receipts?product_id=${encodeURIComponent(productId)}&quantity=${incoming}&unit_cost=${encodeURIComponent(price)}`);
@@ -47,13 +49,13 @@ export default function MarketIntelligence(){
    <Card className="market-intel-picker">
     <div className="market-intel-section-head"><div><span className="market-intel-kicker">01 / SẢN PHẨM</span><h2>Chọn mặt hàng trong kho</h2></div><Boxes size={19}/></div>
     <label className="market-intel-search"><Search size={17}/><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Tìm theo tên hoặc mã SKU" aria-label="Tìm sản phẩm"/></label>
-    <div className="market-intel-mode"><button className={mode==='priority'?'active':''} onClick={()=>setMode('priority')}>Cần quan tâm</button><button className={mode==='all'?'active':''} onClick={()=>setMode('all')}>Tất cả</button></div>
+    <div className="market-intel-mode"><button type="button" className={mode==='priority'?'active':''} onClick={()=>changeMode('priority')}>Cần quan tâm</button><button type="button" className={mode==='all'?'active':''} onClick={()=>changeMode('all')}>Tất cả</button></div>
     {products.error&&<p className="market-intel-message error">{products.error}</p>}
     {products.loading&&!products.data?<p className="market-intel-empty">Đang tải danh mục…</p>:<div className="market-intel-product-list">{(products.data?.items||[]).map(item=><button key={item.id} className={`market-intel-product ${String(item.id)===productId?'selected':''}`} onClick={()=>choose(item.id)}><span><strong>{item.name}</strong><small>{item.sku} · Tồn {Number(item.stock_quantity||0).toLocaleString('vi-VN')}</small></span><span className="market-intel-product-price">{money(item.selling_price)}</span></button>)}</div>}
    </Card>
    <section className="market-intel-content">
     {!selected?<Card className="market-intel-placeholder"><ChartNoAxesCombined size={30}/><h2>Chọn sản phẩm để bắt đầu</h2><p>Giá bán, giá vốn và tồn kho sẽ được đối chiếu với các listing có nguồn tham khảo.</p></Card>:<>
-     <Card className="market-intel-product-summary"><div><span className="market-intel-kicker">{selected.sku} · {selected.category_name||'Chưa phân loại'}</span><h2>{selected.name}</h2></div><div className="market-intel-summary-prices"><span>Giá vốn <strong>{selected.cost_price==null?'—':money(selected.cost_price)}</strong></span><span>Giá bán hiện tại <strong>{money(selected.selling_price)}</strong></span><span>Tồn kho <strong>{Number(selected.stock_quantity||0).toLocaleString('vi-VN')}</strong></span></div></Card>
+     <Card className="market-intel-product-summary"><button type="button" className="market-intel-clear-product" onClick={clearSelection} aria-label="Bỏ chọn sản phẩm" title="Bỏ chọn sản phẩm"><X size={15}/></button><div><span className="market-intel-kicker">{selected.sku} · {selected.category_name||'Chưa phân loại'}</span><h2>{selected.name}</h2></div><div className="market-intel-summary-prices"><span>Giá vốn <strong>{selected.cost_price==null?'—':money(selected.cost_price)}</strong></span><span>Giá bán hiện tại <strong>{money(selected.selling_price)}</strong></span><span>Tồn kho <strong>{Number(selected.stock_quantity||0).toLocaleString('vi-VN')}</strong></span></div></Card>
      <Card className="market-intel-analysis"><div className="market-intel-section-head"><div><span className="market-intel-kicker">02 / GIÁ THỊ TRƯỜNG</span><h2>Vị thế giá bán</h2></div><button className="market-intel-refresh" disabled={busy} onClick={()=>runCheck(true)}><RefreshCw size={15} className={busy?'spin':''}/> {busy?'Đang tra cứu':'Cập nhật giá'}</button></div>
       {error&&<div className="market-intel-message error" role="alert">{error}</div>}
       {busy&&!result&&<p className="market-intel-empty">Đang tra cứu listing và nguồn cung trên Google Search…</p>}

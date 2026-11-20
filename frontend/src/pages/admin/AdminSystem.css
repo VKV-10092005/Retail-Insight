@@ -35,6 +35,7 @@
 .system-state.error{color:#DC2626}
 .system-state.warn{color:#B45309}
 .system-state.muted{color:#64748B}
+.system-health-message{margin:9px 0 0;color:var(--ri-muted);font-size:10px;line-height:1.5}
 .system-card-stats{display:grid;gap:8px;margin-top:13px;padding-top:12px;border-top:1px solid var(--ri-border)}
 .system-card-stats>div:not(.system-model-list){display:flex;align-items:center;justify-content:space-between;gap:10px}
 .system-card-stats>div>span:first-child{color:var(--ri-muted);font-size:10px}

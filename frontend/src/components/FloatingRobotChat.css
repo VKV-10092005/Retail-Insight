@@ -264,12 +264,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
-  transition: background .15s ease;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-.chat-resize-handle-tl:hover {
-  background: rgba(255, 255, 255, 0.3);
+.chat-resize-handle-tl:hover .resize-corner-icon {
+  stroke: #ffffff;
+  filter: brightness(1.18) drop-shadow(0 0 2px rgba(255, 255, 255, 0.45));
 }
 
 .resize-corner-icon {
@@ -281,16 +283,12 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   pointer-events: none;
+  transition: filter .15s ease, stroke .15s ease;
 }
 
 :root[data-theme="dark"] .chat-resize-handle-tl,
 .dark .chat-resize-handle-tl {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-:root[data-theme="dark"] .chat-resize-handle-tl:hover,
-.dark .chat-resize-handle-tl:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: transparent !important;
 }
 
 /* ── Thanh Header ───────────────────────────────────────────── */

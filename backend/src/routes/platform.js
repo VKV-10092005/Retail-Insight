@@ -27,6 +27,19 @@ async function fetchAiWithRetry(url,options={},attempts=3){
  if(lastResponse)return lastResponse;
  throw lastError||new Error('AI Service is unavailable');
 }
+async function probeAiHealth(base){
+ const checkedPaths=['/health','/'];
+ let lastStatus=null,lastError=null;
+ for(const path of checkedPaths){
+  try{
+   const response=await fetchAiWithRetry(base+path,{},1);
+   if(response.ok)return {response,path,checkedPaths,lastStatus:null,lastError:null};
+   lastStatus=response.status;
+   await response.body?.cancel();
+  }catch(error){lastError=error;}
+ }
+ return {response:null,path:null,checkedPaths,lastStatus,lastError};
+}
 const positivePathId=(value,message='ID không hợp lệ')=>{
  const id=Number(value);
  if(!Number.isSafeInteger(id)||id<1)throw new HttpError(400,message);
@@ -137,26 +150,36 @@ router.get('/system-health',asyncRoute(async(req,res)=>{
   const mysqlLatencyMs=Number(process.hrtime.bigint()-mysqlStarted)/1e6;
   const memory=process.memoryUsage(),scheduler=getDigestSchedulerStatus();
   const base=config.aiServiceUrl;
-  let fastapi={status:'offline',latency_ms:null,models:[]};
-  const aiStarted=process.hrtime.bigint();
-  try{
-    const response=await fetchAiWithRetry(base+'/health');
-    const elapsed=Number(process.hrtime.bigint()-aiStarted)/1e6;
-    if(response.ok){
-      fastapi={status:'ok',latency_ms:Number(elapsed.toFixed(2)),models:[]};
-      if(process.env.AI_SERVICE_TOKEN){
-        const readiness=await fetchAiWithRetry(base+'/v1/readiness',{headers:{Authorization:`Bearer ${process.env.AI_SERVICE_TOKEN}`}});
-        if(readiness.ok){
-          const data=await readiness.json();
-          fastapi.models=[
-            {name:'LightGBM Hybrid',status:data.models?.hybrid?.status||'UNKNOWN'},
-            {name:'Stockout Classifier',status:data.models?.stockout?.status||'UNKNOWN'},
-            ...Object.entries(data.algorithms||{}).map(([name,status])=>({name,status}))
-          ];
-        }
+  const aiConfigured=Boolean(String(process.env.AI_SERVICE_URL||'').trim());
+  let fastapi=aiConfigured
+   ? {status:'UNAVAILABLE',latency_ms:null,models:[],message:'AI Service chưa phản hồi; dịch vụ Python có thể đang ngủ hoặc khởi động.',checked_paths:['/health','/']}
+   : {status:'NOT_CONFIGURED',latency_ms:null,models:[],message:'Chưa cấu hình AI_SERVICE_URL. Hãy đặt URL public của FastAPI trong biến môi trường backend.',checked_paths:[]};
+  if(aiConfigured){
+   const aiStarted=process.hrtime.bigint();
+   const probe=await probeAiHealth(base);
+   const elapsed=Number(process.hrtime.bigint()-aiStarted)/1e6;
+   if(probe.response){
+    fastapi={status:'ok',latency_ms:Number(elapsed.toFixed(2)),models:[],message:`Đã kết nối AI Service qua ${probe.path}.`,health_path:probe.path,checked_paths:probe.checkedPaths};
+    if(process.env.AI_SERVICE_TOKEN){
+     try{
+      const readiness=await fetchAiWithRetry(base+'/v1/readiness',{headers:{Authorization:`Bearer ${process.env.AI_SERVICE_TOKEN}`}});
+      if(readiness.ok){
+       const data=await readiness.json();
+       fastapi.models=[
+        {name:'LightGBM Hybrid',status:data.models?.hybrid?.status||'UNKNOWN'},
+        {name:'Stockout Classifier',status:data.models?.stockout?.status||'UNKNOWN'},
+        ...Object.entries(data.algorithms||{}).map(([name,status])=>({name,status}))
+       ];
       }
+     }catch{fastapi.message+=' Readiness chưa phản hồi; health cơ bản vẫn hoạt động.';}
     }
-  }catch{}
+   }else{
+    fastapi.latency_ms=Number(elapsed.toFixed(2));
+    fastapi.message=probe.lastStatus
+     ? `AI Service trả về HTTP ${probe.lastStatus} tại cả /health và /. Kiểm tra route hoặc cấu hình triển khai FastAPI.`
+     : 'Không kết nối được AI Service tại /health hoặc /. Dịch vụ Python có thể đang ngủ; hãy đánh thức service hoặc kiểm tra AI_SERVICE_URL.';
+   }
+  }
   const totalMemory=os.totalmem(),freeMemory=os.freemem(),usedMemory=totalMemory-freeMemory;
   const schedulerTasks=[
     {name:'Thông báo tổng kết cuối ngày',status:scheduler.active?'ACTIVE':'STOPPED',detail:'Digest lúc 23:55 Asia/Ho_Chi_Minh'},
