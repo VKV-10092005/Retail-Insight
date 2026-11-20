@@ -18,6 +18,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
   const port = Number(process.env.SMTP_PORT || 465);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
+  const gasMailWebhookUrl = process.env.GAS_MAIL_WEBHOOK_URL;
   const resendApiKey = process.env.RESEND_API_KEY;
   const smtpConfigured = Boolean(user && pass);
   const smtpFrom = process.env.SMTP_FROM || process.env.EMAIL_FROM || `Retail Insight <${user || ''}>`;
@@ -28,11 +29,11 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
     ? 'Retail Insight <onboarding@resend.dev>'
     : configuredResendFrom;
 
-  if (!resendApiKey && !smtpConfigured) {
+  if (!gasMailWebhookUrl && !resendApiKey && !smtpConfigured) {
     return {
       sent: false,
       configured: false,
-      reason: 'Chưa cấu hình RESEND_API_KEY hoặc SMTP_USER và SMTP_PASS trong backend/.env'
+      reason: 'Chưa cấu hình GAS_MAIL_WEBHOOK_URL, RESEND_API_KEY hoặc SMTP_USER và SMTP_PASS trong backend/.env'
     };
   }
 
@@ -88,6 +89,35 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
 </html>
   `.trim();
 
+  let gasError;
+  if (gasMailWebhookUrl) {
+    try {
+      const response = await fetch(gasMailWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: toEmail, subject, html: htmlBody }),
+        redirect: 'follow',
+        signal: AbortSignal.timeout(10000)
+      });
+      const responseBody = await response.text();
+      if (response.ok) return { sent: true, configured: true, provider: 'google-apps-script' };
+
+      gasError = `Google Apps Script webhook failed (${response.status} ${response.statusText}): ${responseBody}`;
+      console.error('[mailer] Google Apps Script OTP email failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        response: responseBody,
+        to: toEmail
+      });
+    } catch (err) {
+      gasError = `Google Apps Script webhook could not be completed: ${err?.message || String(err)}`;
+      console.error('[mailer] Google Apps Script OTP email request error:', {
+        error: err?.stack || err?.message || String(err),
+        to: toEmail
+      });
+    }
+  }
+
   let resendError;
   if (resendApiKey) {
     try {
@@ -118,9 +148,11 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
     }
   }
 
-  // Render chặn SMTP trên một số gói. Chỉ thử SMTP sau Resend và khi đã cấu hình đủ.
+  const providerError = [gasError, resendError].filter(Boolean).join('; ');
+
+  // Render chặn SMTP trên một số gói. Chỉ thử SMTP sau GAS/Resend và khi đã cấu hình đủ.
   if (!smtpConfigured) {
-    return { sent: false, configured: true, error: resendError || 'SMTP chưa được cấu hình' };
+    return { sent: false, configured: true, error: providerError || 'SMTP chưa được cấu hình' };
   }
   if (!emailPattern.test(smtpFromEmail) || port !== 465 || !emailPattern.test(user)) {
     const smtpError = 'Cấu hình SMTP không hợp lệ; SMTP TLS yêu cầu port 465 và địa chỉ email hợp lệ';
@@ -131,7 +163,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
       from: smtpFrom,
       error: smtpError
     });
-    return { sent: false, configured: true, error: resendError ? `${resendError}; ${smtpError}` : smtpError };
+    return { sent: false, configured: true, error: providerError ? `${providerError}; ${smtpError}` : smtpError };
   }
 
   return new Promise((resolve) => {
