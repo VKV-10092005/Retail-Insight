@@ -5,6 +5,10 @@ body{background:var(--ri-bg);color:var(--ri-text);font-variant-numeric:lining-nu
 .topbar{border-bottom:1px solid var(--ri-border)!important;box-shadow:none!important}
 .card,.ri-card{border:1px solid var(--ri-border);border-radius:12px;box-shadow:none}
 .system-card,.system-overview{border-radius:12px;box-shadow:none;background:var(--ri-surface)}
+:root .sidebar{background-color:var(--ri-sidebar-bg)!important;border-right:1px solid var(--ri-sidebar-border)!important}
+:root .sidebar-bottom{background-color:var(--ri-sidebar-footer)!important;border-top:1px solid var(--ri-sidebar-divider)!important}
+:root[data-theme="dark"] .sidebar{background-color:var(--ri-sidebar-bg)!important;border-right:1px solid var(--ri-sidebar-border)!important}
+:root[data-theme="dark"] .sidebar-bottom{background-color:var(--ri-sidebar-footer)!important;border-top:1px solid var(--ri-sidebar-divider)!important}
 .page-header h1,.page-title,.section-header h2,.card h2,.card h3{color:var(--ri-text)}
 .nav-item.active{background:var(--ri-primary-bg);color:var(--ri-primary);box-shadow:inset 3px 0 var(--ri-primary)}
 .btn-primary,.ri-btn-primary,.ri-button-primary,.auth-primary{background:var(--ri-primary-action)!important;border-color:var(--ri-primary-action)!important;color:var(--ri-on-primary)!important}

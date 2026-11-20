@@ -15,9 +15,9 @@
   flex-direction: column !important;
   box-sizing: border-box !important;
   z-index: 30;
-  background: var(--ri-surface, #ffffff);
-  border-right: none !important;
-  box-shadow: 1px 0 6px rgba(0, 0, 0, 0.025);
+  background: var(--ri-sidebar-bg, #F1F5F9);
+  border-right: 1px solid var(--ri-sidebar-border, rgba(203,213,225,.9)) !important;
+  box-shadow: none;
   overflow: hidden !important;
   transition: width 0.2s ease;
 }
@@ -28,9 +28,9 @@
 }
 
 :root[data-theme="dark"] .sidebar {
-  border-right: none !important;
-  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.22);
-  background: var(--ri-surface, #0f172a);
+  border-right: 1px solid var(--ri-sidebar-border, #1E293B) !important;
+  box-shadow: none;
+  background: var(--ri-sidebar-bg, #090E1A);
 }
 
 .sidebar.sidebar-collapsed,
@@ -321,7 +321,8 @@ aside.sidebar-collapsed {
   margin-top: auto !important;
   flex-shrink: 0 !important;
   padding: 10px 15px 19px;
-  background: inherit;
+  border-top: 1px solid var(--ri-sidebar-divider, #CBD5E1);
+  background: var(--ri-sidebar-footer, rgba(226,232,240,.55));
 }
 
 .sidebar-role-badge {
