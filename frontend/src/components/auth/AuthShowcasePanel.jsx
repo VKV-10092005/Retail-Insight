@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import {Link} from 'react-router-dom';
 import { ChartNoAxesCombined, TrendingUp, Sparkles, ShieldCheck, ShieldAlert, Store, Users, CheckCircle2 } from 'lucide-react';
 
 /**
@@ -25,15 +26,15 @@ export default function AuthShowcasePanel({
       <div className="showcase-grid-overlay" aria-hidden="true" />
 
       {/* Brand Header */}
-      <div className="showcase-brand">
+      <Link to="/welcome" className="showcase-brand" aria-label="RetailInsight home">
         <div className="showcase-logo-box">
           <ChartNoAxesCombined size={24} style={{ color: '#FFFFFF' }} />
         </div>
         <div className="showcase-brand-text">
-          <b>retail<span>insight</span></b>
+          <b>Retail<span>Insight</span></b>
           <span className="showcase-brand-tag">v2.0 PRO</span>
         </div>
-      </div>
+      </Link>
 
       {/* Hero Headline */}
       <div className="showcase-hero">
@@ -151,5 +152,3 @@ export default function AuthShowcasePanel({
     </section>
   );
 }
-
-

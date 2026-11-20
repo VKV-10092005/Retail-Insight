@@ -7,9 +7,15 @@ body{background:var(--ri-bg);color:var(--ri-text);font-variant-numeric:lining-nu
 .system-card,.system-overview{border-radius:12px;box-shadow:none;background:var(--ri-surface)}
 .page-header h1,.page-title,.section-header h2,.card h2,.card h3{color:var(--ri-text)}
 .nav-item.active{background:var(--ri-primary-bg);color:var(--ri-primary);box-shadow:inset 3px 0 var(--ri-primary)}
-.btn-primary,.ri-btn-primary{background:var(--ri-primary);border-color:var(--ri-primary);color:var(--ri-on-primary)}
-.btn-primary:hover,.ri-btn-primary:hover{background:var(--ri-primary-hover);border-color:var(--ri-primary-hover)}
+.btn-primary,.ri-btn-primary,.ri-button-primary,.auth-primary{background:var(--ri-primary-action)!important;border-color:var(--ri-primary-action)!important;color:var(--ri-on-primary)!important}
+.btn-primary:hover:not(:disabled),.ri-btn-primary:hover:not(:disabled),.ri-button-primary:hover:not(:disabled),.auth-primary:hover:not(:disabled){background:var(--ri-primary-action-hover)!important;border-color:var(--ri-primary-action-hover)!important}
 .badge-info{background:var(--ri-primary-bg);color:var(--ri-primary)}
+.badge,.ri-badge{border:1px solid var(--ri-border)}
+.badge-info,.ri-badge-info{background:var(--ri-info-bg);color:var(--ri-info);border-color:color-mix(in srgb,var(--ri-info) 20%,var(--ri-border))}
+.badge-success,.ri-badge-success{background:var(--ri-success-bg);color:var(--ri-success);border-color:color-mix(in srgb,var(--ri-success) 20%,var(--ri-border))}
+.badge-warning,.ri-badge-warning{background:var(--ri-warning-bg);color:var(--ri-warning);border-color:color-mix(in srgb,var(--ri-warning) 20%,var(--ri-border))}
+.badge-danger,.ri-badge-danger,.ri-badge-error{background:var(--ri-danger-bg);color:var(--ri-danger);border-color:color-mix(in srgb,var(--ri-danger) 20%,var(--ri-border))}
+.badge-neutral,.ri-badge-neutral{background:var(--ri-elevated);color:var(--ri-text);border-color:var(--ri-border)}
 .data-table thead,.ri-table thead{background:var(--ri-elevated)}
 .data-table td,.ri-table td,.data-table th,.ri-table th{border-color:var(--ri-border)}
 .data-table tbody tr:hover,.ri-table tbody tr:hover{background:color-mix(in srgb,var(--ri-elevated) 70%,var(--ri-surface))}
@@ -19,14 +25,16 @@ body{background:var(--ri-bg);color:var(--ri-text);font-variant-numeric:lining-nu
 .support-chat-header{background:var(--ri-brand)}
 .support-message.mine{background:var(--ri-primary)}
 .welcome-gradient-blue,.welcome-gradient-cyan{background:none;-webkit-text-fill-color:currentColor;color:inherit}
-.welcome-register,.welcome-primary,.welcome-logo-box{background:var(--ri-primary);box-shadow:none}
-.welcome-register:hover,.welcome-primary:hover{background:var(--ri-primary-hover);box-shadow:none}
+.welcome-register,.welcome-primary,.welcome-logo-box{background:var(--ri-primary-action)!important;color:var(--ri-on-primary)!important;box-shadow:none}
+.welcome-register:hover,.welcome-primary:hover{background:var(--ri-primary-action-hover)!important;box-shadow:none}
 .welcome-page::before{filter:none;opacity:.25}
 .welcome-glow,.welcome-page .feature-float-badge{display:none!important}
 .brand-logo,.welcome-logo-box,.welcome-register,.welcome-primary,.welcome-gradient-blue,.welcome-gradient-cyan{background-image:none!important}
 .nav-item.active,.badge-info,.stat-icon.blue,.stat-icon.teal{border-color:color-mix(in srgb,var(--ri-primary) 18%,var(--ri-border))}
 .welcome-badge{border-color:rgba(15,118,110,.28);background:rgba(15,118,110,.08);color:#99f6e4}
 .welcome-brand strong,.welcome-trust-list svg,.feature-order>div:first-child>svg:last-child,.feature-float-badge svg{color:var(--ri-brand)}
+.welcome-brand,.showcase-brand,.brand-home{cursor:pointer;transition:opacity .16s ease}
+.welcome-brand:hover,.showcase-brand:hover,.brand-home:hover{opacity:.9}
 .welcome-feature-visual,.feature-window,.service-browser{box-shadow:none}
 .feature-window,.service-browser{border:1px solid rgba(148,163,184,.2)}
 .period-chip,.research-card,.model-highlight,.formula,.detail-hero,.step-icon{background:var(--ri-elevated);color:var(--ri-text)}

@@ -1,5 +1,5 @@
 import React,{useRef,useState} from 'react';
-import {NavLink} from 'react-router-dom';
+import {Link,NavLink} from 'react-router-dom';
 import {createPortal} from 'react-dom';
 import {useAuth} from '../../auth/AuthContext';
 import {ROLE_LABELS,ROLES} from '../../config/roles';
@@ -226,8 +226,10 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
         className={`sidebar ${open?'sidebar-open':''} ${isCollapsed?'sidebar-collapsed':''} ${isResizing?'sidebar-resizing':''}`}
       >
         <div className="brand">
-          <div className="brand-logo"><ChartNoAxesCombined size={23}/></div>
-          <strong className="brand-name" title={user?.storeName || 'Retail Insight'}>{user?.role==='OWNER'&&user?.storeName?user.storeName:<><span>Retail</span><em>Insight</em></>}</strong>
+          <Link to="/welcome" className="brand-home" aria-label="RetailInsight home" title={user?.storeName||'RetailInsight'}>
+            <div className="brand-logo"><ChartNoAxesCombined size={23}/></div>
+            <strong className="brand-name"><span>Retail</span><em>Insight</em></strong>
+          </Link>
           <button className="mobile-close" aria-label="Đóng menu" onClick={onClose}><X size={20}/></button>
         </div>
 

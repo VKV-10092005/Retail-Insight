@@ -36,7 +36,7 @@ export default function WelcomePage(){
  return <div className="welcome-page welcome-cinematic">
   <div className="welcome-grid-pattern" aria-hidden="true"/><div className="welcome-glow welcome-glow-one" aria-hidden="true"/><div className="welcome-glow welcome-glow-two" aria-hidden="true"/>
   <header className="welcome-header-bar"><div className="welcome-header-inner">
-   <Link to="/welcome" className="welcome-brand" aria-label="Retail Insight"><span className="welcome-logo-box"><Store size={21}/></span><span>retail<strong>insight</strong></span></Link>
+   <Link to="/welcome" className="welcome-brand" aria-label="RetailInsight"><span className="welcome-logo-box"><Store size={21}/></span><span>Retail<strong>Insight</strong></span></Link>
    <nav className="welcome-menu" aria-label="Điều hướng chính"><a href="#tinh-nang">Tính năng</a><a href="#du-bao-ai">Dự báo AI</a><a href="#so-sanh-hieu-qua">So sánh hiệu quả</a><a href="#dich-vu-web-app">Dịch vụ Web & App</a></nav>
    <div className="welcome-nav-actions"><ThemeToggle className="welcome-theme-toggle"/><Link to="/login" className="welcome-login">Đăng nhập</Link><Link to="/register" className="welcome-register">Đăng ký cửa hàng <ArrowRight size={16}/></Link></div>
   </div></header>
@@ -70,7 +70,7 @@ export default function WelcomePage(){
   </section>
   <footer className="welcome-footer">
    <div className="welcome-footer-brand">
-    <Link to="/welcome" className="welcome-brand"><span className="welcome-logo-box"><Store size={18}/></span><span>retail<strong>insight</strong></span></Link>
+    <Link to="/welcome" className="welcome-brand" aria-label="RetailInsight"><span className="welcome-logo-box"><Store size={18}/></span><span>Retail<strong>Insight</strong></span></Link>
     <p>Nền tảng quản lý bán lẻ đa chi nhánh tích hợp trí tuệ nhân tạo dự báo nhu cầu và giải pháp bán hàng đa kênh.</p>
     <span className="welcome-footer-status"><i/>Sẵn sàng vận hành 24/7</span>
    </div>
