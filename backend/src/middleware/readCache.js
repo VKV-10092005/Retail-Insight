@@ -4,18 +4,22 @@ const MAX_CACHE_BYTES=32*1024*1024;
 const MAX_ENTRY_BYTES=1024*1024;
 const cache=new Map();
 let cacheBytes=0;
-const cacheablePath=/^\/(?:dashboard\/overview|branches|categories|products|inventory(?:\/balances|\/movements)?|sales\/open|bi\/overview|ai\/(?:forecast|summary)|platform\/(?:dashboard|organizations|security\/(?:stats|logs|notifications)))$/;
+const cacheablePath=/^\/(?:dashboard\/overview|branches|categories|products|inventory(?:\/balances|\/movements)?|stock-operations(?:\/[^/]+)?|sales(?:\/open)?|receipts|adjustments|transfers|bi\/overview|ai\/(?:forecast|summary)|platform(?:\/.*)?)$/;
 
 function removeCache(key){const entry=cache.get(key);if(entry){cacheBytes-=entry.bytes;cache.delete(key);}}
 function trimCache(){
  while(cache.size>MAX_ENTRIES||cacheBytes>MAX_CACHE_BYTES)removeCache(cache.keys().next().value);
 }
 
-export function invalidateReadCache(req,_res,next){
- if(!['GET','HEAD','OPTIONS'].includes(req.method)){
-  if(req.user?.role==='PLATFORM_ADMIN'||!req.organizationId){cache.clear();cacheBytes=0;}
-  else for(const [key,entry] of cache)if(String(entry.organizationId)===String(req.organizationId))removeCache(key);
- }
+function invalidateOrganization(organizationId,platformWide=false){
+ if(platformWide||!organizationId){cache.clear();cacheBytes=0;return;}
+ for(const [key,entry] of cache)if(String(entry.organizationId)===String(organizationId))removeCache(key);
+}
+
+export function invalidateReadCache(req,res,next){
+ if(!['GET','HEAD','OPTIONS'].includes(req.method))res.once('finish',()=>{
+  if(res.statusCode>=200&&res.statusCode<300)invalidateOrganization(req.organizationId,req.user?.role==='PLATFORM_ADMIN');
+ });
  next();
 }
 

@@ -14,14 +14,24 @@ export const connectionOptions = {
   timezone: 'Z',
   multipleStatements: false,
   waitForConnections: true,
-  connectionLimit: 25,
+  connectionLimit: 15,
   queueLimit: 200,
   connectTimeout: 10000,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 10000
+  keepAliveInitialDelay: 5000
 };
 
 export const pool = mysql.createPool(connectionOptions);
+
+let pingRunning=false;
+const keepPoolWarm=setInterval(async()=>{
+  if(pingRunning)return;
+  pingRunning=true;
+  try{await pool.query('SELECT 1');}
+  catch(error){console.warn('[MySQL Keepalive] Ping failed:',error?.message||error);}
+  finally{pingRunning=false;}
+},45_000);
+keepPoolWarm.unref?.();
 
 pool.on('connection', connection => {
   connection.query("SET time_zone='+00:00'");

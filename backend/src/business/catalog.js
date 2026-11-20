@@ -51,7 +51,6 @@ router.get('/products',asyncRoute(async(req,res)=>{
  const search=q.q||q.search;if(search){where+=" AND (p.sku LIKE ? OR p.name LIKE ? OR JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.barcode')) LIKE ?)";args.push('%'+search+'%','%'+search+'%','%'+search+'%');}
  if(q.category_id){where+=' AND p.category_id=?';args.push(q.category_id);}
  if(q.status){where+=' AND p.status=?';args.push(q.status);}
- const [[count]]=await pool.execute(`SELECT COUNT(*) AS total FROM products p WHERE ${where}`,args);
  const branchDocFilter=branchId?'AND d.branch_id=?':'';
  const branchInvFilter=branchId?'AND branch_id=?':'';
  const invSubquery=`LEFT JOIN (SELECT product_id,SUM(quantity) AS quantity FROM inventory_balances WHERE organization_id=? ${branchInvFilter} GROUP BY product_id) i ON i.product_id=p.id`;
@@ -61,7 +60,11 @@ router.get('/products',asyncRoute(async(req,res)=>{
  const selectArgs=[...subqueryArgs,...args];
  const orderClause=branchId?'ORDER BY (COALESCE(i.quantity,0) > 0) DESC, COALESCE(i.quantity,0) DESC, p.id DESC':'ORDER BY p.id DESC';
  const limitClause=`LIMIT ${q.limit} OFFSET ${(q.page-1)*q.limit}`;
- const [rows]=await pool.execute(`SELECT p.*,c.name AS category_name,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.barcode')) AS barcode,COALESCE(p.image_url,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.image_url'))) AS image_url,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS min_stock,COALESCE(i.quantity,0) AS stock_remaining,COALESCE(i.quantity,0) AS stock,COALESCE(i.quantity,0) AS quantity,COALESCE(i.quantity,0) AS on_hand,COALESCE(i.quantity,0) AS stock_quantity,COALESCE(rec.imported_qty,0) AS total_imported,COALESCE(sal.sold_qty,0) AS total_sold FROM products p LEFT JOIN categories c ON c.id=p.category_id AND c.organization_id=p.organization_id ${invSubquery} ${recSubquery} ${salSubquery} WHERE ${where} ${orderClause} ${limitClause}`,selectArgs);
+ const [countResult,itemsResult]=await Promise.all([
+  pool.execute(`SELECT COUNT(*) AS total FROM products p WHERE ${where}`,args),
+  pool.execute(`SELECT p.*,c.name AS category_name,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.barcode')) AS barcode,COALESCE(p.image_url,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.image_url'))) AS image_url,JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS min_stock,COALESCE(i.quantity,0) AS stock_remaining,COALESCE(i.quantity,0) AS stock,COALESCE(i.quantity,0) AS quantity,COALESCE(i.quantity,0) AS on_hand,COALESCE(i.quantity,0) AS stock_quantity,COALESCE(rec.imported_qty,0) AS total_imported,COALESCE(sal.sold_qty,0) AS total_sold FROM products p LEFT JOIN categories c ON c.id=p.category_id AND c.organization_id=p.organization_id ${invSubquery} ${recSubquery} ${salSubquery} WHERE ${where} ${orderClause} ${limitClause}`,selectArgs)
+ ]);
+ const count=countResult[0][0],rows=itemsResult[0];
  const mappedRows=rows.map(r=>({...r,stock_remaining:Number(r.stock_remaining||0),total_imported:Number(r.total_imported||0),total_sold:Number(r.total_sold||0),stock:Number(r.stock_remaining||0),quantity:Number(r.stock_remaining||0),on_hand:Number(r.stock_remaining||0),stock_quantity:Number(r.stock_remaining||0)}));
  const items=req.user.role==='CASHIER'?mappedRows.map(({cost_price,...item})=>item):mappedRows;
  res.json({items,total:count.total,page:q.page,limit:q.limit,source:'OPERATIONAL',catalog_mode:branchMode});

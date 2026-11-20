@@ -12,6 +12,16 @@ function wait(ms,signal){
   });
 }
 
+function withAbort(promise,signal){
+  if(!signal)return promise;
+  if(signal.aborted)return Promise.reject(new DOMException('Aborted','AbortError'));
+  return new Promise((resolve,reject)=>{
+    const abort=()=>{signal.removeEventListener('abort',abort);reject(new DOMException('Aborted','AbortError'));};
+    signal.addEventListener('abort',abort,{once:true});
+    promise.then(value=>{signal.removeEventListener('abort',abort);resolve(value);},error=>{signal.removeEventListener('abort',abort);reject(error);});
+  });
+}
+
 async function performFetchWithRetry(input,options={}){
   const signal=options.signal;
   for(let attempt=0;attempt<=2;attempt++){
@@ -39,12 +49,13 @@ export async function fetchWithRetry(input,options={}){
     invalidateClientCache();
     return performFetchWithRetry(input,options).then(response=>{if(response.ok)invalidateClientCache();return response;});
   }
-  if(options.signal)return performFetchWithRetry(input,options);
   const url=typeof input==='string'?input:input.url;
   const headers=[...new Headers(options.headers||input?.headers||{}).entries()].sort(([a],[b])=>a.localeCompare(b));
   const key=JSON.stringify([requestEpoch,url,options.credentials||'same-origin',headers]);
-  const existing=inflightGets.get(key);if(existing)return existing;
-  const shared=performFetchWithRetry(input,options);
+  const existing=inflightGets.get(key);if(existing)return withAbort(existing,options.signal);
+  const {signal:_signal,...sharedOptions}=options;
+  const shared=performFetchWithRetry(input,sharedOptions);
   inflightGets.set(key,shared);
-  try{return await shared;}finally{if(inflightGets.get(key)===shared)inflightGets.delete(key);}
+  shared.then(()=>{if(inflightGets.get(key)===shared)inflightGets.delete(key);},()=>{if(inflightGets.get(key)===shared)inflightGets.delete(key);});
+  return withAbort(shared,options.signal);
 }

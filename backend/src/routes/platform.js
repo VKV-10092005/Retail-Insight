@@ -9,7 +9,6 @@ import {getSettings,saveSettings} from '../services/appSettings.js';
 import {transaction} from '../business/common.js';
 import os from 'node:os';
 import {getDigestSchedulerStatus} from '../services/digestScheduler.js';
-import {verifyDatabase} from '../db/pool.js';
 import {config} from '../config/env.js';
 const router=Router();
 router.use(requireRoles('PLATFORM_ADMIN'));
@@ -125,15 +124,17 @@ router.get('/system-health',asyncRoute(async(req,res)=>{
   const mysqlStarted=process.hrtime.bigint();
   const [[dbName]]=await pool.query('SELECT DATABASE() database_name');
   if(dbName.database_name!=='retail_app')throw new Error('System metrics are restricted to retail_app');
-  await verifyDatabase();
-  const mysqlLatencyMs=Number(process.hrtime.bigint()-mysqlStarted)/1e6;
-  const [[threads]]=await pool.query("SHOW GLOBAL STATUS LIKE 'Threads_connected'");
-  const [[storage]]=await pool.query(`SELECT COUNT(*) table_count,COALESCE(SUM(DATA_LENGTH+INDEX_LENGTH),0) bytes
-    FROM information_schema.TABLES WHERE TABLE_SCHEMA='retail_app'`);
-  const [[counts]]=await pool.query(`SELECT
+  const [threadResult,storageResult,countResult]=await Promise.all([
+   pool.query("SHOW GLOBAL STATUS LIKE 'Threads_connected'"),
+   pool.query(`SELECT COUNT(*) table_count,COALESCE(SUM(DATA_LENGTH+INDEX_LENGTH),0) bytes
+    FROM information_schema.TABLES WHERE TABLE_SCHEMA='retail_app'`),
+   pool.query(`SELECT
     (SELECT COUNT(*) FROM stock_documents WHERE type='SALE') invoice_count,
     (SELECT COUNT(*) FROM products) product_count,
-    (SELECT COUNT(*) FROM stock_documents) transaction_count`);
+    (SELECT COUNT(*) FROM stock_documents) transaction_count`)
+  ]);
+  const threads=threadResult[0][0],storage=storageResult[0][0],counts=countResult[0][0];
+  const mysqlLatencyMs=Number(process.hrtime.bigint()-mysqlStarted)/1e6;
   const memory=process.memoryUsage(),scheduler=getDigestSchedulerStatus();
   const base=config.aiServiceUrl;
   let fastapi={status:'offline',latency_ms:null,models:[]};

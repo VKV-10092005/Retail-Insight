@@ -35,13 +35,16 @@ async function supportItems(userId){
 }
 
 router.get('/notifications',requireRoles(...roles),asyncRoute(async(req,res)=>{
- const contact=await supportItems(req.user.id);
+ const [contact,prefs]=await Promise.all([supportItems(req.user.id),req.user.role==='PLATFORM_ADMIN'?Promise.resolve(null):getSettings('USER',req.user.id)]);
  if(req.user.role==='PLATFORM_ADMIN')return res.json({items:contact,unread_count:contact.filter(item=>!item.read).length,unread_store_count:0,unread_contact_count:contact.filter(item=>!item.read).length});
 
- const prefs=await getSettings('USER',req.user.id),threshold=Number(prefs.operations?.lowStockThreshold??10);
+ const threshold=Number(prefs.operations?.lowStockThreshold??10);
  const stockArgs=[threshold,req.organizationId],scope=branchClause(req.user,'i',stockArgs),minStock="COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(p.attributes,'$.min_stock')) AS DECIMAL(14,2)),?)";
- const [stockRows]=await pool.execute(`SELECT i.branch_id,i.product_id,i.quantity,${minStock} min_stock,i.updated_at,p.sku,p.name,b.name branch_name FROM inventory_balances i JOIN products p ON p.organization_id=i.organization_id AND p.id=i.product_id AND p.status='ACTIVE' JOIN branches b ON b.organization_id=i.organization_id AND b.id=i.branch_id AND b.status='ACTIVE' WHERE i.organization_id=? AND i.quantity<=${minStock}${scope} ORDER BY i.quantity ASC,i.updated_at DESC LIMIT 10`,[threshold,req.organizationId,threshold,...stockArgs.slice(2)]);
- const [digests]=await pool.execute('SELECT id,digest_type,period_key,title,body,created_at,branch_id FROM notification_digests WHERE organization_id=? AND user_id=? ORDER BY created_at DESC LIMIT 40',[req.organizationId,req.user.id]);
+ const [stockResult,digestResult]=await Promise.all([
+  pool.execute(`SELECT i.branch_id,i.product_id,i.quantity,${minStock} min_stock,i.updated_at,p.sku,p.name,b.name branch_name FROM inventory_balances i JOIN products p ON p.organization_id=i.organization_id AND p.id=i.product_id AND p.status='ACTIVE' JOIN branches b ON b.organization_id=i.organization_id AND b.id=i.branch_id AND b.status='ACTIVE' WHERE i.organization_id=? AND i.quantity<=${minStock}${scope} ORDER BY i.quantity ASC,i.updated_at DESC LIMIT 10`,[threshold,req.organizationId,threshold,...stockArgs.slice(2)]),
+  pool.execute('SELECT id,digest_type,period_key,title,body,created_at,branch_id FROM notification_digests WHERE organization_id=? AND user_id=? ORDER BY created_at DESC LIMIT 40',[req.organizationId,req.user.id])
+ ]);
+ const stockRows=stockResult[0],digests=digestResult[0];
  const store=[...stockRows.map(row=>({id:`stock:${row.branch_id}:${row.product_id}`,kind:'LOW_STOCK',title:`Sắp hết hàng: ${row.name}`,message:`${row.branch_name} · ${row.sku} còn ${row.quantity}, ngưỡng tối thiểu ${row.min_stock}.`,href:req.user.role==='INVENTORY'?'/receipts':req.user.role==='CASHIER'?'/sales':'/alerts',created_at:row.updated_at,detail:row})),...digests.map(row=>({id:`digest:${row.id}`,kind:`${row.digest_type}_DIGEST`,title:row.title,message:row.period_key,href:'/dashboard',created_at:row.created_at,detail:typeof row.body==='string'?JSON.parse(row.body):row.body}))];
  if(store.length){const args=[req.organizationId,req.user.id,...store.map(item=>item.id)];const [reads]=await pool.execute(`SELECT notification_id FROM notification_reads WHERE organization_id=? AND user_id=? AND notification_id IN (${store.map(()=>'?').join(',')})`,args);const ids=new Set(reads.map(row=>row.notification_id));for(const item of store)item.read=ids.has(item.id);}else for(const item of store)item.read=false;
  const items=[...contact,...store].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,100),unreadStore=store.filter(item=>!item.read).length,unreadContact=contact.filter(item=>!item.read).length;

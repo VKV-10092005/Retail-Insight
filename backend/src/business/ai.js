@@ -31,18 +31,21 @@ async function loadOperationalProducts(req,q,origin,selectedIds=[]){
  if(!products.length)return [];
  const stockArgs=[req.organizationId];let stockWhere='i.organization_id=?'+branchClause(req.user,'i',stockArgs);
  if(q.branch_id){stockWhere+=' AND i.branch_id=?';stockArgs.push(q.branch_id);}
- const [stocks]=await pool.execute(`SELECT i.product_id,SUM(i.quantity) stock,COUNT(DISTINCT i.branch_id) recorded_branches FROM inventory_balances i WHERE ${stockWhere} GROUP BY i.product_id`,stockArgs);
  const coverageArgs=[req.organizationId];let branchWhere="organization_id=? AND status='ACTIVE'";
  if(q.branch_id){branchWhere+=' AND id=?';coverageArgs.push(q.branch_id);}
  else if(req.user.role!=='OWNER'){branchWhere+=' AND id IN (SELECT branch_id FROM user_branch_roles WHERE organization_id=? AND user_id=?)';coverageArgs.push(req.organizationId,req.user.id);}
- const [[branchCoverage]]=await pool.execute(`SELECT COUNT(*) total FROM branches WHERE ${branchWhere}`,coverageArgs);
- const stockMap=new Map(stocks.map(row=>[Number(row.product_id),Number(row.recorded_branches)===Number(branchCoverage.total)?Number(row.stock):null]));
  const endDate=addMonth(origin,1)+'-01',start28=addDays(endDate,-28),start84=addDays(endDate,-84);
  const salesArgs=[req.organizationId];let salesWhere="d.organization_id=? AND d.type='SALE'"+branchClause(req.user,'d',salesArgs);
  if(q.branch_id){salesWhere+=' AND d.branch_id=?';salesArgs.push(q.branch_id);}
  if(q.category_id){salesWhere+=' AND p.category_id=?';salesArgs.push(q.category_id);}
- const [recent]=await pool.execute(`SELECT x.product_id,p.category_id,SUM(CASE WHEN d.created_at>=? THEN x.quantity ELSE 0 END) quantity_28,SUM(x.quantity) quantity_84 FROM stock_documents d JOIN stock_document_items x ON x.document_id=d.id AND x.organization_id=d.organization_id JOIN products p ON p.id=x.product_id AND p.organization_id=x.organization_id WHERE ${salesWhere} AND d.created_at>=? AND d.created_at<? GROUP BY x.product_id,p.category_id`,[start28,...salesArgs,start84,endDate]);
- const [categoryCounts]=await pool.execute("SELECT category_id,COUNT(*) total FROM products WHERE organization_id=? AND status='ACTIVE' GROUP BY category_id",[req.organizationId]);
+ const [stockResult,coverageResult,recentResult,categoryResult]=await Promise.all([
+  pool.execute(`SELECT i.product_id,SUM(i.quantity) stock,COUNT(DISTINCT i.branch_id) recorded_branches FROM inventory_balances i WHERE ${stockWhere} GROUP BY i.product_id`,stockArgs),
+  pool.execute(`SELECT COUNT(*) total FROM branches WHERE ${branchWhere}`,coverageArgs),
+  pool.execute(`SELECT x.product_id,p.category_id,SUM(CASE WHEN d.created_at>=? THEN x.quantity ELSE 0 END) quantity_28,SUM(x.quantity) quantity_84 FROM stock_documents d JOIN stock_document_items x ON x.document_id=d.id AND x.organization_id=d.organization_id JOIN products p ON p.id=x.product_id AND p.organization_id=x.organization_id WHERE ${salesWhere} AND d.created_at>=? AND d.created_at<? GROUP BY x.product_id,p.category_id`,[start28,...salesArgs,start84,endDate]),
+  pool.execute("SELECT category_id,COUNT(*) total FROM products WHERE organization_id=? AND status='ACTIVE' GROUP BY category_id",[req.organizationId])
+ ]);
+ const stocks=stockResult[0],branchCoverage=coverageResult[0][0],recent=recentResult[0],categoryCounts=categoryResult[0];
+ const stockMap=new Map(stocks.map(row=>[Number(row.product_id),Number(row.recorded_branches)===Number(branchCoverage.total)?Number(row.stock):null]));
  const categoryCount=new Map(categoryCounts.map(row=>[row.category_id==null?'none':String(row.category_id),Number(row.total)]));
  const categoryQuantity=new Map();const productSales=new Map();
  for(const row of recent){const key=row.category_id==null?'none':String(row.category_id);categoryQuantity.set(key,(categoryQuantity.get(key)||0)+Number(row.quantity_84));productSales.set(Number(row.product_id),{quantity28:Number(row.quantity_28),quantity84:Number(row.quantity_84)});}
@@ -99,8 +102,11 @@ async function computeForecast(req){
  const args=[req.organizationId];let where="d.organization_id=? AND d.type='SALE'"+branchClause(req.user,'d',args);
  if(q.branch_id){where+=' AND d.branch_id=?';args.push(q.branch_id);}if(q.category_id){where+=' AND p.category_id=?';args.push(q.category_id);}if(q.product_id){where+=' AND p.id=?';args.push(q.product_id);}
  // Bound history to the observation window; never pad months before the store existed.
- const [[org]]=await pool.execute("SELECT DATE_FORMAT(created_at,'%Y-%m') first_month FROM organizations WHERE id=?",[req.organizationId]);
- const [[coverage]]=await pool.execute(`SELECT DATE_FORMAT(MIN(d.created_at),'%Y-%m') first_sale_month FROM stock_documents d WHERE d.organization_id=? AND d.type='SALE'`,[req.organizationId]);
+ const [orgResult,coverageResult]=await Promise.all([
+  pool.execute("SELECT DATE_FORMAT(created_at,'%Y-%m') first_month FROM organizations WHERE id=?",[req.organizationId]),
+  pool.execute("SELECT DATE_FORMAT(MIN(d.created_at),'%Y-%m') first_sale_month FROM stock_documents d WHERE d.organization_id=? AND d.type='SALE'",[req.organizationId])
+ ]);
+ const org=orgResult[0][0],coverage=coverageResult[0][0];
  const firstComplete=addMonth(org.first_month,1);
  if(q.task==='multi'||q.task==='total'){
   const start=firstComplete>addMonth(origin,-239)?firstComplete:addMonth(origin,-239);
