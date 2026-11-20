@@ -432,12 +432,6 @@ export default function Register(){
           {/* BƯỚC 2: THIẾT LẬP CỬA HÀNG */}
           {currentStep === 2 && (
             <div className="auth-step-pane slide-forward">
-              {/* Badge nhỏ xác nhận email đã được xác minh */}
-              <div className="auth-verified-badge">
-                <CheckCircle2 size={14} />
-                <span><CheckCircle2 size={15} aria-hidden="true"/> Đã xác thực: {email}</span>
-              </div>
-
               <form onSubmit={submit} style={{display:'grid',gap:'12px'}}>
                 <label className="ri-field">
                   <span>Tên cửa hàng / Doanh nghiệp *</span>

@@ -482,11 +482,6 @@ export default function Login(){
             {/* BƯỚC 2: HOÀN THIỆN THÔNG TIN SHOP */}
             {googleModal.step === 2 && (
               <div className="auth-step-pane slide-forward">
-                <div className="auth-verified-badge">
-                  <CheckCircle2 size={14} />
-                  <span><CheckCircle2 size={15} aria-hidden="true"/> Đã xác thực: {googleModal.email}</span>
-                </div>
-
                 <form onSubmit={handleCompleteGoogleOnboarding} style={{display:'grid',gap:'12px'}}>
                   <label className="ri-field">
                     <span>Họ và tên chủ cửa hàng *</span>
