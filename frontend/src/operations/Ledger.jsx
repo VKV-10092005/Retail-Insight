@@ -416,17 +416,54 @@ export default function Ledger({
                 const costField=!isSale&&<div className="receipt-line-cost"><label>Đơn giá nhập *<input required type="number" min="0" step=".01" className="ri-control" placeholder="VNĐ" value={line.unit_price} onChange={e=>updateLine(index,'unit_price',e.target.value)}/></label></div>;
                 const saleField=!isSale&&<div className="receipt-line-sale"><label>Giá bán (VNĐ) *<input required type="number" min="0" step=".01" className="ri-control" value={line.sale_price} onChange={e=>updateLine(index,'sale_price',e.target.value)}/></label></div>;
                 const toggleButton=!isSale&&products.data?.items?.length>0&&<button type="button" className="btn btn-secondary receipt-new-product-toggle" onClick={()=>setLines(rows=>rows.map((item,i)=>i===index?{...item,new_product:!item.new_product,product_id:'',product_search:'',image_url:''}:item))}>{line.new_product?'Chọn sản phẩm có sẵn':'+ Nhập sản phẩm mới'}</button>;
-                const rowActions=<div className="receipt-row-actions">{activeMode==='receipts'&&<button type="button" className="receipt-add-row-quick" title="Thêm dòng bên dưới" aria-label="Thêm dòng bên dưới" onClick={()=>insertReceiptLineAfter(index)}><Plus size={17}/></button>}{lines.length>1&&<button type="button" className="btn btn-secondary receipt-remove-row" aria-label="Xóa dòng sản phẩm" onClick={()=>setLines(rows=>rows.filter((_,i)=>i!==index))}><Trash2 size={16}/></button>}</div>;
+                const rowActions=<div className="receipt-row-actions">{activeMode==='receipts'&&<button type="button" className="receipt-add-row-quick" title="Thêm dòng bên dưới" aria-label="Thêm dòng bên dưới" onClick={()=>insertReceiptLineAfter(index)}><Plus size={17}/><span className="receipt-add-row-text">+ Thêm dòng</span></button>}{lines.length>1&&<button type="button" className="btn btn-secondary receipt-remove-row" aria-label="Xóa dòng sản phẩm" title="Xóa dòng" onClick={()=>setLines(rows=>rows.filter((_,i)=>i!==index))}><Trash2 size={16}/></button>}</div>;
                 const productSelect=!isSale&&products.loading?<label className="receipt-product-select">Danh sách sản phẩm đang tải<input className="ri-control" disabled placeholder="Vui lòng đợi..."/></label>:isSale?<div className="receipt-product-select"><ProductPicker index={index} value={line.product_id} onChange={val=>updateLine(index,'product_id',val)}/></div>:<label className="receipt-product-select">Sản phẩm có sẵn *<input className="ri-control" list={`receipt-products-${index}`} required value={line.product_search||''} placeholder="Tìm theo mã hoặc tên sản phẩm" onChange={e=>{const text=e.target.value;const match=(products.data?.items||[]).find(p=>text===`${p.sku} · ${p.name}`||text===p.sku||text===p.name);setLines(rows=>rows.map((item,i)=>{if(i!==index)return item;const next={...item,product_search:text,product_id:match?String(match.id):''};if(match&&!item.unit_price)next.unit_price=match.cost_price||'';if(match&&!item.sale_price)next.sale_price=match.sale_price||'';next.image_url=match?.image_url||'';return next;}));}}/><datalist id={`receipt-products-${index}`}>{(products.data?.items||[]).filter(p=>p.status==='ACTIVE').map(p=><option key={p.id} value={`${p.sku} · ${p.name}`}/>)}</datalist></label>;
-                return <div className={`op-line ${activeMode==='receipts'?'receipt-product-line':''} ${isNewProductLine?'is-new-product':''}`} key={index}>
-                  {isNewProductLine?<div className="receipt-new-product-layout" style={{display:'flex',flexDirection:'column',gap:12,width:'100%'}}>
-                    <div className="receipt-new-product-row-one" style={{display:'grid',gridTemplateColumns:'1.5fr 1.2fr 1fr auto',gap:12,alignItems:'start'}}>
-                      <div className="receipt-new-product-name"><label>Tên sản phẩm *<input className="ri-control" required placeholder="Dây sạc Type-C 1m" value={line.name} onChange={e=>updateLine(index,'name',e.target.value)}/></label></div>
-                      <div className="receipt-new-product-category"><label>Danh mục<div className="receipt-category-select-row"><select className="ri-control" aria-label="Danh mục sản phẩm mới" value={line.category_name} onChange={e=>updateLine(index,'category_name',e.target.value)}><option value="">Chọn danh mục</option>{categoryList.map(category=><option key={category.id} value={category.name}>{category.name}</option>)}</select><button type="button" className="receipt-category-add" title="Tạo danh mục mới" aria-label="Tạo danh mục mới" onClick={()=>{setCategoryCreateIndex(categoryCreateIndex===index?null:index);setNewCategoryName('');setCategoryInlineError('');}}><Plus size={18}/></button></div></label>{categoryCreateIndex===index&&<div style={{marginTop:'7px'}}><div className="receipt-category-create"><input className="ri-control" autoFocus maxLength={120} aria-label="Tên danh mục mới" placeholder="Tên danh mục mới" value={newCategoryName} onChange={e=>{setNewCategoryName(e.target.value);setCategoryInlineError('');}} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();createReceiptCategory(null,index);}}}/><button type="button" className="btn btn-primary btn-sm" disabled={categoryBusy||!newCategoryName.trim()} onClick={()=>createReceiptCategory(null,index)}>{categoryBusy?'Đang thêm…':'Thêm'}</button><button type="button" className="icon-button" aria-label="Hủy tạo danh mục" onClick={()=>{setCategoryCreateIndex(null);setNewCategoryName('');setCategoryInlineError('');}} disabled={categoryBusy}><X size={16}/></button></div>{categoryInlineError&&<p role="alert" style={{margin:'4px 0 0',color:'var(--ri-danger,#ef4444)',fontSize:'0.8rem',fontWeight:500}}>{categoryInlineError}</p>}</div>}{categoryInlineSuccess&&categoryCreateIndex!==index&&<p style={{margin:'4px 0 0',color:'var(--ri-success,#10b981)',fontSize:'0.8rem',fontWeight:500}}><Check size={14}/> {categoryInlineSuccess}</p>}</div>
-                      <label className="receipt-new-product-sku">Mã sản phẩm<input className="ri-control" placeholder="Tự tạo nếu để trống" value={line.sku} onChange={e=>updateLine(index,'sku',e.target.value)}/></label>{toggleButton}
+                return <div className={`op-line receipt-product-line ${isNewProductLine?'is-new-product':''}`} key={index}>
+                  {isNewProductLine ? (
+                    <div className="receipt-new-product-layout">
+                      <div className="receipt-new-product-header">
+                        <div className="receipt-new-product-name">
+                          <label>Tên sản phẩm *<input className="ri-control" required placeholder="Dây sạc Type-C 1m" value={line.name} onChange={e=>updateLine(index,'name',e.target.value)}/></label>
+                        </div>
+                        {toggleButton}
+                      </div>
+
+                      <div className="receipt-new-product-details">
+                        <div className="receipt-new-product-category">
+                          <label>Danh mục<div className="receipt-category-select-row"><select className="ri-control" aria-label="Danh mục sản phẩm mới" value={line.category_name} onChange={e=>updateLine(index,'category_name',e.target.value)}><option value="">Chọn danh mục</option>{categoryList.map(category=><option key={category.id} value={category.name}>{category.name}</option>)}</select><button type="button" className="receipt-category-add" title="Tạo danh mục mới" aria-label="Tạo danh mục mới" onClick={()=>{setCategoryCreateIndex(categoryCreateIndex===index?null:index);setNewCategoryName('');setCategoryInlineError('');}}><Plus size={18}/></button></div></label>
+                          {categoryCreateIndex===index&&<div style={{marginTop:'7px'}}><div className="receipt-category-create"><input className="ri-control" autoFocus maxLength={120} aria-label="Tên danh mục mới" placeholder="Tên danh mục mới" value={newCategoryName} onChange={e=>{setNewCategoryName(e.target.value);setCategoryInlineError('');}} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();createReceiptCategory(null,index);}}}/><button type="button" className="btn btn-primary btn-sm" disabled={categoryBusy||!newCategoryName.trim()} onClick={()=>createReceiptCategory(null,index)}>{categoryBusy?'Đang thêm…':'Thêm'}</button><button type="button" className="icon-button" aria-label="Hủy tạo danh mục" onClick={()=>{setCategoryCreateIndex(null);setNewCategoryName('');setCategoryInlineError('');}} disabled={categoryBusy}><X size={16}/></button></div>{categoryInlineError&&<p role="alert" style={{margin:'4px 0 0',color:'var(--ri-danger,#ef4444)',fontSize:'0.8rem',fontWeight:500}}>{categoryInlineError}</p>}</div>}
+                          {categoryInlineSuccess&&categoryCreateIndex!==index&&<p style={{margin:'4px 0 0',color:'var(--ri-success,#10b981)',fontSize:'0.8rem',fontWeight:500}}><Check size={14}/> {categoryInlineSuccess}</p>}
+                        </div>
+                        <div className="receipt-new-product-sku">
+                          <label>Mã sản phẩm<input className="ri-control" placeholder="Tự tạo nếu để trống" value={line.sku} onChange={e=>updateLine(index,'sku',e.target.value)}/></label>
+                        </div>
+                        <div className="receipt-new-product-image">
+                          <label style={{display:'block',marginBottom:4}}>Ảnh sản phẩm</label>
+                          <ImageUploadField compact imageUrl={line.image_url} onChange={value=>updateLine(index,'image_url',value)} onError={setError}/>
+                        </div>
+                      </div>
+
+                      <div className="receipt-new-product-pricing">
+                        {quantityField}
+                        {costField}
+                        {saleField}
+                        {rowActions}
+                      </div>
                     </div>
-                    <div className="receipt-new-product-row-two" style={{display:'grid',gridTemplateColumns:'1.5fr 0.7fr 1fr 1fr auto',gap:12,alignItems:'end'}}><div className="receipt-new-product-image"><ImageUploadField compact imageUrl={line.image_url} onChange={value=>updateLine(index,'image_url',value)} onError={setError}/></div>{quantityField}{costField}{saleField}{rowActions}</div>
-                  </div>:<>{productSelect}{quantityField}{costField}{saleField}{toggleButton}{rowActions}</>}
+                  ) : (
+                    <div className="receipt-existing-product-layout">
+                      <div className="receipt-existing-product-header">
+                        {productSelect}
+                        {toggleButton}
+                      </div>
+                      <div className="receipt-existing-product-pricing">
+                        {quantityField}
+                        {costField}
+                        {saleField}
+                        {rowActions}
+                      </div>
+                    </div>
+                  )}
                 </div>;
               })}
             </div>

@@ -320,54 +320,470 @@
 .receipt-image-remove{width:28px;height:28px;border:1px solid var(--ri-border);border-radius:8px;background:var(--ri-surface);color:var(--ri-danger);font-size:18px;line-height:1;cursor:pointer}
 .receipt-product-line .receipt-row-actions{align-self:end;grid-column:auto}
 .receipt-product-line .receipt-add-row-quick{opacity:.55;visibility:visible;transform:none}
-@media(max-width:900px){.receipt-product-line,.receipt-product-line.is-new-product{grid-template-columns:repeat(2,minmax(0,1fr))}.receipt-product-line .receipt-product-select,.receipt-new-product-name{grid-column:1/-1}.receipt-product-line .receipt-row-actions{justify-content:flex-end}}
-/* New-product receipt row: two wide fields first, compact inputs on second row. */
-.receipt-product-line.is-new-product{grid-template-columns:minmax(180px,1.4fr) minmax(160px,1fr) minmax(110px,.72fr) minmax(125px,.82fr) minmax(80px,.58fr) minmax(105px,.75fr) minmax(105px,.75fr) auto auto;align-items:end;row-gap:12px}
-.receipt-new-product-name{grid-column:1;grid-row:1}.receipt-new-product-category{grid-column:2;grid-row:1;display:grid;gap:5px;min-width:0}.receipt-new-product-image{grid-column:1;grid-row:2;min-width:0}.receipt-new-product-sku{grid-column:2;grid-row:2;min-width:0}.receipt-line-quantity{grid-column:3;grid-row:2;min-width:0}.receipt-line-cost{grid-column:4;grid-row:2;min-width:0}.receipt-line-sale{grid-column:5;grid-row:2;min-width:0}.receipt-product-line.is-new-product .receipt-new-product-toggle{grid-column:6/9;grid-row:2;align-self:end;white-space:nowrap}.receipt-product-line.is-new-product .receipt-row-actions{grid-column:9;grid-row:2}
-.receipt-category-select-row{display:flex;align-items:center;gap:6px;min-width:0}.receipt-category-select-row select{flex:1;min-width:0;width:100%;height:40px}.receipt-category-add{display:inline-flex;flex:0 0 40px;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid #CBD5E1;border-radius:9px;background:var(--ri-surface,#fff);color:var(--ri-primary,#0284C7);cursor:pointer}.receipt-category-add:hover{border-color:var(--ri-primary,#0284C7);background:var(--ri-elevated,#F0F9FF)}.receipt-category-create{display:flex;align-items:center;gap:6px;min-width:0;margin-top:7px}.receipt-category-create input{flex:1;min-width:60px}.receipt-new-product-image .image-upload-trigger,.receipt-new-product-image .image-upload-field{max-width:100%}
-@media(max-width:1200px){.receipt-product-line.is-new-product{grid-template-columns:repeat(2,minmax(0,1fr))}.receipt-product-line.is-new-product .receipt-new-product-name,.receipt-product-line.is-new-product .receipt-new-product-category,.receipt-product-line.is-new-product .receipt-new-product-image,.receipt-product-line.is-new-product .receipt-new-product-sku,.receipt-product-line.is-new-product .receipt-line-quantity,.receipt-product-line.is-new-product .receipt-line-cost,.receipt-product-line.is-new-product .receipt-line-sale,.receipt-product-line.is-new-product .receipt-new-product-toggle,.receipt-product-line.is-new-product .receipt-row-actions{grid-column:auto;grid-row:auto}.receipt-product-line.is-new-product .receipt-new-product-toggle{white-space:normal}.receipt-product-line.is-new-product .receipt-row-actions{justify-content:flex-end}}
-/* Receipt entry rows use independent grids so controls never fall into auto-created tracks. */
-.receipt-product-line{display:grid;grid-template-columns:minmax(220px,2.2fr) minmax(130px,auto) minmax(80px,.8fr) minmax(110px,1fr) minmax(110px,1fr) 40px;gap:10px;align-items:end}
-.receipt-product-line .receipt-product-select,.receipt-product-line .receipt-line-quantity,.receipt-product-line .receipt-line-cost,.receipt-product-line .receipt-line-sale{min-width:0}
-.receipt-product-line .ri-control,.receipt-product-line select{box-sizing:border-box;width:100%;height:40px;min-height:40px}
-.receipt-product-line .receipt-new-product-toggle{display:inline-flex;min-height:40px;height:40px;align-items:center;justify-content:center;padding:0 12px;white-space:nowrap}
-.receipt-product-line .receipt-row-actions{min-width:40px;align-self:end;grid-column:auto;justify-content:flex-end}
-.receipt-product-line .receipt-add-row-quick,.receipt-product-line .receipt-remove-row{width:40px;height:40px;min-width:40px}
-.receipt-product-line.is-new-product{display:block;grid-template-columns:none}
-.receipt-new-product-layout{display:grid;gap:12px;min-width:0}
-.receipt-new-product-row-one,.receipt-new-product-row-two{display:grid;align-items:end;gap:10px;min-width:0}
-.receipt-new-product-row-one{grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) minmax(0,1fr) auto}
-.receipt-new-product-row-two{grid-template-columns:minmax(0,1.5fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr) auto}
-.receipt-new-product-row-one>* ,.receipt-new-product-row-two>*{min-width:0}
-.receipt-new-product-row-one .receipt-new-product-toggle{width:max-content;max-width:100%}
-.receipt-new-product-row-two .receipt-row-actions{display:flex;align-items:end;justify-content:flex-end;grid-column:auto}
-.receipt-new-product-row-two .image-upload-trigger{height:40px;min-height:40px;padding:3px 8px;gap:7px;overflow:hidden}
-.receipt-new-product-row-two .image-upload-icon{width:28px;height:28px;flex-basis:28px}
-.receipt-new-product-row-two .image-upload-copy small{display:none}
-.receipt-new-product-row-two .image-upload-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
-.receipt-new-product-row-two .image-upload-preview{width:40px;height:40px;flex-basis:40px}
-.receipt-new-product-row-two .image-upload-change,.receipt-new-product-row-two .image-upload-remove{height:40px;min-height:40px}
-.receipt-category-select-row select{height:40px;min-height:40px}
-.receipt-category-add{height:40px;width:40px;flex-basis:40px}
-.receipt-category-create .btn,.receipt-category-create .icon-button{height:40px;min-height:40px}
-@media(max-width:1000px){.receipt-product-line{grid-template-columns:minmax(0,1fr) minmax(90px,.55fr) minmax(130px,.8fr) minmax(130px,.8fr) auto}.receipt-product-line .receipt-product-select{grid-column:1/-1}.receipt-new-product-row-one{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.receipt-new-product-row-two{grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1fr)}.receipt-new-product-row-two .receipt-row-actions{grid-column:1/-1}}
-@media(max-width:640px){.receipt-product-line,.receipt-product-line.is-new-product{grid-template-columns:1fr}.receipt-product-line .receipt-product-select{grid-column:1}.receipt-new-product-row-one,.receipt-new-product-row-two{grid-template-columns:1fr}.receipt-new-product-row-two .receipt-row-actions{grid-column:1}.receipt-new-product-row-one .receipt-new-product-toggle{width:100%}}
-/* Existing-product receipt row: keep fields together and the mode toggle at the end. */
-.receipt-product-line:not(.is-new-product){display:flex;flex-wrap:nowrap;gap:10px;align-items:end}
-.receipt-product-line:not(.is-new-product)>.receipt-product-select{flex:2.2 1 0;min-width:210px}
-.receipt-product-line:not(.is-new-product)>.receipt-line-quantity{flex:.7 1 0;min-width:80px}
-.receipt-product-line:not(.is-new-product)>.receipt-line-cost,.receipt-product-line:not(.is-new-product)>.receipt-line-sale{flex:1 1 0;min-width:115px}
-.receipt-product-line:not(.is-new-product)>.receipt-new-product-toggle{flex:0 0 auto;height:40px;min-height:40px;white-space:nowrap}
-.receipt-product-line:not(.is-new-product)>.receipt-row-actions{display:flex;flex:0 0 auto;align-items:end;min-width:40px}
-.receipt-product-line:not(.is-new-product) .ri-control{width:100%;height:40px;min-height:40px}
-.receipt-product-line:not(.is-new-product) .receipt-add-row-quick,.receipt-product-line:not(.is-new-product) .receipt-remove-row{width:40px;height:40px;min-width:40px}
-@media(max-width:900px){.receipt-product-line:not(.is-new-product){flex-wrap:wrap}.receipt-product-line:not(.is-new-product)>.receipt-product-select{flex:1 1 100%}.receipt-product-line:not(.is-new-product)>.receipt-line-quantity{flex:.7 1 80px}.receipt-product-line:not(.is-new-product)>.receipt-line-cost,.receipt-product-line:not(.is-new-product)>.receipt-line-sale{flex:1 1 115px}.receipt-product-line:not(.is-new-product)>.receipt-new-product-toggle{margin-left:auto}}
-/* Reset legacy outer-line grid placements inside the two explicit new-product rows. */
-.receipt-new-product-row-one>.receipt-new-product-name,.receipt-new-product-row-one>.receipt-new-product-category,.receipt-new-product-row-one>.receipt-new-product-sku,.receipt-new-product-row-one>.receipt-new-product-toggle,.receipt-new-product-row-two>.receipt-new-product-image,.receipt-new-product-row-two>.receipt-line-quantity,.receipt-new-product-row-two>.receipt-line-cost,.receipt-new-product-row-two>.receipt-line-sale,.receipt-new-product-row-two>.receipt-row-actions{grid-column:auto!important;grid-row:auto!important;min-width:0}
-.receipt-new-product-row-one>.receipt-new-product-toggle{height:40px;min-height:40px;white-space:nowrap}
-.receipt-new-product-row-two .receipt-row-actions{display:flex;align-items:end;justify-content:flex-end}
-.receipt-new-product-row-two .receipt-add-row-quick,.receipt-new-product-row-two .receipt-remove-row{width:40px;height:40px;min-width:40px}
-.receipt-new-product-row-two .image-upload-trigger{height:40px;min-height:40px;padding:3px 8px;gap:7px;overflow:hidden}
-.receipt-new-product-row-two .image-upload-icon{width:28px;height:28px;flex-basis:28px}
-.receipt-new-product-row-two .image-upload-copy small{display:none}
-.receipt-new-product-row-two .image-upload-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+/* ==========================================================================
+   Receipt & Issue Line Items — Responsive Multi-tier Layout
+   ========================================================================== */
+
+.receipt-product-line {
+  display: block;
+  width: 100%;
+  background: var(--ri-surface, #ffffff);
+  border: 1px solid var(--ri-border, #E2E8F0);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-sizing: border-box;
+}
+
+.receipt-product-line .ri-control,
+.receipt-product-line select {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+}
+
+.receipt-new-product-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ── Hàng 1 (Mobile): Tên sản phẩm * (100% width) + nút toggle ── */
+.receipt-new-product-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.receipt-new-product-header .receipt-new-product-name {
+  width: 100%;
+  min-width: 0;
+}
+
+.receipt-new-product-header .receipt-new-product-name label {
+  display: block;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.receipt-new-product-header .receipt-new-product-toggle {
+  align-self: flex-start;
+  font-size: 12px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+/* ── Hàng 2 (Mobile): Danh mục & Mã sản phẩm (grid-cols-2) + Khối ảnh sản phẩm ── */
+.receipt-new-product-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.receipt-new-product-details .receipt-new-product-category {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.receipt-new-product-details .receipt-new-product-sku {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.receipt-new-product-details .receipt-new-product-image {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.receipt-category-select-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.receipt-category-select-row select {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 40px;
+}
+
+.receipt-category-add {
+  display: inline-flex;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #CBD5E1;
+  border-radius: 9px;
+  background: var(--ri-surface, #fff);
+  color: var(--ri-primary, #0284C7);
+  cursor: pointer;
+}
+
+.receipt-category-add:hover {
+  border-color: var(--ri-primary, #0284C7);
+  background: var(--ri-elevated, #F0F9FF);
+}
+
+.receipt-category-create {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 7px;
+}
+
+.receipt-category-create input {
+  flex: 1;
+  min-width: 60px;
+}
+
+.receipt-category-create .btn,
+.receipt-category-create .icon-button {
+  height: 40px;
+  min-height: 40px;
+}
+
+.receipt-new-product-image .image-upload-trigger {
+  height: 40px;
+  min-height: 40px;
+  padding: 3px 8px;
+  gap: 7px;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.receipt-new-product-image .image-upload-icon {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+
+.receipt-new-product-image .image-upload-copy small {
+  display: none;
+}
+
+.receipt-new-product-image .image-upload-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.receipt-new-product-image .image-upload-preview {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.receipt-new-product-image .image-upload-change,
+.receipt-new-product-image .image-upload-remove {
+  height: 40px;
+  min-height: 40px;
+}
+
+/* ── Hàng 3 (Mobile): Số lượng, Đơn giá nhập, Giá bán + Nút Thêm vào phiếu ── */
+.receipt-new-product-pricing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  align-items: end;
+}
+
+.receipt-new-product-pricing .receipt-line-quantity {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.receipt-new-product-pricing .receipt-line-cost {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.receipt-new-product-pricing .receipt-line-sale {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.receipt-new-product-pricing .receipt-row-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.receipt-new-product-pricing .receipt-row-actions .receipt-add-row-quick {
+  flex: 1;
+  height: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--ri-primary, #0284C7);
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.receipt-new-product-pricing .receipt-row-actions .receipt-add-row-quick:hover {
+  background: #0369A1;
+}
+
+.receipt-new-product-pricing .receipt-row-actions .receipt-remove-row {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* ── Dòng sản phẩm có sẵn (Existing Product Layout) ── */
+.receipt-existing-product-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.receipt-existing-product-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.receipt-existing-product-header .receipt-product-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.receipt-existing-product-header .receipt-new-product-toggle {
+  align-self: flex-start;
+  font-size: 12px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.receipt-existing-product-pricing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  align-items: end;
+}
+
+.receipt-existing-product-pricing .receipt-line-quantity {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.receipt-existing-product-pricing .receipt-line-cost {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.receipt-existing-product-pricing .receipt-line-sale {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.receipt-existing-product-pricing .receipt-row-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.receipt-existing-product-pricing .receipt-row-actions .receipt-add-row-quick {
+  flex: 1;
+  height: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--ri-primary, #0284C7);
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.receipt-existing-product-pricing .receipt-row-actions .receipt-add-row-quick:hover {
+  background: #0369A1;
+}
+
+.receipt-existing-product-pricing .receipt-row-actions .receipt-remove-row {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* ── Tablet / Desktop (>= 768px): Xếp hàng cân đối, chuyên nghiệp ── */
+@media (min-width: 768px) {
+  .receipt-product-line {
+    padding: 16px;
+  }
+
+  .receipt-add-row-text {
+    display: none;
+  }
+
+  /* New product desktop */
+  .receipt-new-product-header {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .receipt-new-product-header .receipt-new-product-name {
+    flex: 1;
+  }
+
+  .receipt-new-product-header .receipt-new-product-toggle {
+    align-self: flex-end;
+    height: 40px;
+    min-height: 40px;
+    margin-bottom: 1px;
+  }
+
+  .receipt-new-product-details {
+    grid-template-columns: 1.5fr 1fr 1.5fr;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .receipt-new-product-details .receipt-new-product-category {
+    grid-column: 1;
+  }
+
+  .receipt-new-product-details .receipt-new-product-sku {
+    grid-column: 2;
+  }
+
+  .receipt-new-product-details .receipt-new-product-image {
+    grid-column: 3;
+    margin-top: 0;
+  }
+
+  .receipt-new-product-pricing {
+    grid-template-columns: 0.8fr 1.1fr 1.1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .receipt-new-product-pricing .receipt-line-quantity {
+    grid-column: auto;
+  }
+
+  .receipt-new-product-pricing .receipt-line-cost {
+    grid-column: auto;
+  }
+
+  .receipt-new-product-pricing .receipt-line-sale {
+    grid-column: auto;
+  }
+
+  .receipt-new-product-pricing .receipt-row-actions {
+    grid-column: auto;
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .receipt-new-product-pricing .receipt-row-actions .receipt-add-row-quick {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+  }
+
+  /* Existing product desktop */
+  .receipt-existing-product-layout {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .receipt-existing-product-header {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+    flex: 2 1 0;
+    min-width: 240px;
+  }
+
+  .receipt-existing-product-header .receipt-product-select {
+    flex: 1;
+  }
+
+  .receipt-existing-product-header .receipt-new-product-toggle {
+    align-self: flex-end;
+    height: 40px;
+    min-height: 40px;
+    margin-bottom: 1px;
+  }
+
+  .receipt-existing-product-pricing {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+    flex: 2.5 1 0;
+  }
+
+  .receipt-existing-product-pricing .receipt-line-quantity {
+    flex: 0.7 1 70px;
+    grid-column: auto;
+  }
+
+  .receipt-existing-product-pricing .receipt-line-cost,
+  .receipt-existing-product-pricing .receipt-line-sale {
+    flex: 1 1 110px;
+    grid-column: auto;
+  }
+
+  .receipt-existing-product-pricing .receipt-row-actions {
+    flex: 0 0 auto;
+    width: auto;
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+
+  .receipt-existing-product-pricing .receipt-row-actions .receipt-add-row-quick {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    padding: 0;
+  }
+}
