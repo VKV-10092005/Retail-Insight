@@ -22,34 +22,52 @@
   justify-content: center;
   /* Hiệu ứng phát sáng mềm mại 3D xanh dương */
   filter: brightness(1.08) contrast(1.05) drop-shadow(0 12px 24px rgba(56, 189, 248, 0.42));
-  animation: none;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: robotFloat 3s ease-in-out infinite;
+  transition: filter 0.2s ease;
 }
 
 .robot-mascot-wrapper:hover {
+  filter: brightness(1.15) contrast(1.08) drop-shadow(0 16px 28px rgba(56, 189, 248, 0.55));
+}
+
+.robot-mascot-wrapper:hover .robot-mascot-img {
   transform: scale(1.08);
 }
 
 .robot-mascot-wrapper.dragging {
   cursor: grabbing;
-  animation: none;
+  animation: none !important;
   transform: scale(1.12);
 }
 
-/* Robot nhấp nhô nhẹ khi đang chờ. */
-.robot-mascot-wrapper:not(.dragging):not(.chat-open) {
-  animation: botFloat 3.2s ease-in-out infinite;
+.robot-mascot-wrapper.chat-open {
+  animation: none !important;
 }
 
-@keyframes botFloat {
+/* Robot nhấp nhô nhẹ khi đang chờ trên cả desktop và mobile */
+.robot-mascot-wrapper:not(.dragging):not(.chat-open) {
+  animation: robotFloat 3s ease-in-out infinite;
+}
 
+@keyframes robotFloat {
   0%,
   100% {
     transform: translateY(0);
   }
 
   50% {
-    transform: translateY(-7px);
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes botFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
   }
 }
 

@@ -1,13 +1,20 @@
 .ai-feature-guide{margin:0 0 20px;padding:16px 18px;border-radius:14px;border:1px solid #CFFAFE;background:#F0F9FF;color:#0369A1}
-.ai-feature-guide-layout{display:flex;align-items:flex-start;gap:12px}
+.ai-feature-guide-layout{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+.ai-feature-guide-content{display:flex;align-items:flex-start;gap:12px;width:100%;min-width:0}
 .ai-feature-guide-icon{flex-shrink:0;margin-top:1px;color:#0284C7}
-.ai-feature-guide-copy{flex:1;min-width:0}
+.ai-feature-guide-copy{flex:1;min-width:0;width:100%}
 .ai-feature-guide-copy strong{display:block;margin-bottom:5px;color:#134E4A}
-.ai-feature-guide-copy p{margin:0;line-height:1.55;color:#0369A1}
-.ai-feature-guide-dismiss{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;border:1px solid #CFFAFE;border-radius:8px;background:var(--bg-card);color:#3730A3;padding:7px 10px;cursor:pointer;font-size:13px}
+.ai-feature-guide-copy p{margin:0;line-height:1.55;color:#0369A1;word-break:break-word}
+.ai-feature-guide-dismiss{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;border:1px solid #CFFAFE;border-radius:8px;background:var(--bg-card,#ffffff);color:#3730A3;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:500;width:100%;transition:all .2s ease}
 .ai-feature-guide-dismiss:hover{border-color:#38BDF8;background:#E0F2FE}
 .ai-feature-guide-reopen-wrap{display:flex;justify-content:flex-end;margin:-12px 0 16px}
-.ai-feature-guide-reopen{border:0;background:transparent;color:var(--accent-primary);cursor:pointer;font-size:13px}
+.ai-feature-guide-reopen{border:0;background:transparent;color:var(--accent-primary,#0284C7);cursor:pointer;font-size:13px}
+
+@media(min-width:768px){
+  .ai-feature-guide-layout{flex-direction:row;align-items:flex-start;justify-content:space-between;gap:16px}
+  .ai-feature-guide-content{flex:1}
+  .ai-feature-guide-dismiss{width:auto;align-self:flex-start}
+}
 
 :root[data-theme="dark"] .ai-feature-guide,
 :root.dark .ai-feature-guide,
@@ -27,5 +34,3 @@
 :root[data-theme="dark"] .ai-feature-guide-dismiss:hover,
 :root.dark .ai-feature-guide-dismiss:hover,
 .dark .ai-feature-guide-dismiss:hover{background:rgba(30,41,59,.82);border-color:rgba(15,118,110,.5);color:#F8FAFC}
-
-@media(max-width:720px){.ai-feature-guide-layout{flex-wrap:wrap}.ai-feature-guide-dismiss{margin-left:34px}}

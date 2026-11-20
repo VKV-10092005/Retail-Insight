@@ -21,12 +21,16 @@ export default function AiFeatureGuideBanner({ pageKey, children }) {
   return (
     <section className="ai-feature-guide" aria-label="Chức năng này giúp gì cho cửa hàng?">
       <div className="ai-feature-guide-layout">
-        <Lightbulb className="ai-feature-guide-icon" size={22} aria-hidden="true" />
-        <div className="ai-feature-guide-copy">
-          <strong>Chức năng này giúp gì cho cửa hàng?</strong>
-          <p>{children}</p>
+        <div className="ai-feature-guide-content">
+          <Lightbulb className="ai-feature-guide-icon" size={22} aria-hidden="true" />
+          <div className="ai-feature-guide-copy">
+            <strong>Chức năng này giúp gì cho cửa hàng?</strong>
+            <p>{children}</p>
+          </div>
         </div>
-        <button type="button" className="ai-feature-guide-dismiss" onClick={dismiss}><Sparkles size={14} /> Đã hiểu (Ẩn hướng dẫn)</button>
+        <button type="button" className="ai-feature-guide-dismiss" onClick={dismiss}>
+          <Sparkles size={14} /> Đã hiểu (Ẩn hướng dẫn)
+        </button>
       </div>
     </section>
   );
