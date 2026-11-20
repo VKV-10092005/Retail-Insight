@@ -8,16 +8,12 @@ import {ThemeToggle} from '../design-system/ThemeProvider.jsx';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import PasswordChecklist, { isPasswordStrong } from '../components/auth/PasswordChecklist';
 import {authRequest} from '../services/auth';
+import {setTokens} from '../services/tokenStorage';
 import {warmApi} from '../services/api';
 import OtpInput from '../components/auth/OtpInput';
 import AuthShowcasePanel from '../components/auth/AuthShowcasePanel';
 
 export default function Login(){
-  useEffect(()=>{warmApi();},[]);
-  useEffect(()=>{
-    setError('');
-    if(typeof clearError==='function') clearError();
-  },[clearError]);
   const {user,loading,login,refresh,error:sessionError,clearError}=useAuth();
   const [searchParams]=useSearchParams();
   const navigate=useNavigate();
@@ -30,6 +26,12 @@ export default function Login(){
   const [showGoogleConfirmPassword,setShowGoogleConfirmPassword]=useState(false);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
+
+  // Xóa sạch thông báo lỗi cũ khi render màn hình đăng nhập
+  useEffect(()=>{
+    setError('');
+    if(typeof clearError==='function') clearError();
+  },[clearError]);
 
   // Modal hoàn thiện Shop sau Google OAuth
   const [googleModal, setGoogleModal] = useState(null);
@@ -115,13 +117,10 @@ export default function Login(){
       });
 
       if(res.status === 'LOGGED_IN'){
-        if(res.accessToken || res.token){
-          localStorage.setItem('token', res.accessToken || res.token);
-          localStorage.setItem('accessToken', res.accessToken || res.token);
-        }
-        if(res.refreshToken){
-          localStorage.setItem('refreshToken', res.refreshToken);
-        }
+        setTokens({
+          accessToken: res.accessToken || res.token,
+          refreshToken: res.refreshToken
+        });
         const loggedUser = await refresh();
         const target = (redirectParam && loggedUser && isRouteAllowed(loggedUser.role, redirectParam))
           ? redirectParam
@@ -210,13 +209,10 @@ export default function Login(){
         }
       });
 
-      if(completeRes?.accessToken || completeRes?.token){
-        localStorage.setItem('token', completeRes.accessToken || completeRes.token);
-        localStorage.setItem('accessToken', completeRes.accessToken || completeRes.token);
-      }
-      if(completeRes?.refreshToken){
-        localStorage.setItem('refreshToken', completeRes.refreshToken);
-      }
+      setTokens({
+        accessToken: completeRes?.accessToken || completeRes?.token,
+        refreshToken: completeRes?.refreshToken
+      });
       const loggedUser = await refresh();
       setGoogleModal(null);
       const target = (redirectParam && loggedUser && isRouteAllowed(loggedUser.role, redirectParam))
