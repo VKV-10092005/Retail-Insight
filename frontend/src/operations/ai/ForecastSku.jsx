@@ -204,10 +204,12 @@ export default function ForecastSku() {
                     </div>
                     <div className="ai-param-card">
                       <div className="ai-param-title">Trạng thái mô hình</div>
-                      <div className="ai-param-value" style={{ color: result?.status === 'READY' ? 'var(--ri-success)' : 'var(--ri-warning)' }}>
-                        {aiStatus(result?.status)}
+                      <div className="ai-model-status-wrap">
+                        <span className="ai-param-value" style={{ color: result?.status === 'READY' ? 'var(--ri-success)' : 'var(--ri-warning)' }}>
+                          {aiStatus(result?.status)}
+                        </span>
+                        <small className="ai-param-desc">{aiReason(result?.reason) || 'Đạt tiêu chuẩn suy luận trên dữ liệu thực'}</small>
                       </div>
-                      <small className="ai-param-desc">{aiReason(result?.reason) || 'Đạt tiêu chuẩn suy luận trên dữ liệu thực'}</small>
                     </div>
                   </div>
                 </Card>

@@ -9,6 +9,7 @@ import { AlertTriangle, AlertCircle, ShieldAlert, ArrowRight, Search, CheckCircl
 import {BranchSelect,useBranch} from '../../branches/BranchContext';
 import {useAuth} from '../../auth/AuthContext';
 import useAppSettings from '../../hooks/useAppSettings';
+import { aiReason } from '../shared';
 
 export default function StockoutAlerts() {
   const {user}=useAuth();
@@ -254,7 +255,7 @@ export default function StockoutAlerts() {
                       [
                         "prob",
                         "Xác suất đứt hàng",
-                        r => <strong>{r.probability == null ? (r.method === 'MIN_STOCK_AND_DAYS_OF_SUPPLY' ? 'Theo mức tồn tối thiểu / ngày tồn' : '—') : `${(r.probValue * 100).toFixed(1)}%`}</strong>
+                        r => <strong>{r.probability == null ? (aiReason(r.method) || '—') : `${(r.probValue * 100).toFixed(1)}%`}</strong>
                       ],
                       [
                         "action",

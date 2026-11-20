@@ -235,12 +235,19 @@ export function AiResultNotice({result,partialText}){
 export function aiStatus(status){
   return {
     READY:'Đủ điều kiện',
+    PARTIAL:'Kết quả một phần',
+    PENDING:'Đang xử lý',
     ADAPTIVE_FORECAST:'Dự báo thích ứng cho cửa hàng mới (tham khảo)',
+    LOCAL_FALLBACK:'Mô hình dự báo nội bộ',
+    AI_SERVICE_UNAVAILABLE_LOCAL_FALLBACK:'Mô hình dự báo nội bộ',
+    FALLBACK:'Dự báo từ dữ liệu thực tế',
+    HISTORICAL:'Dữ liệu lịch sử',
     UNAVAILABLE:'Chưa sẵn sàng',
     INSUFFICIENT_HISTORY:'Chưa đủ lịch sử quan sát',
     INSUFFICIENT_DATA:'Chưa đủ dữ liệu đầu vào',
-    SELECT_PRODUCT:'Cần chọn sản phẩm'
-  }[status]||'Chưa xác nhận';
+    SELECT_PRODUCT:'Cần chọn sản phẩm',
+    NO_DATA:'Chưa có dữ liệu'
+  }[status]||(status?`${status}`:'Chưa xác nhận');
 }
 
 export function aiReason(reason){
@@ -252,6 +259,9 @@ export function aiReason(reason){
     MISSING_PRODUCT_HISTORY_OR_ATTRIBUTES:'Lịch sử hoặc thuộc tính của một số sản phẩm chưa đầy đủ.',
     HISTORICAL_PRODUCT_ATTRIBUTE_SNAPSHOTS_NOT_AVAILABLE:'Chưa có bản chụp thuộc tính theo thời gian để dự báo hồi tố kỳ đã chọn.',
     MODEL_VERSION_NOT_LOADED:'Phiên bản mô hình đã chọn chưa được nạp.',
-    MISSING_STOCK:'Chưa có bản ghi tồn đầu kỳ được xác minh.'
-  }[reason]||(reason?.startsWith('INVALID_ARTIFACT_')?'Artifact mô hình chưa vượt qua kiểm tra tương thích và checksum.':reason);
+    MISSING_STOCK:'Chưa có bản ghi tồn đầu kỳ được xác minh.',
+    MIN_STOCK_AND_DAYS_OF_SUPPLY:'Theo mức tồn tối thiểu và số ngày tồn kho còn lại.',
+    HISTORICAL_AVERAGE:'Trung bình bán lịch sử 3 tháng gần nhất.',
+    NO_HISTORY:'Chưa có lịch sử bán hàng để tính toán.'
+  }[reason]||(reason?.startsWith('INVALID_ARTIFACT_')?'Artifact mô hình chưa vượt qua kiểm tra tương thích và checksum.':(reason||null));
 }

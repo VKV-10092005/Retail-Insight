@@ -16,6 +16,22 @@
   .ai-feature-guide-dismiss{width:auto;align-self:flex-start}
 }
 
+/* ── AI param card: status badge mobile stacking ── */
+.ai-model-status-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:4px}
+.ai-model-status-wrap .ai-param-value{display:inline-block}
+.ai-model-status-wrap .ai-param-desc{display:block;margin-top:0}
+
+/* ── AI param card base ── */
+.ai-param-card{background:var(--bg-card,#f8fafc);border:1px solid var(--border-color,#e2e8f0);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.ai-param-title{font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--ri-muted)}
+.ai-param-value{font-size:1rem;font-weight:700;color:var(--ri-text)}
+.ai-param-desc{font-size:0.8rem;color:var(--ri-muted);margin:0}
+
+@media(min-width:768px){
+  .ai-model-status-wrap{flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px}
+  .ai-model-status-wrap .ai-param-desc{margin-top:0}
+}
+
 :root[data-theme="dark"] .ai-feature-guide,
 :root.dark .ai-feature-guide,
 .dark .ai-feature-guide{background:rgba(37,99,235,.13);border-color:rgba(15,118,110,.26);color:#CBD5E1}
