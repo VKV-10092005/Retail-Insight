@@ -6,7 +6,7 @@
 /* ── Container nổi ──────────────────────────────────────────── */
 .floating-robot-container {
   position: fixed;
-  z-index: 9999;
+  z-index: 30;
   user-select: none;
   touch-action: none;
 }
@@ -124,7 +124,7 @@
   cursor: pointer;
   animation: bubblePop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
-  z-index: 10001;
+  z-index: 31;
   color: #1E293B;
 }
 
@@ -217,7 +217,7 @@
   flex-direction: column;
   overflow: hidden;
   animation: dialogPopUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  z-index: 10000;
+  z-index: 32;
   user-select: text;
 }
 
@@ -257,7 +257,7 @@
   width: 22px;
   height: 22px;
   border-radius: 10px 4px 6px 4px;
-  z-index: 50;
+  z-index: 33;
   cursor: nwse-resize;
   pointer-events: auto;
   touch-action: none;

@@ -187,11 +187,11 @@ export function Pager({data,onChange,limit=20}){
   const last=Math.min(page*limit,total);
   const start=Math.max(1,Math.min(page-2,pageCount-4));
   const pages=Array.from({length:Math.min(5,pageCount)},(_,index)=>start+index);
-  const buttonStyle={padding:'6px 14px',minWidth:84,whiteSpace:'nowrap',borderRadius:8,width:'auto',height:36,boxSizing:'border-box'};
+  const buttonStyle={padding:'6px 12px',minWidth:72,whiteSpace:'nowrap',borderRadius:8,width:'auto',height:36,boxSizing:'border-box',flexShrink:0};
   return (
     <div className="pagination">
       <span>Hiển thị {first}–{last} trên tổng số {total} bản ghi</span>
-      <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+      <div className="pagination-buttons" style={{display:'flex',alignItems:'center',gap:6,flexWrap:'nowrap',overflowX:'auto',WebkitOverflowScrolling:'touch',maxWidth:'100%',paddingBottom:2}}>
         <button type="button" className="btn btn-secondary btn-sm" style={buttonStyle} disabled={page<=1} onClick={()=>onChange(page-1)}>‹ Trước</button>
         {pages.map(number=><button key={number} type="button" className="btn btn-secondary btn-sm" aria-current={number===page?'page':undefined} aria-label={`Trang ${number}`} style={{...buttonStyle,minWidth:40,width:40,padding:'6px 10px',background:number===page?'var(--ri-primary)':'var(--ri-surface)',color:number===page?'#fff':'var(--ri-text)',borderColor:number===page?'var(--ri-primary)':'var(--ri-border)'}} disabled={number===page} onClick={()=>onChange(number)}>{number}</button>)}
         <button type="button" className="btn btn-secondary btn-sm" style={buttonStyle} disabled={page>=pageCount} onClick={()=>onChange(page+1)}>Sau ›</button>

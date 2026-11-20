@@ -90,7 +90,7 @@ export default function ForecastSku() {
           {/* 3. Chọn sản phẩm cụ thể */}
           <div className="ai-filter-item" style={{ gridColumn: 'span 2' }}>
             <span className="ai-filter-label">3. Chọn sản phẩm cần dự báo *</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px' }}>
+            <div className="sku-picker-grid">
               <div style={{ position: 'relative' }}>
                 <Search size={16} style={{ position: 'absolute', left: '10px', top: '12px', color: 'var(--ri-muted)' }} />
                 <input

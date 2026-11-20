@@ -1569,3 +1569,219 @@
 .nav-item.active,.badge-info{background:#eff6ff;color:#0369a1}.nav-item.active{box-shadow:inset 3px 0 #0284c7}
 .brand-logo{background:#0284c7;box-shadow:0 5px 13px #0284c73b}.brand strong span,.avatar,.eyebrow{color:#0284c7}
 @media(max-width:768px){.topbar-left{min-width:0;flex:1;gap:8px}.breadcrumb{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.breadcrumb strong{overflow:hidden;text-overflow:ellipsis}.topbar-left>div[style*="margin-left"]{display:none!important}.topbar-right{flex:0 0 auto}.topbar .badge{display:none}.sidebar-collapse-btn{border:0;background:transparent;box-shadow:none}}
+
+
+/* ==========================================================================
+   RETAIL INSIGHT - SENIOR MOBILE & RESPONSIVE UX ENHANCEMENTS
+   iPhone Safari (iOS), Android, iPad/Tablet, Laptop & Large Desktop
+   ========================================================================== */
+
+/* 1. Viewport & Body Anti-overflow */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+  -webkit-text-size-adjust: 100%;
+}
+.app-shell, .content-shell {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+/* 2. iPhone Safari Auto-Zoom Prevention on Form Controls */
+@media (max-width: 767px) {
+  input, select, textarea, .ri-control, .searchbox input {
+    font-size: 16px !important;
+  }
+}
+
+/* 3. Safe Area Inset Support (iPhone Notch & Home Indicator) */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.footer {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+}
+
+/* 4. 100% Tables Wrapped & Touch-Scrollable */
+.table-scroll,
+.table-responsive,
+.table-container,
+.ri-table-region,
+.table-wrap,
+.ri-table-wrap,
+div:has(> table) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+table,
+.data-table,
+.ri-table {
+  width: 100% !important;
+  min-width: max-content !important;
+  border-collapse: collapse;
+}
+
+th,
+.data-table th,
+.ri-table th,
+thead th {
+  white-space: nowrap !important;
+}
+
+/* 5. Mobile Single-Row Flex-Nowrap Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.pagination-buttons,
+.pagination > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.pagination button {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 639px) {
+  .pagination {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .pagination > span {
+    font-size: 12px !important;
+    color: var(--ri-muted, #64748b) !important;
+    width: 100% !important;
+  }
+  .pagination > div,
+  .pagination-buttons {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding-bottom: 4px !important;
+  }
+  .pagination button {
+    height: 34px !important;
+    min-width: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* 6. Universal Mobile Modal & Dialog Optimization */
+.modal-overlay,
+.ri-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50 !important;
+  padding: 12px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal,
+.ri-dialog,
+.receipt-detail-modal {
+  width: min(560px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: 85dvh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  border-radius: 16px !important;
+  box-sizing: border-box !important;
+  position: relative;
+  z-index: 51 !important;
+}
+
+.receipt-detail-modal {
+  width: min(920px, calc(100vw - 24px)) !important;
+}
+
+@media (max-width: 640px) {
+  .modal, .ri-dialog, .receipt-detail-modal {
+    padding: 16px !important;
+  }
+}
+
+/* 7. Responsive Grids (Dashboard Branch Grid & Sku Picker) */
+.dashboard-branch-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.sku-picker-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+}
+
+@media (max-width: 767px) {
+  .dashboard-branch-grid,
+  .sku-picker-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stat-grid,
+  .stat-grid.three,
+  .branch-grid,
+  .architecture-grid,
+  .dashboard-grid,
+  .dashboard-grid.lower,
+  .two-column,
+  .settings-grid,
+  .forecast-panels,
+  .detail-grid,
+  .ai-filter-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .ai-filter-item {
+    grid-column: auto !important;
+  }
+  .page-content {
+    padding: 16px 12px 32px !important;
+  }
+  .card, .ri-card {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
+  .toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .toolbar .searchbox,
+  .toolbar .select,
+  .toolbar > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .stat-grid,
+  .branch-grid,
+  .architecture-grid,
+  .settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
