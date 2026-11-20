@@ -252,10 +252,11 @@
 /* ── Tay nắm kéo chỉnh kích thước ở góc trên bên trái ───── */
 .chat-resize-handle-tl {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 20px;
-  height: 20px;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px 4px 6px 4px;
   z-index: 30;
   cursor: nwse-resize;
   touch-action: none;
@@ -263,7 +264,6 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
   transition: background .15s ease;
 }
 
