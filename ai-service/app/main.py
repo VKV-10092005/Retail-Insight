@@ -1,4 +1,4 @@
-import os,secrets,logging,time
+﻿import os,secrets,logging,time
 from datetime import date
 from typing import Annotated
 from fastapi import FastAPI,Depends,Header,HTTPException,Request
@@ -22,6 +22,8 @@ async def limits(request:Request,call_next):
     started=time.monotonic();response=await call_next(request)
     logger.info('%s %s status=%s elapsed_ms=%s',request.method,request.url.path,response.status_code,round((time.monotonic()-started)*1000))
     return response
+@app.get('/')
+def root():return {'status':'ok','service':'retail-ai','version':'0.2.0'}
 @app.get('/health')
 def health():return {'status':'ONLINE','ready':True,'service':'retail-ai','training_enabled':False}
 @app.get('/v1/readiness',dependencies=[Depends(protect)])
