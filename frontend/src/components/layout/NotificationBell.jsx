@@ -68,7 +68,7 @@ export default function NotificationBell(){
 
  return <div ref={root} style={{position:'relative'}}>
   <button type="button" className="icon-button" aria-label={displayUnread?`Thông báo, ${displayUnread} chưa đọc`:'Thông báo'} title="Thông báo" aria-expanded={open} onClick={()=>setOpen(value=>!value)} style={{position:'relative'}}>
-   <Bell size={19}/>{displayUnread>0&&<span aria-hidden="true" style={{position:'absolute',right:2,top:1,minWidth:16,height:16,padding:'0 4px',borderRadius:999,background:'var(--ri-danger,#d92d20)',color:'#fff',fontSize:10,lineHeight:'16px',fontWeight:700}}>{displayUnread>99?'99+':displayUnread}</span>}
+   <Bell size={19}/>{displayUnread>0&&<span aria-hidden="true" style={{position:'absolute',right:2,top:1,minWidth:16,height:16,padding:'0 4px',borderRadius:999,background:'#dc2626',color:'#ffffff',fontSize:10,lineHeight:'16px',fontWeight:600}}>{displayUnread>99?'99+':displayUnread}</span>}
   </button>
   {open&&<div role="dialog" aria-label="Thông báo" style={{position:'absolute',zIndex:300,top:'calc(100% + 8px)',right:-56,width:'min(352px,calc(100vw - 20px))',maxHeight:'min(74vh,580px)',overflowY:'auto',background:'var(--ri-surface)',border:'1px solid var(--ri-border)',borderRadius:11,boxShadow:'var(--ri-shadow-lg)',padding:9}}>
    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,marginBottom:8}}><strong>Thông báo</strong><button type="button" className="btn btn-secondary btn-sm" onClick={load} disabled={loading}><RefreshCw size={14}/> Làm mới</button></div>
