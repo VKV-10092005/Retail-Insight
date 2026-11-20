@@ -197,11 +197,9 @@ export default function ForgotPassword() {
               </p>
 
               {sendError && (
-                <div style={{
+                <div className="bg-red-50 border-red-200 text-red-700" role="alert" style={{
                   display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '10px 14px',
-                  background: 'var(--ri-danger-bg, color-mix(in srgb, var(--ri-danger) 12%, transparent))',
-                  border: '1px solid var(--ri-danger)', borderRadius: 'var(--ri-radius)',
-                  color: 'var(--ri-danger)', fontSize: '0.875rem', marginBottom: '16px'
+                  borderRadius: 'var(--ri-radius)', fontSize: '0.875rem', marginBottom: '16px'
                 }}>
                   <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
                   <span>{sendError}</span>
@@ -282,11 +280,9 @@ export default function ForgotPassword() {
 
               {/* Lỗi xác thực OTP */}
               {verifyError && (
-                <div style={{
+                <div className="bg-red-50 border-red-200 text-red-700" role="alert" style={{
                   display: 'flex', gap: '8px', alignItems: 'flex-start', padding: '10px 14px',
-                  background: 'var(--ri-danger-bg, color-mix(in srgb, var(--ri-danger) 12%, transparent))',
-                  border: '1px solid var(--ri-danger)', borderRadius: 'var(--ri-radius)',
-                  color: 'var(--ri-danger)', fontSize: '0.875rem', marginBottom: '16px'
+                  borderRadius: 'var(--ri-radius)', fontSize: '0.875rem', marginBottom: '16px'
                 }}>
                   <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
                   <span>{verifyError}</span>

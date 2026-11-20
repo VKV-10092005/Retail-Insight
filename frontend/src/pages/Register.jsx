@@ -42,6 +42,7 @@ export default function Register(){
   const [error, setError]=useState('');
   const [infoMsg, setInfoMsg]=useState('');
   const [busy, setBusy]=useState(false);
+  const infoIsError=infoMsg.startsWith('Không thể gửi email xác thực');
 
   // Đếm ngược 60s trước khi gửi lại OTP
   useEffect(()=>{
@@ -276,20 +277,22 @@ export default function Register(){
           )}
 
           {infoMsg && (
-            <div style={{
+            <div className={infoIsError ? 'bg-red-50 border-red-200 text-red-700' : ''} role={infoIsError ? 'alert' : 'status'} style={{
               display: 'flex',
               gap: '8px',
               alignItems: 'center',
               padding: '10px 14px',
-              background: 'var(--ri-success-bg, color-mix(in srgb, var(--ri-success) 12%, transparent))',
-              border: '1px solid var(--ri-success)',
+              background: infoIsError ? undefined : 'var(--ri-success-bg, color-mix(in srgb, var(--ri-success) 12%, transparent))',
+              border: infoIsError ? undefined : '1px solid var(--ri-success)',
               borderRadius: 'var(--ri-radius)',
-              color: 'var(--ri-success)',
+              color: infoIsError ? undefined : 'var(--ri-success)',
               fontSize: '0.8125rem',
               marginBottom: '12px',
               lineHeight: 1.5
             }}>
-              <CheckCircle2 size={16} style={{flexShrink:0}}/>
+              {infoIsError
+                ? <AlertCircle size={16} style={{flexShrink:0}}/>
+                : <CheckCircle2 size={16} style={{flexShrink:0}}/>}
               <span>{infoMsg}</span>
             </div>
           )}

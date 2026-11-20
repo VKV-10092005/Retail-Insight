@@ -19,23 +19,27 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const resendApiKey = process.env.RESEND_API_KEY;
-  const useResend = Boolean(resendApiKey);
-  const from = process.env.EMAIL_FROM || process.env.SMTP_FROM || `Retail Insight <${user || ''}>`;
-  const fromEmail = mailbox(from);
+  const smtpConfigured = Boolean(user && pass);
+  const smtpFrom = process.env.SMTP_FROM || process.env.EMAIL_FROM || `Retail Insight <${user || ''}>`;
+  const smtpFromEmail = mailbox(smtpFrom);
+  const configuredResendFrom = process.env.RESEND_FROM || process.env.SMTP_FROM || process.env.EMAIL_FROM;
+  const resendFromEmail = mailbox(configuredResendFrom);
+  const resendFrom = !configuredResendFrom || /@gmail\.com$/i.test(resendFromEmail)
+    ? 'Retail Insight <onboarding@resend.dev>'
+    : configuredResendFrom;
 
-  if (!useResend && (!user || !pass)) {
+  if (!resendApiKey && !smtpConfigured) {
     return {
       sent: false,
       configured: false,
-      reason: 'Chưa cấu hình SMTP_USER và SMTP_PASS trong backend/.env'
+      reason: 'Chưa cấu hình RESEND_API_KEY hoặc SMTP_USER và SMTP_PASS trong backend/.env'
     };
   }
 
-  if (!emailPattern.test(fromEmail) || !emailPattern.test(toEmail)) {
-    return { sent: false, configured: true, error: 'Địa chỉ email gửi hoặc nhận không hợp lệ' };
-  }
-  if (!useResend && (port !== 465 || !emailPattern.test(user))) {
-    return { sent: false, configured: true, error: 'Cấu hình SMTP không hợp lệ; Gmail yêu cầu TLS port 465 và địa chỉ email hợp lệ' };
+  if (!emailPattern.test(toEmail)) {
+    const error = 'Địa chỉ email nhận không hợp lệ';
+    console.error('[mailer] OTP email validation failed:', { provider: 'none', toEmail, error });
+    return { sent: false, configured: true, error };
   }
 
   const safePurpose = cleanHeader(purpose);
@@ -84,31 +88,79 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
 </html>
   `.trim();
 
-  if (useResend) {
+  let resendError;
+  if (resendApiKey) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to: [toEmail], subject, html: htmlBody }),
+        body: JSON.stringify({ from: resendFrom, to: [toEmail], subject, html: htmlBody }),
         signal: AbortSignal.timeout(10000)
       });
-      if (!response.ok) return { sent: false, configured: true, error: `Resend request failed (${response.status})` };
-      return { sent: true, configured: true };
-    } catch {
-      return { sent: false, configured: true, error: 'Resend request could not be completed' };
+      const responseBody = await response.text();
+      if (response.ok) return { sent: true, configured: true, provider: 'resend' };
+
+      resendError = `Resend request failed (${response.status} ${response.statusText}): ${responseBody}`;
+      console.error('[mailer] Resend OTP email failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        response: responseBody,
+        from: resendFrom,
+        to: toEmail
+      });
+    } catch (err) {
+      resendError = `Resend request could not be completed: ${err?.message || String(err)}`;
+      console.error('[mailer] Resend OTP email request error:', {
+        error: err?.stack || err?.message || String(err),
+        from: resendFrom,
+        to: toEmail
+      });
     }
+  }
+
+  // Render chặn SMTP trên một số gói. Chỉ thử SMTP sau Resend và khi đã cấu hình đủ.
+  if (!smtpConfigured) {
+    return { sent: false, configured: true, error: resendError || 'SMTP chưa được cấu hình' };
+  }
+  if (!emailPattern.test(smtpFromEmail) || port !== 465 || !emailPattern.test(user)) {
+    const smtpError = 'Cấu hình SMTP không hợp lệ; SMTP TLS yêu cầu port 465 và địa chỉ email hợp lệ';
+    console.error('[mailer] SMTP configuration invalid:', {
+      host,
+      port,
+      userConfigured: Boolean(user),
+      from: smtpFrom,
+      error: smtpError
+    });
+    return { sent: false, configured: true, error: resendError ? `${resendError}; ${smtpError}` : smtpError };
   }
 
   return new Promise((resolve) => {
     let socket;
+    let settled = false;
     const timeoutTimer = setTimeout(() => {
       try { socket?.destroy(); } catch {}
-      resolve({ sent: false, configured: true, error: 'SMTP timeout sau 10s' });
+      const error = 'SMTP timeout sau 10s';
+      console.error('[mailer] SMTP OTP email timeout:', { host, port, from: smtpFrom, to: toEmail, error });
+      if (!settled) {
+        settled = true;
+        resolve({ sent: false, configured: true, error });
+      }
     }, 10000);
 
     const cleanup = (result) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timeoutTimer);
       try { socket?.end(); } catch {}
+      if (!result.sent) {
+        console.error('[mailer] SMTP OTP email failed:', {
+          host,
+          port,
+          from: smtpFrom,
+          to: toEmail,
+          error: result.error
+        });
+      }
       resolve(result);
     };
 
@@ -160,7 +212,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
             case 4: // Password response (235 Auth success)
               if (code !== 235) return cleanup({ sent: false, configured: true, error: `Auth error: ${line}` });
               step = 5;
-              socket.write(`MAIL FROM:<${fromEmail}>\r\n`);
+              socket.write(`MAIL FROM:<${smtpFromEmail}>\r\n`);
               break;
 
             case 5: // MAIL FROM response (250)
@@ -179,7 +231,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
               if (code !== 354) return cleanup({ sent: false, configured: true, error: `DATA prompt error: ${line}` });
               step = 8;
               const msg = [
-                `From: ${cleanHeader(from)}`,
+                `From: ${cleanHeader(smtpFrom)}`,
                 `To: <${toEmail}>`,
                 `Subject: ${subjectEncoded}`,
                 `MIME-Version: 1.0`,
@@ -196,7 +248,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
               if (code !== 250) return cleanup({ sent: false, configured: true, error: `Send error: ${line}` });
               step = 9;
               socket.write(`QUIT\r\n`);
-              cleanup({ sent: true, configured: true });
+              cleanup({ sent: true, configured: true, provider: 'smtp' });
               break;
           }
         }
