@@ -223,9 +223,9 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
     <>
       <div className={`sidebar-backdrop ${open?'active':''}`} onClick={onClose}/>
       <aside
-        className={`sidebar ${open?'sidebar-open':''} ${isCollapsed?'sidebar-collapsed':''} ${isResizing?'sidebar-resizing':''}`}
+        className={`sidebar flex flex-col h-screen max-h-screen overflow-hidden ${open?'sidebar-open':''} ${isCollapsed?'sidebar-collapsed':''} ${isResizing?'sidebar-resizing':''}`}
       >
-        <div className="brand">
+        <div className="brand shrink-0">
           <Link to="/welcome" className="brand-home" aria-label="RetailInsight home" title={user?.storeName||'RetailInsight'}>
             <div className="brand-logo"><ChartNoAxesCombined size={23}/></div>
             <strong className="brand-name"><span>Retail</span><em>Insight</em></strong>
@@ -233,7 +233,7 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
           <button className="mobile-close" aria-label="Đóng menu" onClick={onClose}><X size={20}/></button>
         </div>
 
-        <nav className="nav flex-1 overflow-y-auto pb-8 scrollbar-thin">
+        <nav className="nav flex-1 min-h-0 overflow-y-auto pb-6 scrollbar-thin">
           {navGroups.map(g=>(
             <div className="nav-group" key={g.label}>
               <div className="nav-label">{g.label}</div>
@@ -262,7 +262,7 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
           ))}
         </nav>
 
-        <div className="sidebar-bottom">
+        <div className="sidebar-bottom shrink-0">
           <div
             className="sidebar-role-badge"
             title={`Vai trò: ${ROLE_LABELS[role]||'Tài khoản'}`}
