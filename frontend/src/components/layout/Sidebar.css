@@ -166,6 +166,14 @@ aside.sidebar-collapsed {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+.desktop-sidebar-toggle {
+  display: none !important;
+}
+
+.mobile-menu {
+  display: inline-flex !important;
+}
+
 .sidebar-collapse-btn:hover {
   color: var(--ri-primary);
   background: var(--ri-elevated);
@@ -341,7 +349,7 @@ aside.sidebar-collapsed {
 /* ====================================================================
    MOBILE RESPONSIVENESS (<= 768px): OFF-CANVAS DRAWER
    ==================================================================== */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .sidebar,
   .sidebar.sidebar-collapsed,
   aside.sidebar-collapsed {
@@ -421,6 +429,16 @@ aside.sidebar-collapsed {
   }
 
   .sidebar-resize-handle {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .desktop-sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .mobile-menu {
     display: none !important;
   }
 }

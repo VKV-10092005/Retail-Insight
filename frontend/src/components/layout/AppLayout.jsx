@@ -1,6 +1,6 @@
 import React,{useState,useRef,useEffect} from 'react';
 import {Outlet,useLocation,useNavigate} from 'react-router-dom';
-import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,HelpCircle,PartyPopper} from 'lucide-react';
+import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,PanelLeftClose,PanelLeftOpen,HelpCircle,PartyPopper} from 'lucide-react';
 import {useAuth} from '../../auth/AuthContext';
 import {useBranch} from '../../branches/BranchContext';
 import {ROLE_LABELS,ROLES} from '../../config/roles';
@@ -260,18 +260,21 @@ export default function AppLayout(){
           <div className="topbar-left" style={{gap:'12px'}}>
             <button
               type="button"
-              className="sidebar-collapse-btn"
-              onClick={() => {
-                if (typeof window !== 'undefined' && window.innerWidth <= 768) {
-                  setOpen(v => !v);
-                } else {
-                  setIsSidebarCollapsed(value => !value);
-                }
-              }}
+              className="sidebar-collapse-btn mobile-menu"
+              onClick={() => setOpen(value => !value)}
+              aria-label="Mở menu điều hướng"
+              title="Mở menu điều hướng"
+            >
+              <Menu size={19} />
+            </button>
+            <button
+              type="button"
+              className="sidebar-collapse-btn desktop-sidebar-toggle"
+              onClick={() => setIsSidebarCollapsed(value => !value)}
               aria-label={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
               title={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
             >
-              <Menu size={19} />
+              {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
             </button>
             <div className="breadcrumb">
               Hệ thống <ChevronRight size={14}/> <strong>{titleMap[location.pathname]||'Trang làm việc'}</strong>

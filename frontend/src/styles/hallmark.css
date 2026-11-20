@@ -1,7 +1,7 @@
 :root{font-variant-numeric:lining-nums tabular-nums}
 body{background:var(--ri-bg);color:var(--ri-text);font-variant-numeric:lining-nums tabular-nums}
 .sidebar,.topbar,.card,.ri-card,.modal,.ri-dialog,.ri-popover,.ri-dropdown-menu,.ri-table,.data-table,.searchbox,.select,.ri-control{background-color:var(--ri-surface);color:var(--ri-text);border-color:var(--ri-border)}
-.sidebar{border-right:1px solid var(--ri-border)!important;box-shadow:none!important}
+.sidebar{border-right:0!important;box-shadow:none!important}
 .topbar{border-bottom:1px solid var(--ri-border)!important;box-shadow:none!important}
 .card,.ri-card{border:1px solid var(--ri-border);border-radius:12px;box-shadow:none}
 .system-card,.system-overview{border-radius:12px;box-shadow:none;background:var(--ri-surface)}
