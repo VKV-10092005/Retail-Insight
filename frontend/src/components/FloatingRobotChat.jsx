@@ -466,6 +466,7 @@ export default function FloatingRobotChat() {
   const handleResizePointerDown = (e) => {
     e.stopPropagation();
     if (e.button !== 0 && e.pointerType === 'mouse') return;
+    e.preventDefault();
     isResizingRef.current = true;
     resizeStartRef.current = {
       startX: e.clientX,
@@ -478,16 +479,21 @@ export default function FloatingRobotChat() {
 
   const handleResizePointerMove = (e) => {
     if (!isResizingRef.current) return;
-    const dx = e.clientX - resizeStartRef.current.startX;
-    const dy = e.clientY - resizeStartRef.current.startY;
+    e.preventDefault();
 
     const maxW = Math.min(window.innerWidth - 32, 800);
     const maxH = Math.min(window.innerHeight - 96, 900);
     const minW = Math.min(340, maxW);
     const minH = Math.min(400, maxH);
 
-    const nextW = Math.max(minW, Math.min(maxW, resizeStartRef.current.startWidth - dx));
-    const nextH = Math.max(minH, Math.min(maxH, resizeStartRef.current.startHeight - dy));
+    const nextW = Math.max(minW, Math.min(
+      maxW,
+      resizeStartRef.current.startWidth + (resizeStartRef.current.startX - e.clientX)
+    ));
+    const nextH = Math.max(minH, Math.min(
+      maxH,
+      resizeStartRef.current.startHeight + (resizeStartRef.current.startY - e.clientY)
+    ));
 
     setChatSize({ width: Math.round(nextW), height: Math.round(nextH) });
   };
@@ -639,6 +645,8 @@ export default function FloatingRobotChat() {
             onPointerDown={handleResizePointerDown}
             onPointerMove={handleResizePointerMove}
             onPointerUp={handleResizePointerUp}
+            onPointerCancel={handleResizePointerUp}
+            onLostPointerCapture={handleResizePointerUp}
             title="Kéo để thay đổi kích thước hộp thoại"
           >
             <div className="resize-indicator-lines"><span /><span /></div>

@@ -256,9 +256,10 @@
   left: 6px;
   width: 22px;
   height: 22px;
-  border-radius: 8px 4px 6px 4px;
-  z-index: 30;
+  border-radius: 10px 4px 6px 4px;
+  z-index: 50;
   cursor: nwse-resize;
+  pointer-events: auto;
   touch-action: none;
   display: flex;
   align-items: center;
@@ -797,9 +798,9 @@
 /* ── Responsive Mobile ──────────────────────────────────────── */
 @media (max-width: 480px) {
   .robot-chat-dialog {
-    width: calc(100vw - 24px) !important;
+    width: calc(100vw - 24px);
     right: -10px;
-    height: 440px !important;
+    height: min(440px, calc(100vh - 96px));
   }
 
   .mascot-speech-bubble {
