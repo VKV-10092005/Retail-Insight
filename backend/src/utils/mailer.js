@@ -8,6 +8,22 @@ function mailbox(value) {
   const bracketed = /<([^<>]+)>$/.exec(cleaned)?.[1];
   return bracketed || cleaned;
 }
+function subjectForPurpose(purpose) {
+  const normalizedPurpose = String(purpose || '').toLocaleLowerCase('vi-VN');
+  if (normalizedPurpose.includes('cửa hàng')) {
+    return 'Retail Insight - Hoàn tất thiết lập cửa hàng của bạn';
+  }
+  if (normalizedPurpose.includes('đăng ký')) {
+    return 'Retail Insight - Xác nhận thông tin đăng ký tài khoản';
+  }
+  if (normalizedPurpose.includes('đặt lại mật khẩu')) {
+    return 'Retail Insight - Yêu cầu đặt lại mật khẩu truy cập';
+  }
+  if (normalizedPurpose.includes('đổi mật khẩu')) {
+    return 'Retail Insight - Xác nhận thay đổi mật khẩu truy cập';
+  }
+  return 'Retail Insight - Xác nhận yêu cầu của bạn';
+}
 
 /**
  * Gửi email qua SMTP (hỗ trợ Gmail TLS port 465 hoặc SMTP thông thường)
@@ -44,46 +60,36 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
   }
 
   const safePurpose = cleanHeader(purpose);
-  const subject = `[Retail Insight] Mã xác thực ${safePurpose}: ${otpCode}`;
+  const subject = subjectForPurpose(safePurpose);
   const subjectEncoded = `=?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`;
+  const recipientName = cleanHeader(fullName) || 'Quý khách';
+  const textBody = [
+    `Xin chào ${recipientName},`,
+    '',
+    `Bạn vừa yêu cầu ${safePurpose} trên Retail Insight.`,
+    `Mã xác thực của bạn: ${otpCode}`,
+    '',
+    'Mã này có hiệu lực trong 5 phút và chỉ được sử dụng một lần.',
+    'Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.',
+    '',
+    'Retail Insight'
+  ].join('\r\n');
 
   const htmlBody = `
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>Mã xác thực ${escapeHtml(safePurpose)}</title>
+  <title>${escapeHtml(subject)}</title>
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #1e293b;">
-  <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-    <div style="margin-bottom: 24px;">
-      <h2 style="margin: 0; color: #0284c7; font-size: 22px;">Retail Insight</h2>
-      <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Hệ thống Quản lý Bán lẻ Thông minh</p>
-    </div>
-    
-    <p style="font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
-      Xin chào <strong>${escapeHtml(fullName || 'Quý khách')}</strong>,
-    </p>
-    
-    <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 20px;">
-      Bạn (hoặc ai đó) vừa yêu cầu <strong>${escapeHtml(safePurpose)}</strong> cho tài khoản Retail Insight liên kết với email này. Vui lòng sử dụng mã xác thực dưới đây để tiếp tục:
-    </p>
-    
-    <div style="text-align: center; margin: 28px 0;">
-      <div style="display: inline-block; padding: 14px 32px; background: #f0f9ff; border: 2px dashed #0284c7; border-radius: 8px; font-size: 28px; font-weight: 700; letter-spacing: 6px; color: #0369a1;">
-        ${otpCode}
-      </div>
-      <p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Mã này có hiệu lực trong vòng <strong>5 phút</strong>.</p>
-    </div>
-    
-    <p style="font-size: 13px; line-height: 1.6; color: #64748b; margin: 0 0 8px;">
-      Nếu bạn không yêu cầu thao tác này, vui lòng bỏ qua email hoặc liên hệ ngay với quản trị viên để bảo vệ tài khoản.
-    </p>
-    
-    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-    <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
-      © 2026 Retail Insight · Email tự động, vui lòng không trả lời.
-    </p>
+<body style="margin:0;padding:24px;background:#f8fafc;color:#1e293b;font-family:Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;">
+    <h1 style="margin:0 0 24px;color:#0369a1;font-size:22px;">Retail Insight</h1>
+    <p style="margin:0 0 16px;line-height:1.6;">Xin chào <strong>${escapeHtml(recipientName)}</strong>,</p>
+    <p style="margin:0 0 20px;line-height:1.6;">Bạn vừa yêu cầu ${escapeHtml(safePurpose)}. Sử dụng mã dưới đây để tiếp tục:</p>
+    <p style="margin:20px 0;padding:14px;text-align:center;background:#f0f9ff;border-radius:6px;color:#0369a1;font-size:28px;font-weight:700;letter-spacing:6px;">${escapeHtml(otpCode)}</p>
+    <p style="margin:0 0 16px;line-height:1.6;">Mã này có hiệu lực trong 5 phút và chỉ được sử dụng một lần.</p>
+    <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6;">Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>
   </div>
 </body>
 </html>
@@ -95,7 +101,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
       const response = await fetch(gasMailWebhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: toEmail, subject, html: htmlBody }),
+        body: JSON.stringify({ to: toEmail, subject, text: textBody, html: htmlBody, otp: otpCode }),
         redirect: 'follow',
         signal: AbortSignal.timeout(10000)
       });
@@ -124,7 +130,7 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: resendFrom, to: [toEmail], subject, html: htmlBody }),
+        body: JSON.stringify({ from: resendFrom, to: [toEmail], subject, text: textBody, html: htmlBody }),
         signal: AbortSignal.timeout(10000)
       });
       const responseBody = await response.text();
@@ -262,15 +268,27 @@ export async function sendOtpEmail(toEmail, otpCode, fullName = '', purpose = '�
             case 7: // DATA response (354)
               if (code !== 354) return cleanup({ sent: false, configured: true, error: `DATA prompt error: ${line}` });
               step = 8;
+              const mimeBoundary = `retail-insight-${Date.now()}`;
               const msg = [
                 `From: ${cleanHeader(smtpFrom)}`,
                 `To: <${toEmail}>`,
                 `Subject: ${subjectEncoded}`,
                 `MIME-Version: 1.0`,
+                `Content-Type: multipart/alternative; boundary="${mimeBoundary}"`,
+                ``,
+                `--${mimeBoundary}`,
+                `Content-Type: text/plain; charset=UTF-8`,
+                `Content-Transfer-Encoding: 8bit`,
+                ``,
+                textBody,
+                ``,
+                `--${mimeBoundary}`,
                 `Content-Type: text/html; charset=UTF-8`,
                 `Content-Transfer-Encoding: 8bit`,
                 ``,
                 htmlBody,
+                ``,
+                `--${mimeBoundary}--`,
                 `.`
               ].join('\r\n') + '\r\n';
               socket.write(msg);
