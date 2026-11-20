@@ -119,6 +119,7 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
           ['/inventory','Tồn kho chi nhánh',Warehouse],
           ['/receipts','Nhập hàng',PackagePlus],
           ['/stock-operations','Kiểm kê & Chuyển kho',ClipboardCheck],
+          ['/market-intelligence','Gi\u00e1 th\u1ecb tr\u01b0\u1eddng & Ngu\u1ed3n cung',ChartNoAxesCombined],
           ['/products','Danh sách sản phẩm',Boxes],
         ]
       },
@@ -151,7 +152,8 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
         items:[
           ['/inventory','Tồn kho',Warehouse],
           ['/receipts','Nhập hàng',PackagePlus],
-          ['/stock-operations','Kiểm kê & Chuyển kho',ClipboardCheck]
+          ['/stock-operations','Kiểm kê & Chuyển kho',ClipboardCheck],
+          ['/market-intelligence','Gi\u00e1 th\u1ecb tr\u01b0\u1eddng & Ngu\u1ed3n cung',ChartNoAxesCombined]
         ]
       },
       {
@@ -194,7 +196,8 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
         items:[
           ['/inventory','Tồn kho',Warehouse],
           ['/receipts','Nhập hàng',PackagePlus],
-          ['/stock-operations','Kiểm kê & Chuyển kho',ClipboardCheck]
+          ['/stock-operations','Kiểm kê & Chuyển kho',ClipboardCheck],
+          ['/market-intelligence','Gi\u00e1 th\u1ecb tr\u01b0\u1eddng & Ngu\u1ed3n cung',ChartNoAxesCombined]
         ]
       },
       {

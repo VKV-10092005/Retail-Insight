@@ -3,6 +3,7 @@ import app from './app.js';
 import { pool, verifyDatabase } from './db/pool.js';
 import {startDigestScheduler} from './services/digestScheduler.js';
 import {startAiService, stopAiService} from './services/aiServiceManager.js';
+import {ensureMarketPriceChecksTable} from './business/market-intelligence.js';
 
 // Bắt lỗi toàn cục để server tuyệt đối không bị sập ngang gây đứt kết nối (ECONNRESET)
 process.once('uncaughtException', (err) => {
@@ -17,6 +18,7 @@ process.once('unhandledRejection', (reason, promise) => {
 
 try {
   await verifyDatabase();
+  await ensureMarketPriceChecksTable();
   console.log('Database retail_app verified successfully.');
 } catch (err) {
   console.warn('Database verification warning (will retry on requests):', err.message);

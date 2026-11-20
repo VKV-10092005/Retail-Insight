@@ -45,6 +45,7 @@ export default function Ledger({
   const [page,setPage]=useState(1);
   const [note,setNote]=useState('');
   const [lines,setLines]=useState([{product_id:'',product_search:'',quantity:1,unit_price:'',sale_price:'',new_product:false,sku:'',name:'',category_name:'',image_url:''}]);
+  const marketPrefillApplied=useRef('');
   const [categoryCreateIndex,setCategoryCreateIndex]=useState(null);
   const [newCategoryName,setNewCategoryName]=useState('');
   const [categoryBusy,setCategoryBusy]=useState(false);
@@ -101,6 +102,19 @@ export default function Ledger({
   const documents = useResource(branch?(isSale ? '/sales?' : '/receipts?') + params({...scopedFilters,page}):null);
   const stock = useResource(activeMode === 'inventory'&&branch ? ('/inventory?' + params({...scopedFilters,page})) : null);
   const movements = useResource(activeMode === 'inventory'&&branch ? ('/inventory/movements?' + params(scopedFilters)) : null);
+
+  useEffect(()=>{
+    if(activeMode!=='receipts'||products.loading||!branch)return;
+    const search=new URLSearchParams(location.search),productId=search.get('product_id');
+    if(!productId||marketPrefillApplied.current===productId)return;
+    const product=products.data?.items?.find(item=>String(item.id)===String(productId));
+    if(!product)return;
+    const quantity=Math.max(1,Number(search.get('quantity'))||1),unitPrice=search.get('unit_cost');
+    marketPrefillApplied.current=productId;
+    setReceiptTab('single');
+    setLines([{product_id:String(product.id),product_search:`${product.sku} · ${product.name}`,quantity,unit_price:unitPrice??String(product.cost_price||''),sale_price:String(product.sale_price||''),new_product:false,sku:product.sku,name:product.name,category_name:'',image_url:product.image_url||''}]);
+    navigate('/receipts',{replace:true});
+  },[activeMode,branch,products.loading,products.data,location.search,navigate]);
 
   useEffect(()=>{
     if(!invoice)return undefined;

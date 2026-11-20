@@ -23,6 +23,7 @@ const AIAssistant = lazy(()=>import('../pages/AIAssistant'));
 const Dashboard = lazy(()=>import('../operations/Dashboard'));
 const ReportsBI = lazy(()=>import('../operations/ReportsBI'));
 const Products = lazy(()=>import('../operations/Products'));
+const MarketIntelligence = lazy(()=>import('../pages/MarketIntelligence'));
 const Market = lazy(()=>import('../operations/Market'));
 const Ledger = lazy(()=>import('../operations/Ledger'));
 const StockOperations = lazy(()=>import('../operations/StockOperations'));
@@ -138,6 +139,11 @@ export default function App(){
             <Route path="stock-operations" element={
               <ProtectedRoute allow={[ROLES.OWNER, ROLES.MANAGER, ROLES.INVENTORY]}>
                 <StockOperations/>
+              </ProtectedRoute>
+            }/>
+            <Route path="market-intelligence" element={
+              <ProtectedRoute allow={[ROLES.OWNER, ROLES.MANAGER, ROLES.INVENTORY]}>
+                <MarketIntelligence/>
               </ProtectedRoute>
             }/>
 

@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useBranch } from '../branches/BranchContext';
 import { PageHeader, Card, Badge } from '../components/ui/Elements';
 import { useResource, request, State, Table, Message, money, Pager, params } from './shared';
-import { Plus, PlusCircle, Search, Pencil, X, Check, FolderOpen, FolderPlus, Trash2, CircleHelp, ArrowRight, PackagePlus, Sparkles } from 'lucide-react';
+import { Plus, PlusCircle, Search, Pencil, X, Check, FolderOpen, FolderPlus, Trash2, CircleHelp, ArrowRight, PackagePlus, Sparkles, ChartNoAxesCombined } from 'lucide-react';
 import './ProductCreate.css';
 import AddProductModal from './AddProductModal';
 import ImageUploadField from '../components/common/ImageUploadField';
@@ -642,16 +642,17 @@ export default function Products({
                         )
                       )
                     ],
-                    ...(canEditProduct
-                      ? [
-                          [
-                            "actions",
-                            "Thao tác",
-                            r => (
-                              <button type="button" className="btn btn-secondary btn-sm product-action-edit" onClick={() => openEditModal(r)} title="Chỉnh sửa sản phẩm" aria-label="Chỉnh sửa sản phẩm"><Pencil size={14} /></button>
-                            )
-                          ]
-                        ]
+                    ...(['OWNER','MANAGER','INVENTORY'].includes(user?.role)
+                      ? [[
+                          "actions",
+                          "Thao t\u00e1c",
+                          r => (
+                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                              <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate(`/market-intelligence?product_id=${encodeURIComponent(r.id)}`)} title="So s\u00e1nh gi\u00e1 th\u1ecb tr\u01b0\u1eddng" aria-label={`So s\u00e1nh gi\u00e1 th\u1ecb tr\u01b0\u1eddng: ${r.name}`}><ChartNoAxesCombined size={14}/></button>
+                              {canEditProduct&&<button type="button" className="btn btn-secondary btn-sm product-action-edit" onClick={() => openEditModal(r)} title="Ch\u1ec9nh s\u1eeda s\u1ea3n ph\u1ea9m" aria-label="Ch\u1ec9nh s\u1eeda s\u1ea3n ph\u1ea9m"><Pencil size={14} /></button>}
+                            </div>
+                          )
+                        ]]
                       : [])
                   ]}
                 />

@@ -27,6 +27,7 @@ import tts from './routes/tts.js';
 import assistant from './routes/assistant.js';
 import categoriesRoute from './routes/categories.js';
 import market from './business/market.js';
+import marketIntelligence from './business/market-intelligence.js';
 import notifications from './business/notifications.js';
 import {calendarMetadata} from './business/business-calendar.js';
 import settings from './business/settings.js';
@@ -89,6 +90,7 @@ app.use('/api/v1',authenticate,asyncRoute(async(req,res,next)=>{
  const config=await getPlatformSettings();if(config.maintenance&&req.user?.role!=='PLATFORM_ADMIN')return res.status(503).json({message:'Hệ thống đang bảo trì. Vui lòng thử lại sau.'});next();
 }));
 app.use('/api/v1',tenantScope);
+app.use('/api/v1/market-intelligence',marketIntelligence);
 app.use('/api/v1',invalidateReadCache);
 app.use('/api/v1',cacheReadResponses);
 app.use('/api/v1/platform',platform);
