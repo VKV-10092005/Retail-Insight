@@ -14,7 +14,11 @@ import AuthShowcasePanel from '../components/auth/AuthShowcasePanel';
 
 export default function Login(){
   useEffect(()=>{warmApi();},[]);
-  const {user,loading,login,refresh,error:sessionError}=useAuth();
+  useEffect(()=>{
+    setError('');
+    if(typeof clearError==='function') clearError();
+  },[clearError]);
+  const {user,loading,login,refresh,error:sessionError,clearError}=useAuth();
   const [searchParams]=useSearchParams();
   const navigate=useNavigate();
   const redirectParam = searchParams.get('redirect');
@@ -111,6 +115,13 @@ export default function Login(){
       });
 
       if(res.status === 'LOGGED_IN'){
+        if(res.accessToken || res.token){
+          localStorage.setItem('token', res.accessToken || res.token);
+          localStorage.setItem('accessToken', res.accessToken || res.token);
+        }
+        if(res.refreshToken){
+          localStorage.setItem('refreshToken', res.refreshToken);
+        }
         const loggedUser = await refresh();
         const target = (redirectParam && loggedUser && isRouteAllowed(loggedUser.role, redirectParam))
           ? redirectParam
@@ -188,7 +199,7 @@ export default function Login(){
 
     setGoogleModal(m => ({ ...m, busy: true, error: '' }));
     try{
-      await authRequest('/google/complete', {
+      const completeRes = await authRequest('/google/complete', {
         method: 'POST',
         body: {
           verification_token: googleModal.verificationToken,
@@ -199,6 +210,13 @@ export default function Login(){
         }
       });
 
+      if(completeRes?.accessToken || completeRes?.token){
+        localStorage.setItem('token', completeRes.accessToken || completeRes.token);
+        localStorage.setItem('accessToken', completeRes.accessToken || completeRes.token);
+      }
+      if(completeRes?.refreshToken){
+        localStorage.setItem('refreshToken', completeRes.refreshToken);
+      }
       const loggedUser = await refresh();
       setGoogleModal(null);
       const target = (redirectParam && loggedUser && isRouteAllowed(loggedUser.role, redirectParam))

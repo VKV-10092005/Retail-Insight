@@ -43,19 +43,33 @@ async function performFetchWithRetry(input,options={}){
   }
 }
 
+function prepareOptions(options={}){
+  const opts={...options};
+  const headers=new Headers(opts.headers||{});
+  if(typeof window!=='undefined'){
+    const token=localStorage.getItem('token')||localStorage.getItem('accessToken');
+    if(token&&!headers.has('Authorization')){
+      headers.set('Authorization',`Bearer ${token}`);
+    }
+  }
+  opts.headers=headers;
+  return opts;
+}
+
 export async function fetchWithRetry(input,options={}){
-  const method=String(options.method||input?.method||'GET').toUpperCase();
+  const finalOptions=prepareOptions(options);
+  const method=String(finalOptions.method||input?.method||'GET').toUpperCase();
   if(method!=='GET'){
     invalidateClientCache();
-    return performFetchWithRetry(input,options).then(response=>{if(response.ok)invalidateClientCache();return response;});
+    return performFetchWithRetry(input,finalOptions).then(response=>{if(response.ok)invalidateClientCache();return response;});
   }
   const url=typeof input==='string'?input:input.url;
-  const headers=[...new Headers(options.headers||input?.headers||{}).entries()].sort(([a],[b])=>a.localeCompare(b));
-  const key=JSON.stringify([requestEpoch,url,options.credentials||'same-origin',headers]);
-  const existing=inflightGets.get(key);if(existing)return withAbort(existing,options.signal).then(response=>response.clone());
-  const {signal:_signal,...sharedOptions}=options;
+  const headers=[...finalOptions.headers.entries()].sort(([a],[b])=>a.localeCompare(b));
+  const key=JSON.stringify([requestEpoch,url,finalOptions.credentials||'same-origin',headers]);
+  const existing=inflightGets.get(key);if(existing)return withAbort(existing,finalOptions.signal).then(response=>response.clone());
+  const {signal:_signal,...sharedOptions}=finalOptions;
   const shared=performFetchWithRetry(input,sharedOptions);
   inflightGets.set(key,shared);
   shared.then(()=>{if(inflightGets.get(key)===shared)inflightGets.delete(key);},()=>{if(inflightGets.get(key)===shared)inflightGets.delete(key);});
-  return withAbort(shared,options.signal).then(response=>response.clone());
+  return withAbort(shared,finalOptions.signal).then(response=>response.clone());
 }

@@ -2,9 +2,14 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
 import { pool } from '../db/pool.js';
 import { HttpError, asyncRoute } from '../utils/http.js';
+
 export const authenticate = asyncRoute(async (req,res,next) => {
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const token = bearerToken || req.cookies?.session;
+
   let claims;
-  try { claims = jwt.verify(req.cookies?.session, config.secret, {algorithms:['HS256'], issuer:'retail-app', audience:'retail-web'}); }
+  try { claims = jwt.verify(token, config.secret, {algorithms:['HS256'], issuer:'retail-app', audience:'retail-web'}); }
   catch { throw new HttpError(401,'Vui lòng đăng nhập'); }
   const [rows] = await pool.execute(`SELECT u.id,u.organization_id,u.email,u.full_name,u.phone,u.avatar_url,u.bio,u.role,u.locked_until,u.is_locked,u.lock_reason,u.locked_at,u.unlock_requested_at
     FROM auth_sessions s
@@ -22,16 +27,19 @@ export const authenticate = asyncRoute(async (req,res,next) => {
   }
   req.user=rows[0]; req.sessionId=claims.jti; next();
 });
+
 export const requireRoles = (...roles) => (req,res,next) => {
   if (!roles.includes(req.user?.role)) return next(new HttpError(403,'Không đủ quyền'));
   next();
 };
+
 export function tenantScope(req,res,next) {
   if (req.user.role === 'PLATFORM_ADMIN') { next(); return; }
   const supplied = [req.headers['x-organization-id'], req.query.organization_id, req.body?.organization_id].filter(v=>v!==undefined);
   if (supplied.some(v=>String(v)!==String(req.user.organization_id))) return next(new HttpError(403,'Không được truy cập organization khác'));
   req.organizationId=req.user.organization_id; next();
 }
+
 export const branchScope = (...allowed) => asyncRoute(async (req,res,next) => {
   const id=Number(req.params.branchId);
   if (!Number.isSafeInteger(id)||id<1) throw new HttpError(400,'Chi nhánh không hợp lệ');

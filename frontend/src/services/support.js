@@ -1,9 +1,11 @@
 import {apiUrl} from './apiUrl.js';
+import {dispatchAuthExpired} from './api.js';
+import {fetchWithRetry} from './fetchWithRetry.js';
 
 async function call(path,{method='GET',body}={}){
- const response=await fetch(apiUrl(path),{method,credentials:'include',headers:{Accept:'application/json','Content-Type':'application/json','X-Requested-With':'retail-web'},...(body!==undefined?{body:JSON.stringify(body)}:{})});
+ const response=await fetchWithRetry(apiUrl(path),{method,credentials:'include',headers:{Accept:'application/json','Content-Type':'application/json','X-Requested-With':'retail-web'},...(body!==undefined?{body:JSON.stringify(body)}:{})});
  const data=response.status===204?null:await response.json();
- if(!response.ok){if(response.status===401)window.dispatchEvent(new Event('auth-expired'));const error=new Error(data?.message||'Không thể kết nối kênh hỗ trợ');error.status=response.status;throw error;}
+ if(!response.ok){if(response.status===401)dispatchAuthExpired();const error=new Error(data?.message||'Không thể kết nối kênh hỗ trợ');error.status=response.status;throw error;}
  return data;
 }
 

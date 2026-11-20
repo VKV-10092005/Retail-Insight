@@ -196,12 +196,13 @@ router.post('/staff/:id/impersonate',requireRoles('OWNER'),asyncRoute(async(req,
   await connection.execute('INSERT INTO audit_logs(user_id,organization_id,event_type,status,details) VALUES (?,?,?,?,?)',[req.user.id,req.organizationId,'IMPERSONATE_STAFF','SUCCESS',JSON.stringify({action:'START',actor_user_id:req.user.id,target_user_id:target.id,target_role:target.role,session_id:sessionId})]);
   await connection.commit();
  }catch(error){await connection.rollback();throw error;}finally{connection.release();}
- res.cookie('owner_session',req.cookies.session,{...sessionCookieOptions,maxAge:8*60*60*1000});
+ const currentToken = (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) ? req.headers.authorization.slice(7).trim() : req.cookies?.session;
+ if(currentToken) res.cookie('owner_session',currentToken,{...sessionCookieOptions,maxAge:8*60*60*1000});
  res.cookie('session',token,{...sessionCookieOptions,maxAge:8*60*60*1000});
- res.json({user:{...user,impersonating:true}});
+ res.json({user:{...user,impersonating:true},token,accessToken:token});
 }));
 router.post('/staff/impersonate/return',requireRoles('MANAGER','CASHIER','INVENTORY'),asyncRoute(async(req,res)=>{
- const ownerToken=req.cookies.owner_session;
+ const ownerToken=req.cookies?.owner_session || req.headers['x-owner-token'];
  if(!ownerToken)throw new HttpError(403,'Không có phiên chủ cửa hàng để quay lại');
  let claims;try{claims=jwt.verify(ownerToken,config.secret,{algorithms:['HS256'],issuer:'retail-app',audience:'retail-web'});}catch{throw new HttpError(403,'Phiên chủ cửa hàng đã hết hạn');}
  const [[owner]]=await pool.execute(`SELECT u.id,u.organization_id,u.email,u.full_name,u.phone,u.role,u.status,s.id session_id
@@ -213,6 +214,6 @@ router.post('/staff/impersonate/return',requireRoles('MANAGER','CASHIER','INVENT
  await pool.execute('UPDATE auth_sessions SET revoked_at=COALESCE(revoked_at,UTC_TIMESTAMP()) WHERE id=? AND user_id=?',[req.sessionId,req.user.id]);
  res.cookie('session',ownerToken,{...sessionCookieOptions,maxAge:8*60*60*1000});
  res.clearCookie('owner_session',sessionCookieOptions);
- res.json({user:{...user,impersonating:false}});
+ res.json({user:{...user,impersonating:false},token:ownerToken,accessToken:ownerToken});
 }));
 export default router;

@@ -13,10 +13,38 @@ export function AuthProvider({children}){
  const [staffEnabled,setStaffEnabled]=useState(false);
  
  async function refresh(){
-  const data=await authRequest('/me');
-  setUser(data.user);
-  setImpersonating(data.user?.impersonating===true);
-  return data.user;
+  try {
+   const data=await authRequest('/me');
+   setUser(data.user);
+   setImpersonating(data.user?.impersonating===true);
+   return data.user;
+  } catch (err) {
+   if (err.status === 401) {
+    const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+    if (storedRefreshToken) {
+     try {
+      const refreshRes = await authRequest('/refresh', {
+       method: 'POST',
+       body: { refreshToken: storedRefreshToken }
+      });
+      if (refreshRes?.accessToken || refreshRes?.token) {
+       localStorage.setItem('token', refreshRes.accessToken || refreshRes.token);
+       localStorage.setItem('accessToken', refreshRes.accessToken || refreshRes.token);
+       if (refreshRes.refreshToken) localStorage.setItem('refreshToken', refreshRes.refreshToken);
+       const retryMe = await authRequest('/me');
+       setUser(retryMe.user);
+       setImpersonating(retryMe.user?.impersonating === true);
+       return retryMe.user;
+      }
+     } catch {
+      localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+     }
+    }
+   }
+   throw err;
+  }
  }
 
  function updateUser(patch){setUser(current=>current?{...current,...patch}:current);}
@@ -37,14 +65,34 @@ export function AuthProvider({children}){
  },[]);
  
  useEffect(()=>{
-  const expired=()=>{setUser(null);setImpersonating(false);setError('Phiên đăng nhập đã hết hạn.');};
+  const expired=()=>{
+   const isPublic = typeof window !== 'undefined' && ['/login', '/register', '/welcome', '/forgot-password'].some(p => window.location.pathname.startsWith(p));
+   const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('token') || localStorage.getItem('accessToken'));
+   if (typeof window !== 'undefined') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+   }
+   setUser(null);
+   setImpersonating(false);
+   if (!isPublic && hasToken) {
+    setError('Phiên đăng nhập đã hết hạn.');
+   }
+  };
   window.addEventListener('auth-expired',expired);
   return()=>window.removeEventListener('auth-expired',expired);
  },[]);
  
  async function login(data){
   setError('');
-  await authRequest('/login',{method:'POST',body:data});
+  const res = await authRequest('/login',{method:'POST',body:data});
+  if (res?.accessToken || res?.token) {
+   localStorage.setItem('token', res.accessToken || res.token);
+   localStorage.setItem('accessToken', res.accessToken || res.token);
+  }
+  if (res?.refreshToken) {
+   localStorage.setItem('refreshToken', res.refreshToken);
+  }
   const u=await refresh();
   return u;
  }
@@ -52,12 +100,18 @@ export function AuthProvider({children}){
  async function logout(){
   try{
    await authRequest('/logout',{method:'POST'});
-   setUser(null);
-   setImpersonating(false);
-   setError('');
   }catch(e){
    if(e.status===401){setUser(null);setImpersonating(false);}
    else setError(e.message);
+  }finally{
+   if (typeof window !== 'undefined') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+   }
+   setUser(null);
+   setImpersonating(false);
+   setError('');
   }
  }
  
@@ -73,11 +127,22 @@ export function AuthProvider({children}){
   returnToOwner,
   loading,
   error,
+  clearError: () => setError(''),
   login,
   logout,
   refresh,
   updateUser,
-  register:data=>authRequest('/register',{method:'POST',body:data}),
+  register: async data => {
+   const res = await authRequest('/register', { method: 'POST', body: data });
+   if (res?.accessToken || res?.token) {
+    localStorage.setItem('token', res.accessToken || res.token);
+    localStorage.setItem('accessToken', res.accessToken || res.token);
+   }
+   if (res?.refreshToken) {
+    localStorage.setItem('refreshToken', res.refreshToken);
+   }
+   return res;
+  },
   users:user?[user]:[],
   requests:[],
   roles,

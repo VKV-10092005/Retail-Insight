@@ -46,7 +46,7 @@ const registrationSchema = z.object({
   path: ['confirm_password']
 });
 
-const cookieOptions = { httpOnly: true, secure: config.production, sameSite: config.production ? 'none' : 'lax', path: '/api' };
+const cookieOptions = { httpOnly: true, secure: config.production, sameSite: config.production ? 'none' : 'lax', path: '/' };
 
 async function session(res, user) {
   const id = randomUUID();
@@ -59,8 +59,14 @@ async function session(res, user) {
     config.secret,
     { algorithm: 'HS256', subject: String(user.id), jwtid: id, issuer: 'retail-app', audience: 'retail-web', expiresIn: '8h' }
   );
+  const refreshToken = jwt.sign(
+    { purpose: 'refresh', session_id: id },
+    config.secret,
+    { algorithm: 'HS256', subject: String(user.id), jwtid: randomUUID(), issuer: 'retail-app', audience: 'retail-web', expiresIn: '7d' }
+  );
   res.cookie('session', token, { ...cookieOptions, maxAge: 8 * 60 * 60 * 1000 });
-  return id;
+  res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  return { id, token, accessToken: token, refreshToken };
 }
 
 const dummyHash = await bcrypt.hash(randomUUID(), 12);
@@ -189,11 +195,14 @@ async function completeStoreRegistration(req, res) {
   }
 
   // Đăng nhập tự động ngay sau khi đăng ký
-  await session(res, user);
+  const sess = await session(res, user);
   res.status(201).json({
     status: 'LOGGED_IN',
     message: 'Khởi tạo cửa hàng thành công! Đang chuyển hướng vào hệ thống.',
-    user: { id: user.id, email: user.email, name: user.full_name, role: user.role }
+    user: { id: user.id, email: user.email, name: user.full_name, role: user.role },
+    token: sess.token,
+    accessToken: sess.accessToken,
+    refreshToken: sess.refreshToken
   });
 }
 
@@ -244,12 +253,15 @@ router.post('/google', asyncRoute(async (req, res) => {
 
   if (rows.length && rows[0].status === 'ACTIVE') {
     const u = rows[0];
-    await session(res, u);
+    const sess = await session(res, u);
     await pool.execute('UPDATE users SET last_login_at=UTC_TIMESTAMP() WHERE id=?', [u.id]);
     return res.json({
       status: 'LOGGED_IN',
       message: 'Đăng nhập Google thành công',
-      user: { id: u.id, email: u.email, name: u.full_name, role: u.role }
+      user: { id: u.id, email: u.email, name: u.full_name, role: u.role },
+      token: sess.token,
+      accessToken: sess.accessToken,
+      refreshToken: sess.refreshToken
     });
   }
 
@@ -292,14 +304,21 @@ router.post('/login', asyncRoute(async (req, res) => {
   if (!u || !valid || u.status !== 'ACTIVE') throw new HttpError(401, 'Email hoặc mật khẩu không đúng');
 
   // Kiểm tra tài khoản có đang bị tạm khóa an ninh không
-  const loginSessionId=await session(res, u);
+  const sess = await session(res, u);
+  const loginSessionId = sess.id;
   res.clearCookie('owner_session', cookieOptions);
   if ((Number(u.is_locked) === 1 && (!u.locked_until || new Date(u.locked_until) > new Date())) || (u.locked_until && new Date(u.locked_until) > new Date())) {
-    if(u.unlock_requested_at){await pool.execute('UPDATE auth_sessions SET revoked_at=UTC_TIMESTAMP() WHERE id=?',[loginSessionId]);res.clearCookie('session',cookieOptions);}
+    if(u.unlock_requested_at){await pool.execute('UPDATE auth_sessions SET revoked_at=UTC_TIMESTAMP() WHERE id=?',[loginSessionId]);res.clearCookie('session',cookieOptions);res.clearCookie('refreshToken',cookieOptions);}
     return res.status(423).json({code:'ACCOUNT_TEMP_LOCKED',reason:u.lock_reason,locked_at:u.locked_at||u.locked_until,unlock_requested:Boolean(u.unlock_requested_at),message:'Tài khoản của bạn đã bị khóa tạm thời.'});
   }
   await pool.execute('UPDATE users SET last_login_at=UTC_TIMESTAMP() WHERE id=?', [u.id]);
-  res.json({ message: 'Đăng nhập thành công' });
+  res.json({
+    message: 'Đăng nhập thành công',
+    token: sess.token,
+    accessToken: sess.accessToken,
+    refreshToken: sess.refreshToken,
+    user: { id: u.id, email: u.email, name: u.full_name, role: u.role }
+  });
 }));
 
 router.post('/request-unlock', authenticate, asyncRoute(async (req,res) => {
@@ -314,6 +333,36 @@ router.post('/request-unlock', authenticate, asyncRoute(async (req,res) => {
   res.clearCookie('session',cookieOptions);
   res.clearCookie('owner_session',cookieOptions);
   res.json({success:true,message:'Đã gửi yêu cầu mở khóa tới Quản trị viên nền tảng.'});
+}));
+
+// 5.1 LÀM MỚI PHIÊN ĐĂNG NHẬP (HỖ TRỢ IPHONE/SAFARI CHẶN COOKIE)
+router.post('/refresh', asyncRoute(async (req, res) => {
+  const incomingToken = req.body?.refreshToken || req.headers['x-refresh-token'] || req.cookies?.refreshToken;
+  if (!incomingToken) throw new HttpError(401, 'Thiếu refresh token');
+
+  let claims;
+  try {
+    claims = jwt.verify(incomingToken, config.secret, { algorithms: ['HS256'], issuer: 'retail-app', audience: 'retail-web' });
+  } catch {
+    throw new HttpError(401, 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+  }
+
+  const userId = claims.sub;
+  const [users] = await pool.execute(
+    'SELECT u.* FROM users u LEFT JOIN organizations o ON o.id=u.organization_id WHERE u.id=? AND u.status=? AND (o.status=? OR u.role=?)',
+    [userId, 'ACTIVE', 'ACTIVE', 'PLATFORM_ADMIN']
+  );
+  if (!users.length) throw new HttpError(401, 'Tài khoản không hợp lệ hoặc đã bị khóa');
+
+  const u = users[0];
+  const sess = await session(res, u);
+  res.json({
+    message: 'Làm mới token thành công',
+    token: sess.token,
+    accessToken: sess.accessToken,
+    refreshToken: sess.refreshToken,
+    user: { id: u.id, email: u.email, name: u.full_name, role: u.role }
+  });
 }));
 
 // 6. LẤY THÔNG TIN TÀI KHOẢN ĐANG ĐĂNG NHẬP (/me)
@@ -467,6 +516,7 @@ router.post('/logout', authenticate, asyncRoute(async (req, res) => {
     }catch{}
   }
   res.clearCookie('session', cookieOptions);
+  res.clearCookie('refreshToken', cookieOptions);
   res.clearCookie('owner_session', cookieOptions);
   res.status(204).end();
 }));

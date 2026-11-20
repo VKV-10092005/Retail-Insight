@@ -152,7 +152,7 @@ export default function Register(){
 
     setBusy(true);
     try{
-      await authRequest('/register', {
+      const regRes = await authRequest('/register', {
         method: 'POST',
         body: {
           verification_token: verificationToken,
@@ -162,6 +162,13 @@ export default function Register(){
           confirm_password: confirmPassword
         }
       });
+      if(regRes?.accessToken || regRes?.token){
+        localStorage.setItem('token', regRes.accessToken || regRes.token);
+        localStorage.setItem('accessToken', regRes.accessToken || regRes.token);
+      }
+      if(regRes?.refreshToken){
+        localStorage.setItem('refreshToken', regRes.refreshToken);
+      }
       // Đăng nhập tự động ngay sau khi đăng ký
       const newUser=await refresh();
       try{if(newUser?.id)localStorage.setItem(`onboarding_main_pending_${newUser.id}`,'true');}catch{}
@@ -184,6 +191,13 @@ export default function Register(){
       });
 
       if(res.status === 'LOGGED_IN'){
+        if(res?.accessToken || res?.token){
+          localStorage.setItem('token', res.accessToken || res.token);
+          localStorage.setItem('accessToken', res.accessToken || res.token);
+        }
+        if(res?.refreshToken){
+          localStorage.setItem('refreshToken', res.refreshToken);
+        }
         await refresh();
         navigate('/', {replace:true});
       } else if(res.status === 'NEED_OTP_AND_ONBOARDING'){
