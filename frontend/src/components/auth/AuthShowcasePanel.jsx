@@ -140,10 +140,10 @@ export default function AuthShowcasePanel({
       {/* Footer của panel */}
       <div className="showcase-footer">
         <div className="showcase-trust-pills">
-          <span>✓ Đa chi nhánh</span>
-          <span>✓ Quiet POS</span>
-              <span>✓ Dự báo sản phẩm</span>
-          <span>✓ Gmail SMTP thật</span>
+          <span><CheckCircle2 size={14}/> Đa chi nhánh</span>
+          <span><CheckCircle2 size={14}/> Quiet POS</span>
+              <span><CheckCircle2 size={14}/> Dự báo sản phẩm</span>
+          <span><CheckCircle2 size={14}/> Gmail SMTP thật</span>
         </div>
         <p className="showcase-copyright">
           Retail Insight © 2026 · Đề tài Nghiên cứu Khoa học Bán lẻ Tích hợp Trí tuệ Nhân tạo

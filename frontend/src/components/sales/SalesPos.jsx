@@ -7,6 +7,7 @@ import {Badge,Button,EmptyState,ErrorState,Modal,Skeleton,Toast} from '../../des
 import {AlertTriangle,Banknote,Barcode,Boxes,CheckCircle2,CreditCard,Grid2X2,History,Minus,Plus,Printer,ReceiptText,Search,ShoppingCart,Trash2,UserRound,WalletCards,X} from 'lucide-react';
 import PaymentSettingsModal from '../PaymentSettingsModal';
 import AddProductModal from '../../operations/AddProductModal';
+import {productVisual} from '../common/ProductThumbnail';
 import useAppSettings from '../../hooks/useAppSettings';
 import {playAppBeep} from '../../services/appSettings';
 import {cachePaymentSettings,createVietQrDataUrl,readCachedPaymentSettings} from '../../vietqr';
@@ -69,19 +70,10 @@ function CategoryFilter({items,value,onChange,vertical=false}){
  </nav>;
 }
 
-function getProductVisual(product){
- const text=`${product.category_name||''} ${product.name||''}`.toLocaleLowerCase('vi');
- if(/bút|sổ|văn phòng|giấy|thước/.test(text))return {icon:'✏️',kind:'stationery'};
- if(/balo|túi|ví|vali/.test(text))return {icon:'🎒',kind:'bags'};
- if(/áo|dép|giày|thời trang|quần/.test(text))return {icon:'👕',kind:'fashion'};
- if(/nước|uống|bánh|kẹo|trà|cà phê/.test(text))return {icon:'🥤',kind:'food'};
- if(/gia dụng|nồi|chảo|ly|cốc|đèn/.test(text))return {icon:'🏠',kind:'home'};
- return {icon:'📦',kind:'default'};
-}
 function ProductImage({product}){
  const [failed,setFailed]=useState(false);
- const visual=getProductVisual(product);
- return <span className={`pos-product-image pos-product-image-${visual.kind}`}>{product.image_url&&!failed?<img src={product.image_url} alt="" onError={()=>setFailed(true)}/>:<span aria-hidden="true">{visual.icon}</span>}</span>;
+ const visual=productVisual(product),Icon=visual.Icon;
+ return <span className={`pos-product-image pos-product-image-${visual.kind}`}>{product.image_url&&!failed?<img src={product.image_url} alt="" onError={()=>setFailed(true)}/>:<span aria-hidden="true"><Icon size={32} strokeWidth={1.7}/></span>}</span>;
 }
 
 function ProductGrid({products,loading,error,onAdd,cart}){

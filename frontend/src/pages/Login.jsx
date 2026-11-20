@@ -470,7 +470,7 @@ export default function Login(){
               <div className="auth-step-pane slide-forward">
                 <div className="auth-verified-badge">
                   <CheckCircle2 size={14} />
-                  <span>✓ Đã xác thực: {googleModal.email}</span>
+                  <span><CheckCircle2 size={15} aria-hidden="true"/> Đã xác thực: {googleModal.email}</span>
                 </div>
 
                 <form onSubmit={handleCompleteGoogleOnboarding} style={{display:'grid',gap:'12px'}}>

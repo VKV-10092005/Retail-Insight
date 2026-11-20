@@ -1,3 +1,3 @@
-﻿.product-thumbnail{display:grid;place-items:center;overflow:hidden;flex:none;border-radius:8px;background:linear-gradient(145deg,#f8fafc,#f0f9ff);font-size:19px;line-height:1;box-shadow:inset 0 0 0 1px rgba(148,163,184,.18)}
+.product-thumbnail{display:grid;place-items:center;overflow:hidden;flex:none;border-radius:8px;background:linear-gradient(145deg,#f8fafc,#f0f9ff);color:#0284c7;font-size:19px;line-height:1;box-shadow:inset 0 0 0 1px rgba(148,163,184,.18)}
 .product-thumbnail>img{display:block;width:100%;height:100%;object-fit:cover}
 .product-thumbnail-stationery{background:linear-gradient(145deg,#eff6ff,#dbeafe)}.product-thumbnail-bags{background:linear-gradient(145deg,#fef3c7,#ffedd5)}.product-thumbnail-fashion{background:linear-gradient(145deg,#fce7f3,#fdf2f8)}.product-thumbnail-food{background:linear-gradient(145deg,#dcfce7,#f0fdf4)}.product-thumbnail-home{background:linear-gradient(145deg,#f1f5f9,#e2e8f0)}

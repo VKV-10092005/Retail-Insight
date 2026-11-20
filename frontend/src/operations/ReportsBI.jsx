@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Boxes,
   Warehouse,
-  BarChart3
+  BarChart3,
+  Package
 } from 'lucide-react';
 
 
@@ -235,7 +236,7 @@ export default function ReportsBI() {
           const tabItems = [
             {
               id: 'revenue_branches',
-              label: '📈 Doanh thu & Chi nhánh',
+              label: <span className="reports-tab-label"><TrendingUp size={16}/> Doanh thu &amp; Chi nhánh</span>,
               content: (
                 <div style={{ marginTop: '20px' }}>
                   <div className="op-grid" style={{ marginBottom: '24px' }}>
@@ -284,7 +285,7 @@ export default function ReportsBI() {
             },
             {
               id: 'products',
-              label: '🏆 Hiệu quả Sản phẩm',
+              label: <span className="reports-tab-label"><BarChart3 size={16}/> Hiệu quả Sản phẩm</span>,
               content: (
                 <div style={{ marginTop: '20px' }}>
                   <div className="op-grid" style={{ marginBottom: '24px' }}>
@@ -329,7 +330,7 @@ export default function ReportsBI() {
             },
             {
               id: 'inventory',
-              label: '📦 Xuất - Nhập - Tồn kho',
+              label: <span className="reports-tab-label"><Package size={16}/> Xuất - Nhập - Tồn kho</span>,
               content: (
                 <div style={{ marginTop: '20px' }}>
                   <Card style={{ marginBottom: '24px' }}>

@@ -106,7 +106,7 @@ export default function ProfilePage(){
               <h2 style={{margin:0,fontSize:'1.125rem',color:'var(--ri-text)'}}>Thông tin chỉnh sửa</h2>
               <small style={{color:'var(--ri-text-muted)'}}>Cập nhật họ tên và số điện thoại liên hệ</small>
             </div>
-            <span className={`profile-autosave-status ${saveState}`} aria-live="polite">{saveState==='saving'?'Đang lưu...':saveState==='saved'?'✓ Đã tự động lưu':saveState==='error'?'Chưa lưu được':''}</span>
+            <span className={`profile-autosave-status ${saveState}`} aria-live="polite">{saveState==='saving'?'Đang lưu...':saveState==='saved'?<><CheckCircle2 size={14} aria-hidden="true"/> Đã tự động lưu</>:saveState==='error'?'Chưa lưu được':''}</span>
           </div>
 
           <div className="profile-avatar-row">

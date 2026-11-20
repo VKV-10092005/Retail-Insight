@@ -3,7 +3,7 @@ import {useBranch} from '../branches/BranchContext';
 import {useAuth} from '../auth/AuthContext';
 import {request,useResource} from './shared';
 import ImageUploadField from '../components/common/ImageUploadField';
-import {X,RefreshCw,Plus} from 'lucide-react';
+import {X,RefreshCw,Plus,Check} from 'lucide-react';
 import './AddProductModal.css';
 
 export default function AddProductModal({open,onClose,onCreated,allowAddToCart=false}){
@@ -114,7 +114,7 @@ export default function AddProductModal({open,onClose,onCreated,allowAddToCart=f
       {categoryInlineError&&<p role="alert" style={{margin:'4px 0 0',color:'var(--ri-danger,#ef4444)',fontSize:'0.8rem',fontWeight:500}}>{categoryInlineError}</p>}
      </div>
     )}
-    {categoryInlineSuccess&&<p style={{margin:'4px 0 0',color:'var(--ri-success,#10b981)',fontSize:'0.8rem',fontWeight:500}}>✓ {categoryInlineSuccess}</p>}
+    {categoryInlineSuccess&&<p style={{display:'flex',alignItems:'center',gap:4,margin:'4px 0 0',color:'var(--ri-success,#10b981)',fontSize:'0.8rem',fontWeight:500}}><Check size={14}/>{categoryInlineSuccess}</p>}
    </label>
    <label>Đơn vị tính<input className="ri-control" maxLength={50} value={form.unit} onChange={e=>update('unit',e.target.value)}/></label>
    <label>Giá bán niêm yết (VNĐ) *<input className="ri-control" required type="number" min="1" step="1" value={form.sale_price} onChange={e=>update('sale_price',e.target.value)}/></label>

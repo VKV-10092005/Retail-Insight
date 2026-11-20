@@ -387,10 +387,10 @@ export default function AdminSecurity() {
               style={{ width: '100%' }}
             >
               <option value="">Tất cả mức độ</option>
-              <option value="CRITICAL">🔴 CRITICAL (Nghiêm trọng)</option>
-              <option value="HIGH">🟠 HIGH (Mức cao)</option>
-              <option value="MEDIUM">🟡 MEDIUM (Trung bình)</option>
-              <option value="LOW">🟢 LOW (Mức thấp)</option>
+              <option value="CRITICAL">CRITICAL (Nghiêm trọng)</option>
+              <option value="HIGH">HIGH (Mức cao)</option>
+              <option value="MEDIUM">MEDIUM (Trung bình)</option>
+              <option value="LOW">LOW (Mức thấp)</option>
             </select>
           </div>
 

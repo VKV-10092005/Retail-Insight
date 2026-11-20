@@ -902,7 +902,7 @@ export default function Products({
                     )}
                     {editCategoryInlineSuccess && (
                       <p style={{ margin: '4px 0 0', color: 'var(--ri-success, #10b981)', fontSize: '0.8rem', fontWeight: 500 }}>
-                        ✓ {editCategoryInlineSuccess}
+                        <Check size={14}/> {editCategoryInlineSuccess}
                       </p>
                     )}
                   </div>

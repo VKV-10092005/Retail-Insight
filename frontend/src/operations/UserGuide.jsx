@@ -4,7 +4,7 @@ import {
   Compass, PackagePlus, ShoppingCart, Warehouse, TrendingUp, ShieldCheck,
   ArrowRight, Search, BookOpen, Layers, Users, ChevronDown, ChevronUp,
   Store, BarChart2, BrainCircuit, Building2, Package, ClipboardList,
-  RefreshCw, AlertTriangle, CheckCircle2, XCircle, Circle, Lightbulb
+  RefreshCw, AlertTriangle, CheckCircle2, XCircle, Circle, Lightbulb, X
 } from 'lucide-react';
 import { PageHeader, Card } from '../components/ui/Elements';
 
@@ -550,7 +550,7 @@ export default function UserGuide() {
               color: 'var(--ri-muted)', padding: 2,
             }}
           >
-            ✕
+            <X size={16}/>
           </button>
         )}
       </div>

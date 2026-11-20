@@ -169,7 +169,7 @@ export default function StockoutAlerts() {
                     <strong style={{ fontSize: '1.85rem', color: totalAlerts > 0 ? 'var(--ri-danger)' : 'var(--ri-success)' }}>
                       {totalAlerts} sản phẩm
                     </strong>
-                    <small>{totalAlerts > 0 ? 'Có nguy cơ đứt hàng trong kỳ tới' : '✓ Tồn kho đảm bảo an toàn'}</small>
+                    <small>{totalAlerts > 0 ? 'Có nguy cơ đứt hàng trong kỳ tới' : <><CheckCircle2 size={14} aria-hidden="true"/> Tồn kho đảm bảo an toàn</>}</small>
                   </Card>
 
                   <Card className="stat" style={{ borderLeft: '4px solid var(--ri-danger)' }}>

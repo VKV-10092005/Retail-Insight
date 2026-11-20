@@ -418,7 +418,7 @@ export default function Register(){
               {/* Badge nhỏ xác nhận email đã được xác minh */}
               <div className="auth-verified-badge">
                 <CheckCircle2 size={14} />
-                <span>✓ Đã xác thực: {email}</span>
+                <span><CheckCircle2 size={15} aria-hidden="true"/> Đã xác thực: {email}</span>
               </div>
 
               <form onSubmit={submit} style={{display:'grid',gap:'12px'}}>
