@@ -25,6 +25,10 @@ try {
   await verifyDatabase();
   const [[{ count }]] = await pool.query('SELECT COUNT(*) AS count FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()');
   const [tables] = await pool.query('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE=\'BASE TABLE\' ORDER BY TABLE_NAME');
+  const [columnMetadata] = await pool.query('SELECT TABLE_NAME,COLUMN_NAME,EXTRA FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()');
+  const generatedColumns = new Set(columnMetadata
+    .filter(column => String(column.EXTRA || '').toUpperCase().includes('GENERATED'))
+    .map(column => `${column.TABLE_NAME}.${column.COLUMN_NAME}`));
   const passwordHash = await bcrypt.hash(randomBytes(32).toString('hex'), 12);
   let rowsExported = 0;
   const output = [
@@ -47,7 +51,7 @@ try {
     const [rows] = await pool.query(`SELECT * FROM ${quoteId(table)}`);
     if (!rows.length) continue;
     rowsExported += rows.length;
-    const columns = Object.keys(rows[0]);
+    const columns = Object.keys(rows[0]).filter(column => !generatedColumns.has(`${table}.${column}`));
     const inserts = rows.map(source => {
       const row = { ...source };
       if (table === 'users') {
