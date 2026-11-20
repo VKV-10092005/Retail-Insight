@@ -16,7 +16,7 @@ import {
   Printer
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import {apiUrl} from '../services/apiUrl';
+import { apiUrl } from '../services/apiUrl';
 import './FloatingRobotChat.css';
 
 // ── 4 Nút câu hỏi gợi ý nhanh phân hóa theo vai trò (Role-based Quick Chips) ──
@@ -456,7 +456,7 @@ export default function FloatingRobotChat() {
   const handlePointerUp = useCallback((e) => {
     if (!isDragging) return;
     setIsDragging(false);
-    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) { }
     if (!dragRef.current.moved) {
       setIsOpen((prev) => !prev);
     }
@@ -487,7 +487,7 @@ export default function FloatingRobotChat() {
     const minH = Math.min(400, maxH);
 
     const nextW = Math.max(minW, Math.min(maxW, resizeStartRef.current.startWidth - dx));
-    const nextH = Math.max(minH, Math.min(maxH, resizeStartRef.current.startHeight + dy));
+    const nextH = Math.max(minH, Math.min(maxH, resizeStartRef.current.startHeight - dy));
 
     setChatSize({ width: Math.round(nextW), height: Math.round(nextH) });
   };
@@ -495,14 +495,14 @@ export default function FloatingRobotChat() {
   const handleResizePointerUp = (e) => {
     if (!isResizingRef.current) return;
     isResizingRef.current = false;
-    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) { }
   };
 
   // ── Làm mới cuộc trò chuyện & Xóa lịch sử trong localStorage ─────────────
   const handleResetChat = () => {
     try {
       localStorage.removeItem(storageKey);
-    } catch (_) {}
+    } catch (_) { }
     setMessages(createInitialMessages());
   };
 
@@ -633,15 +633,15 @@ export default function FloatingRobotChat() {
           onScroll={resetChatIdleTimer}
           style={{ width: `${chatSize.width}px`, height: `${chatSize.height}px`, maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 96px)' }}
         >
-          {/* Tay nắm kéo thay đổi kích thước ở góc dưới bên trái */}
+          {/* Tay nắm kéo thay đổi kích thước ở góc trên bên trái */}
           <div
-            className="chat-resize-handle-bl"
+            className="chat-resize-handle-tl"
             onPointerDown={handleResizePointerDown}
             onPointerMove={handleResizePointerMove}
             onPointerUp={handleResizePointerUp}
             title="Kéo để thay đổi kích thước hộp thoại"
           >
-            <div className="resize-indicator-lines"><span/><span/></div>
+            <div className="resize-indicator-lines"><span /><span /></div>
           </div>
 
           {/* Thanh Header */}
