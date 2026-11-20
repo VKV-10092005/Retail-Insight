@@ -43,7 +43,7 @@ export default function WelcomePage(){
   <main className="welcome-hero">
    <section className="welcome-hero-copy">
     <div className="welcome-badge">NỀN TẢNG QUẢN LÝ BÁN LẺ THỰC TẾ & TÍCH HỢP TRÍ TUỆ NHÂN TẠO</div>
-    <h1>Vận hành cửa hàng <span className="welcome-gradient-blue">chính</span><br/><span className="welcome-gradient-blue">xác,</span><br/>bổ sung hàng hóa <span className="welcome-gradient-cyan">thông</span><br/><span className="welcome-gradient-cyan">minh.</span></h1>
+    <h1>Vận hành cửa hàng<br/><span className="welcome-hero-emphasis">chính xác,</span> bổ sung<br/>hàng hóa <span className="welcome-hero-emphasis">thông minh.</span></h1>
     <p className="welcome-description">Retail Insight kết hợp nghiệp vụ bán hàng POS tinh gọn, quản trị kho đa chi nhánh phân quyền 4 vai trò (Chủ cửa hàng, Quản lý, Kho, Thu ngân) và giải thuật AI dự báo nhu cầu sản phẩm trên dữ liệu thực tế.</p>
     <div className="welcome-actions"><Link to="/register" className="welcome-primary">Bắt đầu với cửa hàng của bạn <ArrowRight size={18}/></Link><Link to="/login" className="welcome-secondary">Đăng nhập phiên làm việc</Link></div>
     <ul className="welcome-trust-list"><li><CheckCircle2 size={17}/>Bảo mật phiên JWT & phân quyền 4 vai trò thực tế</li><li><CheckCircle2 size={17}/>Kiểm soát tồn kho đa chi nhánh theo thời gian thực</li><li><CheckCircle2 size={17}/>Mô hình AI dự báo nhu cầu sản phẩm & cảnh báo thiếu hàng</li></ul>

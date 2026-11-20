@@ -64,11 +64,11 @@ export default function AppLayout(){
   const [pageTour,setPageTour]=useState(null);
   const [tourState,setTourState]=useState({userId:null,pending:false,completed:false,shown:false});
   const [celebration,setCelebration]=useState(false);
-  const celebrationKey=`retail_insight_first_order_celebrated_${user?.organization_id||user?.organization?.id||user?.id||'unknown'}`;
   const [clickedNavItems,setClickedNavItems]=useState([]);
   const location=useLocation();
   const navigate=useNavigate();
   const {user,logout,impersonating,returnToOwner}=useAuth();
+  const celebrationKey=`retail_insight_first_order_celebrated_${user?.organization_id||user?.organization?.id||user?.id||'unknown'}`;
   const {activeBranchId,activeBranch,branches:branchList,setActiveBranchId,isOwner}=useBranch();
   const appSettings=useAppSettings(user?.id,user?.role);
   const menuRef=useRef(null);

@@ -52,10 +52,10 @@ export async function fetchWithRetry(input,options={}){
   const url=typeof input==='string'?input:input.url;
   const headers=[...new Headers(options.headers||input?.headers||{}).entries()].sort(([a],[b])=>a.localeCompare(b));
   const key=JSON.stringify([requestEpoch,url,options.credentials||'same-origin',headers]);
-  const existing=inflightGets.get(key);if(existing)return withAbort(existing,options.signal);
+  const existing=inflightGets.get(key);if(existing)return withAbort(existing,options.signal).then(response=>response.clone());
   const {signal:_signal,...sharedOptions}=options;
   const shared=performFetchWithRetry(input,sharedOptions);
   inflightGets.set(key,shared);
   shared.then(()=>{if(inflightGets.get(key)===shared)inflightGets.delete(key);},()=>{if(inflightGets.get(key)===shared)inflightGets.delete(key);});
-  return withAbort(shared,options.signal);
+  return withAbort(shared,options.signal).then(response=>response.clone());
 }
