@@ -395,6 +395,12 @@ export default function Register(){
                     margin: '2px 0 0'
                   }}>
                     <div style={{marginBottom: '10px'}}>
+                      <p style={{margin:'0 0 10px',fontSize:'0.8125rem',color:'var(--ri-text-muted)',lineHeight:1.5}}>
+                        Hệ thống vừa gửi mã xác thực 6 số đến Gmail <strong>{email}</strong>. Vui lòng mở hòm thư và nhập mã để xác nhận:
+                      </p>
+                      <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2 text-xs" style={{marginBottom:'12px'}}>
+                        Lưu ý: Nếu chưa thấy email trong Hộp thư đến sau 15 giây, vui lòng kiểm tra thêm mục Thư rác (Spam) và chọn 'Báo cáo không phải thư rác'.
+                      </div>
                       <span style={{fontWeight: 600, fontSize: '0.875rem', color: 'var(--ri-text)', display: 'block', marginBottom: '12px'}}>
                         Nhập mã OTP 6 số gửi về hòm thư *
                       </span>

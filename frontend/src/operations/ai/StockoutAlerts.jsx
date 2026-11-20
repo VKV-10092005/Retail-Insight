@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, Card, Badge } from '../../components/ui/Elements';
 import { useResource, State, Table, number, params, AiResultNotice, vndNumber } from '../shared';

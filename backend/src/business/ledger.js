@@ -120,7 +120,7 @@ function postDocument(type){return asyncRoute(async(req,res)=>{
  data.items.sort((a,b)=>Number(a.product_id||0)-Number(b.product_id||0)||String(a.sku||'').localeCompare(String(b.sku||'')));
  if(type==='SALE'&&data.order_status==='COMPLETED'&&data.payment?.method==='BANK_TRANSFER')throw new HttpError(400,'Bank transfer must be confirmed before completion');
  const allowed=type==='SALE'?['MANAGER','CASHIER']:['MANAGER','INVENTORY'];
- await assertBranch(req.user,data.branch_id,allowed);
+ const authorizedBranch=await assertBranch(req.user,data.branch_id,allowed);
  if(type==='RECEIPT'&&data.items.some(i=>i.unit_price===undefined))throw new HttpError(400,'Phiếu nhập cần đơn giá từng sản phẩm');
  if(type==='SALE'&&data.items.some(i=>i.unit_price!==undefined))throw new HttpError(400,'Giá bán được lấy từ danh mục trên máy chủ');
  if(type==='RECEIPT'&&(data.customer_id||data.order_discount||data.payment||data.items.some(i=>i.discount)))throw new HttpError(400,'Phiếu nhập không hỗ trợ dữ liệu bán hàng');
@@ -136,7 +136,8 @@ function postDocument(type){return asyncRoute(async(req,res)=>{
    const duplicate=await recentOpenDuplicate(c,org,req.user.id,data.branch_id,data,req.user.role==='OWNER'?50:req.user.role==='MANAGER'?30:10);
    if(duplicate)return duplicate;
   }
-  if(data.customer_id){const [customers]=await c.execute('SELECT id FROM customers WHERE id=? AND organization_id=?',[data.customer_id,org]);if(!customers.length)throw new HttpError(404,'Không tìm thấy khách hàng');}
+  let customerRecord=null;
+  if(data.customer_id){const [customers]=await c.execute('SELECT id,name,phone FROM customers WHERE id=? AND organization_id=?',[data.customer_id,org]);if(!customers.length)throw new HttpError(404,'Không tìm thấy khách hàng');customerRecord=customers[0];}
   const orderStatus=requestedOrderStatus;
   const payment=data.payment||{method:'CASH'};
   const paymentStatus=type==='SALE'&&orderStatus==='COMPLETED'?(payment.method==='CASH'?'PAID':'WAITING_PAYMENT'):type==='SALE'&&payment.method==='BANK_TRANSFER'?'WAITING_PAYMENT':null;
@@ -144,7 +145,50 @@ function postDocument(type){return asyncRoute(async(req,res)=>{
   let subtotalCents=0,itemDiscountCents=0;
   const [[receiptBranch]]=type==='RECEIPT'?await c.execute('SELECT catalog_mode FROM branches WHERE id=? AND organization_id=?',[data.branch_id,org]):[[null]];
   const maxDiscountRate=req.user.role==='OWNER'?50:req.user.role==='MANAGER'?30:10;
-  for(const item of data.items){
+  const saleItemRows=[];
+  if(type==='SALE'){
+   const productIds=data.items.map(item=>Number(item.product_id));
+   const balancePlaceholders=data.items.map(()=>'(?,?,?,0)').join(',');
+   await c.execute(`INSERT INTO inventory_balances(organization_id,branch_id,product_id,quantity) VALUES ${balancePlaceholders} ON DUPLICATE KEY UPDATE quantity=quantity`,data.items.flatMap(item=>[org,data.branch_id,item.product_id]));
+   const productPlaceholders=productIds.map(()=>'?').join(',');
+   const [products]=await c.execute(`SELECT p.id,p.sku,p.name,p.sale_price,p.branch_id product_branch_id,b.catalog_mode,bal.quantity,bal.average_cost
+    FROM products p
+    JOIN branches b ON b.organization_id=p.organization_id AND b.id=?
+    JOIN inventory_balances bal ON bal.organization_id=p.organization_id AND bal.branch_id=b.id AND bal.product_id=p.id
+    WHERE p.organization_id=? AND p.status='ACTIVE' AND p.id IN (${productPlaceholders})
+    ORDER BY p.id FOR UPDATE`,[data.branch_id,org,...productIds]);
+   if(products.length!==productIds.length)throw new HttpError(404,'Sản phẩm không tồn tại hoặc đã ngừng bán');
+   const productById=new Map(products.map(product=>[Number(product.id),product]));
+   for(const item of data.items){
+    const p=productById.get(Number(item.product_id));
+    if(p.catalog_mode!=='INDEPENDENT'&&p.product_branch_id!=null&&Number(p.product_branch_id)!==Number(data.branch_id))throw new HttpError(404,'Sản phẩm không thuộc danh mục của chi nhánh');
+    const next=Number(p.quantity)-item.quantity;
+    if(next<0)throw new HttpError(409,'Không đủ tồn kho: '+p.sku);
+    const unit=Number(p.sale_price),unitCents=Math.round(unit*100),grossCents=unitCents*item.quantity;
+    const discountCents=calculateDiscount(grossCents,item.discount,maxDiscountRate);
+    subtotalCents+=grossCents;itemDiscountCents+=discountCents;
+    if(!Number.isSafeInteger(subtotalCents)||subtotalCents>100000000000000)throw new HttpError(400,'Tổng chứng từ vượt giới hạn');
+    saleItemRows.push({
+     product_id:Number(p.id),sku:p.sku,product_name:p.name,quantity:item.quantity,unit_price:unit,
+     unit_cost:orderStatus==='COMPLETED'?Number(p.average_cost||0):null,
+     discount_type:item.discount?.type??null,discount_value:item.discount?.value??0,
+     discount_amount:discountCents/100,line_total:(grossCents-discountCents)/100,
+     quantity_delta:-item.quantity,balance_after:next
+    });
+   }
+   const quantityCases=saleItemRows.map(()=> 'WHEN ? THEN ?').join(' ');
+   await c.execute(`UPDATE inventory_balances SET quantity=CASE product_id ${quantityCases} ELSE quantity END WHERE organization_id=? AND branch_id=? AND product_id IN (${productPlaceholders})`,[
+    ...saleItemRows.flatMap(item=>[item.product_id,item.balance_after]),org,data.branch_id,...productIds
+   ]);
+   const itemValues=saleItemRows.map(()=>'(?,?,?,?,?,?,?,?,?,?,?,?)').join(',');
+   await c.execute(`INSERT INTO stock_document_items(organization_id,document_id,product_id,sku,product_name,quantity,unit_price,unit_cost,discount_type,discount_value,discount_amount,line_total) VALUES ${itemValues}`,saleItemRows.flatMap(item=>[
+    org,doc.insertId,item.product_id,item.sku,item.product_name,item.quantity,item.unit_price,item.unit_cost,item.discount_type,item.discount_value,item.discount_amount,item.line_total
+   ]));
+   const movementValues=saleItemRows.map(()=>'(?,?,?,?,?,?)').join(',');
+   await c.execute(`INSERT INTO inventory_movements(organization_id,branch_id,product_id,document_id,quantity_delta,balance_after) VALUES ${movementValues}`,saleItemRows.flatMap(item=>[
+    org,data.branch_id,item.product_id,doc.insertId,item.quantity_delta,item.balance_after
+   ]));
+  }else for(const item of data.items){
    if(type==='RECEIPT'&&!item.product_id){
     let categoryId=null;
     if(item.category_name){const branchId=receiptBranch.catalog_mode==='INDEPENDENT'?data.branch_id:null;let [categories]=await c.execute('SELECT id FROM categories WHERE organization_id=? AND branch_id <=> ? AND LOWER(name)=LOWER(?) LIMIT 1 FOR UPDATE',[org,branchId,item.category_name]);if(!categories.length){const [created]=await c.execute('INSERT INTO categories(organization_id,branch_id,name) VALUES (?,?,?)',[org,branchId,item.category_name]);categoryId=created.insertId;}else categoryId=categories[0].id;}
@@ -181,7 +225,22 @@ function postDocument(type){return asyncRoute(async(req,res)=>{
   }
   await c.execute('UPDATE stock_documents SET subtotal=?,item_discount_total=?,order_discount=?,total=?,cash_received=?,change_due=? WHERE id=? AND organization_id=?',[subtotalCents/100,itemDiscountCents/100,orderDiscountCents/100,totalCents/100,receivedCents===null?null:receivedCents/100,changeCents===null?null:changeCents/100,doc.insertId,org]);
   if(type==='SALE'&&(orderStatus==='COMPLETED'||payment.method==='BANK_TRANSFER'))await c.execute('INSERT INTO sale_payments(organization_id,document_id,method,status,amount,received_amount,change_amount) VALUES (?,?,?,?,?,?,?)',[org,doc.insertId,payment.method,paymentStatus,totalCents/100,receivedCents===null?null:receivedCents/100,changeCents===null?null:changeCents/100]);
-  return {id:doc.insertId,total:totalCents/100,payment_status:paymentStatus,order_status:orderStatus,replayed:false};
+  const id=doc.insertId,total=totalCents/100;
+  if(type!=='SALE')return {id,total,payment_status:paymentStatus,order_status:orderStatus,replayed:false};
+  const organizationName=req.user.organization_name||'Retail Insight';
+  const paymentReference=vietQrPaymentReference(organizationName,id);
+  let paymentQrUrl=null;
+  if(payment.method==='BANK_TRANSFER'&&authorizedBranch.bank_bin&&authorizedBranch.bank_account_number){
+   paymentQrUrl=`https://img.vietqr.io/image/${encodeURIComponent(authorizedBranch.bank_bin)}-${encodeURIComponent(authorizedBranch.bank_account_number)}-compact2.png?amount=${encodeURIComponent(total)}&addInfo=${encodeURIComponent(paymentReference)}&accountName=${encodeURIComponent(authorizedBranch.bank_account_name||'')}`;
+  }else if(payment.method==='BANK_TRANSFER'&&authorizedBranch.static_qr_url)paymentQrUrl=authorizedBranch.static_qr_url;
+  return {
+   id,total,payment_status:paymentStatus,order_status:orderStatus,replayed:false,
+   receipt:{
+    document:{id,organization_id:org,organization_name:organizationName,branch_id:data.branch_id,branch_name:authorizedBranch.name,branch_address:authorizedBranch.address,branch_phone:authorizedBranch.phone,type:'SALE',subtotal:subtotalCents/100,item_discount_total:itemDiscountCents/100,order_discount:orderDiscountCents/100,total,note:data.note??null,customer_id:data.customer_id??null,customer_name:customerRecord?.name??null,customer_phone:customerRecord?.phone??null,payment_method:payment.method,payment_status:paymentStatus,order_status:orderStatus,cash_received:receivedCents===null?null:receivedCents/100,change_due:changeCents===null?null:changeCents/100,created_at:new Date().toISOString(),client_created_at:data.client_created_at??null,completed_at:orderStatus==='COMPLETED'?new Date().toISOString():null,performed_by:req.user.id,performed_by_name:req.user.full_name},
+    items:saleItemRows.map(({quantity_delta,balance_after,...item})=>({...item,returned_quantity:0,product_status:'ACTIVE'})),
+    payment_qr_url:paymentQrUrl,payment_configured:Boolean(authorizedBranch.bank_bin&&authorizedBranch.bank_account_number),payment_reference:paymentReference,calendar:calendarMetadata()
+   }
+  };
  });}catch(e){if(e.code==='ER_DUP_ENTRY'){result=await existing(org,type,data.request_key,hash);if(!result)throw e;}else throw e;}
  res.status(result.replayed?200:201).json(result);
 });}

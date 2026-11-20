@@ -264,6 +264,9 @@ export default function ForgotPassword() {
               <p style={{ margin: '0 0 18px', color: 'var(--ri-text-muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
                 Hệ thống đã gửi mã xác thực 6 số đến Gmail <strong>{email}</strong>. Vui lòng mở hòm thư và nhập mã vào các ô dưới đây:
               </p>
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2 text-xs" style={{ marginBottom: '16px' }}>
+                Lưu ý: Nếu chưa thấy email trong Hộp thư đến sau 15 giây, vui lòng kiểm tra thêm mục Thư rác (Spam) và chọn 'Báo cáo không phải thư rác'.
+              </div>
 
               {/* Thông báo gửi mã thành công */}
               {sendInfo && (

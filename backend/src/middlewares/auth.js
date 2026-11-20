@@ -11,7 +11,7 @@ export const authenticate = asyncRoute(async (req,res,next) => {
   let claims;
   try { claims = jwt.verify(token, config.secret, {algorithms:['HS256'], issuer:'retail-app', audience:'retail-web'}); }
   catch { throw new HttpError(401,'Vui lòng đăng nhập'); }
-  const [rows] = await pool.execute(`SELECT u.id,u.organization_id,u.email,u.full_name,u.phone,u.avatar_url,u.bio,u.role,u.locked_until,u.is_locked,u.lock_reason,u.locked_at,u.unlock_requested_at
+  const [rows] = await pool.execute(`SELECT u.id,u.organization_id,u.email,u.full_name,u.phone,u.avatar_url,u.bio,u.role,u.locked_until,u.is_locked,u.lock_reason,u.locked_at,u.unlock_requested_at,o.name organization_name
     FROM auth_sessions s
     JOIN users u ON u.id=s.user_id
       AND (s.organization_id<=>u.organization_id)

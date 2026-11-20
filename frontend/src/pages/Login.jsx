@@ -423,6 +423,9 @@ export default function Login(){
                   <p style={{margin:0,fontSize:'0.875rem',color:'var(--ri-text-muted)',lineHeight:1.6}}>
                     Hệ thống vừa gửi mã xác thực 6 số đến Gmail <strong>{googleModal.email}</strong>. Vui lòng mở hòm thư và nhập mã để xác nhận:
                   </p>
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2 text-xs">
+                    Lưu ý: Nếu chưa thấy email trong Hộp thư đến sau 15 giây, vui lòng kiểm tra thêm mục Thư rác (Spam) và chọn 'Báo cáo không phải thư rác'.
+                  </div>
 
                   {googleModal.resendMsg && (
                     <div style={{
