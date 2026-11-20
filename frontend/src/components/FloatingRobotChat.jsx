@@ -462,7 +462,7 @@ export default function FloatingRobotChat() {
     }
   }, [isDragging]);
 
-  // ── Xử lý Kéo Tay Nắm Chỉnh Kích Thước (Top-Left Resize Handle) ───────────
+  // ── Xử lý kéo tay nắm chỉnh kích thước (góc dưới trái) ────────────────
   const handleResizePointerDown = (e) => {
     e.stopPropagation();
     if (e.button !== 0 && e.pointerType === 'mouse') return;
@@ -481,13 +481,13 @@ export default function FloatingRobotChat() {
     const dx = e.clientX - resizeStartRef.current.startX;
     const dy = e.clientY - resizeStartRef.current.startY;
 
-    const minW = 340;
-    const maxW = Math.min(window.innerWidth * 0.85, 800);
-    const minH = 400;
-    const maxH = Math.min(window.innerHeight * 0.82, 900);
+    const maxW = Math.min(window.innerWidth - 32, 800);
+    const maxH = Math.min(window.innerHeight - 96, 900);
+    const minW = Math.min(340, maxW);
+    const minH = Math.min(400, maxH);
 
     const nextW = Math.max(minW, Math.min(maxW, resizeStartRef.current.startWidth - dx));
-    const nextH = Math.max(minH, Math.min(maxH, resizeStartRef.current.startHeight - dy));
+    const nextH = Math.max(minH, Math.min(maxH, resizeStartRef.current.startHeight + dy));
 
     setChatSize({ width: Math.round(nextW), height: Math.round(nextH) });
   };
@@ -631,17 +631,17 @@ export default function FloatingRobotChat() {
           onInput={resetChatIdleTimer}
           onWheel={resetChatIdleTimer}
           onScroll={resetChatIdleTimer}
-          style={{ width: `${chatSize.width}px`, height: `${chatSize.height}px` }}
+          style={{ width: `${chatSize.width}px`, height: `${chatSize.height}px`, maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 96px)' }}
         >
-          {/* Tay nắm kéo thay đổi kích thước ở góc trên bên trái */}
+          {/* Tay nắm kéo thay đổi kích thước ở góc dưới bên trái */}
           <div
-            className="chat-resize-handle-tl"
+            className="chat-resize-handle-bl"
             onPointerDown={handleResizePointerDown}
             onPointerMove={handleResizePointerMove}
             onPointerUp={handleResizePointerUp}
             title="Kéo để thay đổi kích thước hộp thoại"
           >
-            <div className="resize-indicator-dots" />
+            <div className="resize-indicator-lines"><span/><span/></div>
           </div>
 
           {/* Thanh Header */}

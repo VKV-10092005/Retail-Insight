@@ -171,9 +171,9 @@
   width: 380px;
   height: 480px;
   min-width: min(340px, calc(100vw - 32px));
-  min-height: min(400px, calc(100vh - 32px));
+  min-height: min(400px, calc(100vh - 96px));
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100vh - 96px);
   background: #ffffff;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -209,34 +209,47 @@
   .robot-chat-dialog { animation: none; }
 }
 
-/* ── Tay Nắm Kéo Chỉnh Kích Thước (Top-Left Resize Handle) ───── */
-.chat-resize-handle-tl {
+/* ── Tay nắm kéo chỉnh kích thước ở góc dưới trái ───── */
+.chat-resize-handle-bl {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
+  bottom: 7px;
+  left: 7px;
+  width: 24px;
+  height: 24px;
   z-index: 10002;
-  cursor: nwse-resize;
+  cursor: nesw-resize;
   touch-action: none;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: flex-start;
-  padding: 3px;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background .15s ease;
 }
 
-.resize-indicator-dots {
-  width: 8px;
-  height: 8px;
-  border-top: 2px solid rgba(255, 255, 255, 0.5);
-  border-left: 2px solid rgba(255, 255, 255, 0.5);
-  border-top-left-radius: 4px;
-  transition: border-color 0.15s, transform 0.15s;
+.chat-resize-handle-bl:hover {
+  background: rgba(2,132,199,.1);
 }
 
-.chat-resize-handle-tl:hover .resize-indicator-dots {
-  border-color: #ffffff;
-  transform: scale(1.15);
+.resize-indicator-lines {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+
+.resize-indicator-lines span {
+  display: block;
+  width: 9px;
+  height: 2px;
+  border-radius: 2px;
+  background: #0369a1;
+}
+
+:root[data-theme="dark"] .resize-indicator-lines span,
+.dark .resize-indicator-lines span {
+  background: #7dd3fc;
 }
 
 /* ── Thanh Header ───────────────────────────────────────────── */
@@ -255,7 +268,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: 10px; /* Chừa khoảng trống cho tay nắm resize góc trái */
+  margin-left: 0;
 }
 
 /* Avatar ảnh robot thật ở Header */
