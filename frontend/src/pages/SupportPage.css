@@ -212,7 +212,7 @@
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
-    background: linear-gradient(120deg, #0284c7, #0f766e);
+    background: linear-gradient(135deg, #0369a1, #0f766e);
     color: #fff
 }
 
@@ -255,12 +255,12 @@
     gap: 12px;
     overflow-y: auto;
     padding: 22px;
-    background: rgba(248, 250, 252, .9)
+    background: #f1f5f9
 }
 
 :root[data-theme="dark"] .support-chat-history,
 .dark .support-chat-history {
-    background: #030712
+    background: #090e1a
 }
 
 .support-welcome {
@@ -292,10 +292,10 @@
 .support-message {
     max-width: 100%;
     padding: 10px 13px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #cbd5e1;
     border-radius: 15px 15px 15px 4px;
-    background: #FFFFFF;
-    color: #1E293B;
+    background: #ffffff;
+    color: #0f172a;
     box-shadow: 0 2px 7px rgba(15, 23, 42, .05);
     user-select: none;
     -webkit-user-select: none
@@ -304,8 +304,8 @@
 .support-message.mine {
     border-color: transparent;
     border-radius: 15px 15px 4px 15px;
-    background: #0284C7;
-    color: #FFFFFF;
+    background: #0284c7;
+    color: #ffffff;
     box-shadow: 0 2px 6px rgba(2, 132, 199, .25)
 }
 
@@ -1181,17 +1181,18 @@
     border-radius: 16px
 }
 
+.support- message.theirs,
 .support-message.theirs {
-    border: 1px solid #E2E8F0;
-    background: #F8FAFC;
-    color: #0F172A
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a
 }
 
 .support-message.mine {
     border: 0;
-    background: linear-gradient(135deg, #0284C7, #0F766E);
-    box-shadow: 0 5px 14px rgba(37, 99, 235, .2);
-    color: #fff
+    background: #0284c7;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, .25);
+    color: #ffffff
 }
 
 .support-message-wrap.mine {
