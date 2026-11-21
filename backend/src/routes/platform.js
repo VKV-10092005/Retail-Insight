@@ -3,7 +3,7 @@ import { pool } from '../db/pool.js';
 import { asyncRoute, HttpError } from '../utils/http.js';
 import { requireRoles } from '../middlewares/auth.js';
 import { z } from 'zod';
-import { unlockUserAccount } from '../services/aiSecurityGuard.js';
+import { lockUserAccount, unlockUserAccount } from '../services/aiSecurityGuard.js';
 import { generatePlatformNotificationDigests } from '../services/notificationDigests.js';
 import {getSettings,saveSettings} from '../services/appSettings.js';
 import {transaction} from '../business/common.js';
@@ -51,17 +51,18 @@ router.put('/settings',asyncRoute(async(req,res)=>{
  const input=platformPrefs.parse(req.body),current=await getSettings('PLATFORM','global');
  res.json(await saveSettings('PLATFORM','global',{...current,...input}));
 }));
-router.get('/dashboard',asyncRoute(async(req,res)=>{
+const getPlatformOverview=async(req,res)=>{
   const [[[organizations]],[users],[[lockedUsers]],[[products]],[[documents]]]=await Promise.all([
    pool.execute("SELECT COUNT(*) total,SUM(status='ACTIVE') active,SUM(status='DISABLED') disabled FROM organizations"),
    pool.execute("SELECT role,COUNT(*) total FROM users WHERE role IN ('OWNER','MANAGER','CASHIER') GROUP BY role"),
-   pool.execute("SELECT COUNT(*) total FROM users WHERE role IN ('OWNER','MANAGER','CASHIER') AND ((is_locked=1 AND (locked_until IS NULL OR locked_until > UTC_TIMESTAMP())) OR locked_until > UTC_TIMESTAMP())"),
+   pool.execute("SELECT COUNT(*) total FROM users WHERE role IN ('OWNER','MANAGER','CASHIER') AND locked_until > UTC_TIMESTAMP()"),
    pool.execute("SELECT COUNT(*) total FROM products WHERE status='ACTIVE'"),
    pool.execute("SELECT COUNT(*) invoices,COALESCE(SUM(total),0) revenue FROM stock_documents WHERE type='SALE'")
   ]);
   const userCounts=Object.fromEntries(users.map(row=>[row.role,Number(row.total)]));
   res.json({organizations:{total:Number(organizations.total||0),active:Number(organizations.active||0),disabled:Number(organizations.disabled||0)},users:{total:Object.values(userCounts).reduce((a,b)=>a+b,0),locked:Number(lockedUsers.total||0),byRole:{OWNER:userCounts.OWNER||0,MANAGER:userCounts.MANAGER||0,CASHIER:userCounts.CASHIER||0}},products:{active:Number(products.total||0)},invoices:{total:Number(documents.invoices||0),revenue:Number(documents.revenue||0)}});
-}));
+};
+router.get(['/dashboard','/overview'],asyncRoute(getPlatformOverview));
 router.get('/notification-digests',asyncRoute(async(req,res)=>{
  const [items]=await pool.execute('SELECT id,digest_type,period_key,title,body,read_at,created_at FROM platform_notification_digests WHERE user_id=? ORDER BY created_at DESC LIMIT 20',[req.user.id]);
  res.json({items:items.map(item=>({...item,body:typeof item.body==='string'?JSON.parse(item.body):item.body}))});
@@ -74,14 +75,21 @@ router.post('/notification-digests/run',asyncRoute(async(req,res)=>{
 }));
 router.get('/organizations',asyncRoute(async(req,res)=>{
   const [rows]=await pool.execute(`SELECT o.id,o.name,o.status,o.created_at,
-    owner.id AS owner_id, owner.email AS owner_email, owner.is_locked AS owner_is_locked,
+    owner.id AS owner_id, owner.email AS owner_email,
+    CASE WHEN owner.locked_until > UTC_TIMESTAMP() THEN 1 ELSE 0 END AS owner_is_locked,
     owner.locked_until AS owner_locked_until, owner.lock_reason AS owner_lock_reason,
-    CASE WHEN owner.id IS NOT NULL AND ((owner.is_locked=1 AND (owner.locked_until IS NULL OR owner.locked_until > UTC_TIMESTAMP())) OR owner.locked_until > UTC_TIMESTAMP()) THEN 1 ELSE 0 END AS owner_temporarily_locked,
-    (SELECT COUNT(*) FROM branches WHERE organization_id=o.id) AS branch_count,
-    (SELECT COUNT(*) FROM users WHERE organization_id=o.id AND role IN ('OWNER','MANAGER','CASHIER')) AS user_count,
-    (SELECT COUNT(*) FROM products WHERE organization_id=o.id AND status='ACTIVE') AS product_count
+    CASE WHEN owner.locked_until > UTC_TIMESTAMP() THEN 1 ELSE 0 END AS owner_temporarily_locked,
+    COALESCE((SELECT COUNT(*) FROM branches WHERE organization_id=o.id),0) AS branch_count,
+    COALESCE((SELECT COUNT(*) FROM users WHERE organization_id=o.id AND role IN ('OWNER','MANAGER','CASHIER')),0) AS user_count,
+    COALESCE((SELECT COUNT(*) FROM products WHERE organization_id=o.id AND status='ACTIVE'),0) AS product_count
     FROM organizations o
-    LEFT JOIN users owner ON owner.id=(SELECT u.id FROM users u WHERE u.organization_id=o.id AND u.role='OWNER' ORDER BY u.id LIMIT 1)
+    LEFT JOIN (
+      SELECT organization_id,MIN(id) AS owner_id
+      FROM users
+      WHERE role='OWNER'
+      GROUP BY organization_id
+    ) owner_pick ON owner_pick.organization_id=o.id
+    LEFT JOIN users owner ON owner.id=owner_pick.owner_id
     ORDER BY o.created_at DESC`);
   res.json({organizations:rows});
 }));
@@ -209,7 +217,7 @@ router.get('/security/stats', asyncRoute(async (req, res) => {
   const [[[eventCount]],[[lockedCount]],[[criticalCount]],[[highCount]],[[unreadAlerts]],[lockedUsers]] = await Promise.all([
    pool.execute('SELECT COUNT(*) AS total FROM audit_logs'),
    pool.execute(
-    'SELECT COUNT(*) AS total FROM users WHERE (is_locked=1 AND (locked_until IS NULL OR locked_until > UTC_TIMESTAMP())) OR locked_until > UTC_TIMESTAMP()'
+    'SELECT COUNT(*) AS total FROM users WHERE locked_until > UTC_TIMESTAMP()'
    ),
    pool.execute(
     "SELECT COUNT(*) AS total FROM audit_logs WHERE severity = 'CRITICAL'"
@@ -224,8 +232,8 @@ router.get('/security/stats', asyncRoute(async (req, res) => {
     `SELECT u.id, u.email, u.full_name, u.role, u.is_locked, u.locked_at, u.unlock_request_note, u.unlock_requested_at, u.locked_until, u.lock_reason, o.name AS organization_name
      FROM users u
      LEFT JOIN organizations o ON o.id = u.organization_id
-     WHERE (u.is_locked=1 AND (u.locked_until IS NULL OR u.locked_until > UTC_TIMESTAMP())) OR u.locked_until > UTC_TIMESTAMP()
-     ORDER BY COALESCE(u.locked_at,u.locked_until) DESC`
+     WHERE u.locked_until > UTC_TIMESTAMP()
+     ORDER BY u.locked_until DESC`
    )
   ]);
 
@@ -289,8 +297,12 @@ router.get('/security/logs', asyncRoute(async (req, res) => {
   }
   const total = Number(countRow?.total || 0);
 
+  const now=Date.now();
   res.json({
-    logs: rows,
+    logs: rows.map(row=>({
+      ...row,
+      is_currently_locked:Boolean(row.locked_until&&new Date(row.locked_until).getTime()>now),
+    })),
     pagination: {
       page,
       limit:safeLimit,
@@ -356,8 +368,9 @@ router.post('/security/users/:id/lock', asyncRoute(async(req,res)=>{
   const [[target]]=await pool.execute('SELECT id,role FROM users WHERE id=?',[userId]);
   if(!target)throw new HttpError(404,'Không tìm thấy tài khoản');
   if(!['OWNER','MANAGER','CASHIER','INVENTORY'].includes(target.role))throw new HttpError(400,'Chỉ được khóa tài khoản người dùng cửa hàng');
-  const [updated]=await pool.execute('UPDATE users SET is_locked=1,locked_at=UTC_TIMESTAMP(),locked_until=NULL,lock_reason=? WHERE id=?',[reason,userId]);
-  res.json({success:Boolean(updated.affectedRows),message:'Đã khóa tạm thời tài khoản'});
+  const success=await lockUserAccount(userId,15,reason);
+  if(!success)throw new HttpError(500,'Khóa tạm thời tài khoản thất bại');
+  res.json({success:true,message:'Đã khóa tạm thời tài khoản'});
 }));
 
 // 5. Danh sách thông báo an ninh cho Admin

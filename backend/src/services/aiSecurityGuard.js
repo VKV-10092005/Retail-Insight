@@ -293,48 +293,78 @@ export function sanitizeOutput(reply) {
 // 4. KHÓA TÀI KHOẢN TẠM THỜI (TEMPORARY ACCOUNT LOCKING)
 export async function lockUserAccount(userId, durationMinutes = 15, reason = 'Phát hiện hành vi vi phạm an ninh nghiêm trọng') {
   if (!userId) return false;
+  const connection=await pool.getConnection();
   try {
-    const [result] = await pool.execute(
+    await connection.beginTransaction();
+    const [result] = await connection.execute(
       `UPDATE users SET is_locked=1,
        locked_until=IF(? IS NULL,NULL,DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? MINUTE)),
        locked_at=UTC_TIMESTAMP(),lock_reason=?
        WHERE id=? AND role IN ('OWNER','MANAGER','CASHIER','INVENTORY')`,
       [durationMinutes, durationMinutes, String(reason||'').slice(0,500), userId]
     );
-    if (!result.affectedRows) return false;
+    if (!result.affectedRows){
+      await connection.rollback();
+      return false;
+    }
+    await connection.execute(
+      'UPDATE auth_sessions SET revoked_at=COALESCE(revoked_at,UTC_TIMESTAMP()) WHERE user_id=?',
+      [userId]
+    );
+    await connection.commit();
 
     console.warn(`[SecurityGuard] Tài khoản User ID ${userId} đã bị tạm khóa ${durationMinutes} phút. Lý do: ${reason}`);
     return true;
   } catch (err) {
+    await connection.rollback();
     console.error(`[SecurityGuard] Lỗi khi khóa tài khoản User ID ${userId}:`, err.message);
     return false;
+  } finally {
+    connection.release();
   }
 }
 
 // 5. MỞ KHÓA TÀI KHOẢN THỦ CÔNG (ADMIN UNLOCK)
 export async function unlockUserAccount(userId, adminUserId = null, reason = 'Quản trị viên mở khóa thủ công') {
   if (!userId) return false;
+  const connection=await pool.getConnection();
   try {
-    await pool.execute(
+    await connection.beginTransaction();
+    const [result]=await connection.execute(
       `UPDATE users 
        SET is_locked=0,locked_until = NULL,locked_at=NULL,lock_reason = NULL,
            unlock_request_note=NULL,unlock_requested_at=NULL
        WHERE id = ?`,
       [userId]
     );
+    if(!result.affectedRows){
+      await connection.rollback();
+      return false;
+    }
+
+    await connection.execute(
+      `UPDATE audit_logs
+       SET status='RESOLVED',unlocked_by=?,unlocked_at=UTC_TIMESTAMP(),unlock_reason=?
+       WHERE user_id=? AND status='TEMPORARILY_LOCKED'`,
+      [adminUserId,reason,userId]
+    );
 
     // Ghi nhận sự kiện ADMIN mở khóa vào audit_logs
-    await pool.execute(
+    await connection.execute(
       `INSERT INTO audit_logs (user_id, event_type, severity, status, details, unlocked_by, unlocked_at, unlock_reason)
        VALUES (?, 'ADMIN_UNLOCKED_USER', 'LOW', 'RESOLVED', ?, ?, UTC_TIMESTAMP(), ?)`,
       [userId, JSON.stringify({ action: 'UNLOCK_USER', adminUserId }), adminUserId, reason]
     );
+    await connection.commit();
 
     console.log(`[SecurityGuard] Tài khoản User ID ${userId} đã được mở khóa bởi Admin ${adminUserId || 'System'}`);
     return true;
   } catch (err) {
+    await connection.rollback();
     console.error(`[SecurityGuard] Lỗi khi mở khóa tài khoản User ID ${userId}:`, err.message);
     return false;
+  } finally {
+    connection.release();
   }
 }
 

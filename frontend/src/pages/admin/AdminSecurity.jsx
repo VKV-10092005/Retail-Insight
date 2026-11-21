@@ -170,7 +170,7 @@ export default function AdminSecurity() {
       setUnlockTarget(null);
       setUnlockReason('');
       if (userHistory) setUserHistory(null);
-      loadData(pagination.page);
+      await loadData(pagination.page);
     } catch (e) {
       alert(`Mở khóa thất bại: ${e.message}`);
     } finally {
@@ -181,13 +181,13 @@ export default function AdminSecurity() {
   async function approveUnlock(user) {
     try {
       await request(`/platform/security/users/${user.id}/unlock`, {method:'POST',body:JSON.stringify({reason:'Duyệt yêu cầu mở khóa của người dùng'})});
-      loadData(pagination.page);
+      await loadData(pagination.page);
     } catch (e) { alert(`Mở khóa thất bại: ${e.message}`); }
   }
   async function handleManualLock(userId) {
     const reason=window.prompt('Lý do khóa tạm thời tài khoản:');
     if(!reason?.trim())return;
-    try { await request(`/platform/security/users/${userId}/lock`,{method:'POST',body:JSON.stringify({reason:reason.trim()})});loadData(pagination.page); }
+    try { await request(`/platform/security/users/${userId}/lock`,{method:'POST',body:JSON.stringify({reason:reason.trim()})});await loadData(pagination.page); }
     catch(e){alert(`Khóa tài khoản thất bại: ${e.message}`);}
   }
 
@@ -488,8 +488,9 @@ export default function AdminSecurity() {
               <tbody>
                 {logs.map((log) => {
                   const sevStyle = SEVERITY_COLORS[log.severity] || SEVERITY_COLORS.MEDIUM;
-                  const isUserLocked = (Number(log.is_locked)===1 && (!log.locked_until || new Date(log.locked_until)>new Date())) || (log.locked_until && new Date(log.locked_until)>new Date());
-                  const shouldShowUnlock = Boolean(log.user_id) && (log.status === 'TEMPORARILY_LOCKED' || isUserLocked);
+                  const isUserLocked = log.is_currently_locked === true;
+                  const wasLockEvent = log.status === 'TEMPORARILY_LOCKED' || log.event_type === 'ADMIN_UNLOCKED_USER' || Boolean(log.unlocked_at);
+                  const currentStatusLabel = isUserLocked ? 'Tạm khóa' : wasLockEvent ? 'Đã mở khóa' : 'Thành công';
 
                   return (
                     <tr key={log.id}>
@@ -550,10 +551,10 @@ export default function AdminSecurity() {
                           style={{
                             fontSize: '0.8125rem',
                             fontWeight: 600,
-                            color: log.status === 'TEMPORARILY_LOCKED' ? '#B91C1C' : 'var(--ri-text)',
+                            color: isUserLocked ? '#B91C1C' : 'var(--ri-text)',
                           }}
                         >
-                          {STATUS_LABELS[log.status] || log.status}
+                          {currentStatusLabel}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -567,7 +568,7 @@ export default function AdminSecurity() {
                             <Eye size={13} /> Lịch sử
                           </button>
                         )}
-                        {shouldShowUnlock && (
+                        {log.user_id && isUserLocked && (
                           <>
                           <button
                             className="ri-btn ri-btn-primary ri-btn-sm"
@@ -585,7 +586,7 @@ export default function AdminSecurity() {
                           </button>
                           </>
                         )}
-                        {log.user_id && log.role!=='PLATFORM_ADMIN' && !shouldShowUnlock && <button className="ri-btn ri-btn-secondary ri-btn-sm" onClick={()=>handleManualLock(log.user_id)}><Lock size={13}/> Khóa tạm thời</button>}
+                        {log.user_id && log.role!=='PLATFORM_ADMIN' && !isUserLocked && <button className="ri-btn ri-btn-secondary ri-btn-sm" onClick={()=>handleManualLock(log.user_id)}><Lock size={13}/> Khóa tạm thời</button>}
                       </td>
                     </tr>
                   );
