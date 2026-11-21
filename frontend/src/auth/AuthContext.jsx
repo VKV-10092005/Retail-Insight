@@ -1,14 +1,17 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authRequest } from '../services/auth';
+import { authApiUrl } from '../services/apiUrl';
 import { staffSessionRequest } from '../services/staff-session';
 import { roles, ROLE_LABELS, ROLES, getDefaultRoute } from '../config/roles';
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../services/tokenStorage';
+import { getAccessToken, getRefreshToken, getAuthHeaders, setTokens, clearTokens } from '../services/tokenStorage';
 
 export { roles, ROLE_LABELS, ROLES, getDefaultRoute };
 
 const Context = createContext(null);
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -120,21 +123,23 @@ export function AuthProvider({ children }) {
     return u;
   }
 
-  async function logout() {
+  async function logout({ skipServer = false } = {}) {
+    const logoutRequest = skipServer ? null : fetch(authApiUrl('/logout'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'X-Requested-With': 'retail-web', ...getAuthHeaders() }
+    });
+    window.dispatchEvent(new Event('auth-logout'));
+    clearTokens();
+    setUser(null);
+    setImpersonating(false);
+    setStaffEnabled(false);
+    setError('');
+    navigate('/login', { replace: true });
     try {
-      await authRequest('/logout', { method: 'POST' });
-    } catch (e) {
-      if (e.status === 401) {
-        setUser(null);
-        setImpersonating(false);
-      } else {
-        setError(e.message);
-      }
-    } finally {
-      clearTokens();
-      setUser(null);
-      setImpersonating(false);
-      setError('');
+      if (logoutRequest) await logoutRequest;
+    } catch {
+      // Local logout is authoritative even if the server session already expired.
     }
   }
 

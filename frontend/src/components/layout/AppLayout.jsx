@@ -419,7 +419,7 @@ export default function AppLayout(){
                       borderRadius:'8px',
                       cursor:'pointer'
                     }}
-                    onClick={()=>{setMenuOpen(false);logout();}}
+                    onClick={()=>{setMenuOpen(false);void logout();}}
                   >
                     <span style={{width:'18px',height:'18px',flexShrink:0,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>
                       <LogOut size={16}/>

@@ -29,6 +29,10 @@ export function clearTokens() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('ri_current_user_id');
+  localStorage.removeItem('ri_current_user_role');
 }
 
 export function getAuthHeaders() {

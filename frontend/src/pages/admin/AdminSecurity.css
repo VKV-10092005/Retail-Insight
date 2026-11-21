@@ -171,11 +171,36 @@
   color: #fda4af;
 }
 
-:root[data-theme="dark"] .security-severity-badge,
-:root.dark .security-severity-badge,
-.dark .security-severity-badge {
-  background: rgba(127, 29, 29, 0.35) !important;
-  color: #fecaca !important;
+:root[data-theme="dark"] .security-severity-low,
+:root.dark .security-severity-low,
+.dark .security-severity-low {
+  background: rgba(2, 44, 34, 0.5) !important;
+  border-color: rgba(6, 95, 70, 0.6) !important;
+  color: #6ee7b7 !important;
+}
+
+:root[data-theme="dark"] .security-severity-medium,
+:root.dark .security-severity-medium,
+.dark .security-severity-medium {
+  background: rgba(66, 32, 6, 0.5) !important;
+  border-color: rgba(146, 64, 14, 0.6) !important;
+  color: #fde68a !important;
+}
+
+:root[data-theme="dark"] .security-severity-high,
+:root.dark .security-severity-high,
+.dark .security-severity-high {
+  background: rgba(69, 26, 3, 0.5) !important;
+  border-color: rgba(180, 83, 9, 0.6) !important;
+  color: #fcd34d !important;
+}
+
+:root[data-theme="dark"] .security-severity-critical,
+:root.dark .security-severity-critical,
+.dark .security-severity-critical {
+  background: rgba(69, 10, 10, 0.5) !important;
+  border-color: rgba(153, 27, 27, 0.6) !important;
+  color: #fca5a5 !important;
 }
 
 :root[data-theme="dark"] .security-alert-count,

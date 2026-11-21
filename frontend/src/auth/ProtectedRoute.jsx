@@ -16,7 +16,7 @@ export default function ProtectedRoute({allow, children}){
   }
 
   if(!user){
-    if(isAdminPath(location.pathname))return <Navigate to="/404" replace/>;
+    if(isAdminPath(location.pathname))return <Navigate to="/login" replace/>;
     // Nếu truy cập root "/" hoặc "/welcome" khi chưa đăng nhập -> chuyển về /welcome
     if(location.pathname==='/'||location.pathname==='/welcome'){
       return <Navigate to="/welcome" replace/>;

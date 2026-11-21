@@ -532,6 +532,7 @@ export default function AdminSecurity() {
                       </td>
                       <td>
                         <span
+                          className={`security-severity-badge security-severity-${String(log.severity||'medium').toLowerCase()}`}
                           style={{
                             display: 'inline-block',
                             padding: '3px 8px',
@@ -728,7 +729,7 @@ export default function AdminSecurity() {
                         <td className="security-history-snippet">{h.request_snippet || '—'}</td>
                         <td className="security-history-nowrap">
                           <span
-                            className="security-severity-badge"
+                            className={`security-severity-badge security-severity-${String(h.severity||'medium').toLowerCase()}`}
                             style={{
                               padding: '2px 6px',
                               borderRadius: '4px',
