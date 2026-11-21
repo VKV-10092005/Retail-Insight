@@ -1785,3 +1785,49 @@ thead th {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+
+/* ==========================================================================
+   Dark Mode Overrides for CSV / File Upload Zone (Global)
+   ========================================================================== */
+:root[data-theme="dark"] .upload-zone,
+.dark .upload-zone {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-color: #334155 !important;
+  color: #38bdf8 !important;
+}
+
+:root[data-theme="dark"] .upload-zone:hover,
+.dark .upload-zone:hover {
+  border-color: #0284c7 !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+}
+
+:root[data-theme="dark"] .upload-zone.is-dragging,
+.dark .upload-zone.is-dragging {
+  border-color: #38bdf8 !important;
+  background: #172033 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+:root[data-theme="dark"] .upload-zone strong,
+.dark .upload-zone strong {
+  color: #f1f5f9 !important;
+}
+
+:root[data-theme="dark"] .upload-zone span,
+.dark .upload-zone span {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme="dark"] .selected-file,
+.dark .selected-file {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+:root[data-theme="dark"] .selected-file span,
+.dark .selected-file span {
+  color: #94a3b8 !important;
+}

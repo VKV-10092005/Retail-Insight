@@ -19,7 +19,7 @@ export default function ProductImport({onImported,branchId,canImport=true}){
  return <Card>
   <div className="feature-heading"><FileSpreadsheet size={22}/><div><h2>Nhập sản phẩm từ CSV</h2><p>Xem trước và kiểm tra toàn bộ dữ liệu trước khi xác nhận ghi.</p></div></div>
   <div className="file-picker-row">
-   <button className={`upload-zone compact ${dragging?'is-dragging':''}`} type="button" disabled={busy} onClick={()=>input.current?.click()} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);fileChange(e.dataTransfer.files?.[0]);}}><Upload size={25}/><strong>Kéo thả CSV vào đây hoặc bấm để chọn</strong><span>Tối đa 200 sản phẩm · 60.000 byte</span></button>
+   <button className={`upload-zone compact dark:bg-slate-900/80 dark:border-slate-700 hover:dark:border-sky-500 ${dragging?'is-dragging':''}`} type="button" disabled={busy} onClick={()=>input.current?.click()} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);fileChange(e.dataTransfer.files?.[0]);}}><Upload size={25}/><strong className="dark:text-slate-100">Kéo thả CSV vào đây hoặc bấm để chọn</strong><span className="dark:text-slate-400">Tối đa 200 sản phẩm · 60.000 byte</span></button>
    <button className="btn btn-secondary template-download" type="button" onClick={template} disabled={busy}><Download size={16}/> Tải mẫu CSV</button>
   </div>
   <input ref={input} className="visually-hidden" aria-label="Chọn tệp CSV sản phẩm" type="file" accept=".csv,text/csv" disabled={busy} onChange={e=>fileChange(e.target.files?.[0])}/>

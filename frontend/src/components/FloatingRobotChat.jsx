@@ -26,7 +26,7 @@ import { request } from '../operations/shared';
 import { apiUrl } from '../services/apiUrl';
 import './FloatingRobotChat.css';
 
-// ── 4 Nút câu hỏi gợi ý nhanh phân hóa theo vai trò (Role-based Quick Chips) ──
+// ── 4 Nút câu hỏi gợi ý nhanh phân tích sâu theo vai trò (Role-based Quick Chips) ──
 function getQuickChipsByRole(role) {
   if (role === 'PLATFORM_ADMIN') {
     return [
@@ -37,14 +37,15 @@ function getQuickChipsByRole(role) {
         iconClass: 'primary',
       },
       {
-        label: 'Chi nhánh & người dùng',
-        query: 'Thống kê chi nhánh & người dùng',
+        label: 'Phân tích khách hàng & độ tuổi',
+        query: 'Phân tích chân dung & độ tuổi khách hàng toàn hệ thống',
         icon: UsersRound,
-        iconClass: 'success',
+        iconClass: 'primary',
+        action: 'demographics',
       },
       {
-        label: 'Giao dịch toàn hệ thống',
-        query: 'Báo cáo giao dịch toàn hệ thống',
+        label: 'Xu hướng mùa vụ',
+        query: 'Phân tích xu hướng mùa vụ và nhu cầu tiêu dùng',
         icon: TrendingUp,
         iconClass: 'warning',
       },
@@ -60,28 +61,30 @@ function getQuickChipsByRole(role) {
   if (role === 'INVENTORY') {
     return [
       {
+        label: 'Phân tích khách hàng & độ tuổi',
+        query: 'Phân tích chi tiết chân dung khách hàng & lứa tuổi mục tiêu từ dữ liệu bán hàng',
+        icon: UsersRound,
+        iconClass: 'primary',
+        action: 'demographics',
+      },
+      {
+        label: 'Xu hướng mùa vụ',
+        query: 'Phân tích xu hướng mùa vụ và nhu cầu nhập hàng',
+        icon: TrendingUp,
+        iconClass: 'warning',
+      },
+      {
+        label: 'Tự lập phiếu nhập',
+        query: 'Tự động lập phiếu nhập hàng tối ưu từ dự báo AI & tồn kho',
+        icon: PackagePlus,
+        iconClass: 'primary',
+        action: 'replenish',
+      },
+      {
         label: 'Sản phẩm tồn kho thấp',
         query: 'Danh sách sản phẩm tồn kho thấp',
         icon: AlertTriangle,
         iconClass: 'warning',
-      },
-      {
-        label: 'Giá trị tồn kho',
-        query: 'Tổng giá trị tồn kho hiện tại',
-        icon: Wallet,
-        iconClass: 'success',
-      },
-      {
-        label: '5 phiếu nhập gần nhất',
-        query: '5 phiếu nhập kho gần nhất',
-        icon: PackagePlus,
-        iconClass: 'primary',
-      },
-      {
-        label: 'Nhập hàng bằng Excel',
-        query: 'Hướng dẫn nhập hàng bằng Excel',
-        icon: FileSpreadsheet,
-        iconClass: '',
       },
     ];
   }
@@ -89,16 +92,24 @@ function getQuickChipsByRole(role) {
   if (role === 'CASHIER') {
     return [
       {
-        label: 'Doanh thu hôm nay',
-        query: 'Doanh thu bán hàng hôm nay',
-        icon: TrendingUp,
-        iconClass: '',
+        label: 'Phân tích khách hàng & độ tuổi',
+        query: 'Phân tích chi tiết chân dung khách hàng & lứa tuổi mục tiêu từ dữ liệu bán hàng',
+        icon: UsersRound,
+        iconClass: 'primary',
+        action: 'demographics',
       },
       {
-        label: '5 hóa đơn vừa thanh toán',
-        query: '5 hóa đơn vừa thanh toán',
-        icon: Receipt,
-        iconClass: 'primary',
+        label: 'Xu hướng mùa vụ',
+        query: 'Phân tích xu hướng mùa vụ và nhu cầu sản phẩm cho cửa hàng',
+        icon: TrendingUp,
+        iconClass: 'warning',
+      },
+      {
+        label: 'Tự lập phiếu nhập',
+        query: 'Tự động lập phiếu nhập hàng tối ưu từ dự báo AI & tồn kho',
+        icon: PackagePlus,
+        iconClass: 'success',
+        action: 'replenish',
       },
       {
         label: 'Hàng sắp hết tại quầy',
@@ -106,39 +117,35 @@ function getQuickChipsByRole(role) {
         icon: AlertTriangle,
         iconClass: 'warning',
       },
-      {
-        label: 'Bán hàng & in hóa đơn',
-        query: 'Hướng dẫn bán hàng & in hóa đơn POS',
-        icon: Printer,
-        iconClass: 'success',
-      },
     ];
   }
 
   // Mặc định: OWNER hoặc MANAGER (Chủ cửa hàng / Quản lý)
   return [
     {
-      label: 'Doanh thu & lãi gộp',
-      query: 'Doanh thu & lãi gộp hôm nay',
-      icon: TrendingUp,
-      iconClass: '',
+      label: 'Phân tích khách hàng & độ tuổi',
+      query: 'Phân tích chi tiết chân dung khách hàng & lứa tuổi mục tiêu từ dữ liệu bán hàng',
+      icon: UsersRound,
+      iconClass: 'primary',
+      action: 'demographics',
     },
     {
-      label: 'Cảnh báo hàng sắp hết',
-      query: 'Cảnh báo hàng sắp hết tồn',
-      icon: AlertTriangle,
+      label: 'Xu hướng mùa vụ',
+      query: 'Phân tích xu hướng mùa vụ và nhu cầu sản phẩm cho cửa hàng',
+      icon: TrendingUp,
       iconClass: 'warning',
     },
     {
-      label: 'Top bán chạy nhất',
-      query: 'Top sản phẩm bán chạy nhất',
-      icon: Wallet,
+      label: 'Tự lập phiếu nhập',
+      query: 'Tự động lập phiếu nhập hàng tối ưu từ dự báo AI & tồn kho',
+      icon: PackagePlus,
       iconClass: 'success',
+      action: 'replenish',
     },
     {
-      label: 'Gợi ý nhập hàng AI',
-      query: 'Gợi ý nhập hàng từ AI',
-      icon: Sparkles,
+      label: 'Khung giờ vàng & doanh thu',
+      query: 'Phân tích khung giờ vàng bán hàng và doanh thu theo thời gian',
+      icon: Clock,
       iconClass: 'primary',
     },
   ];
@@ -524,10 +531,9 @@ export default function FloatingRobotChat() {
   };
 
   // ── Gửi tin nhắn ─────────────────────────────────────────────────────────
-  const handleSend = async (e) => {
-    e?.preventDefault();
-    if (!inputVal.trim() || loading) return;
-    const userText = inputVal.trim();
+  const sendChatMessage = async (textToSend) => {
+    const userText = (typeof textToSend === 'string' ? textToSend : inputVal).trim();
+    if (!userText || loading) return;
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const newMsg = { sender: 'user', text: userText, time: timeStr };
 
@@ -576,6 +582,23 @@ export default function FloatingRobotChat() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSend = (e) => {
+    e?.preventDefault();
+    sendChatMessage(inputVal);
+  };
+
+  const handleQuickChipClick = (chip) => {
+    if (chip.action === 'replenish') {
+      handleAutoReplenish();
+      return;
+    }
+    if (chip.action === 'demographics') {
+      handleAnalyzeDemographics();
+      return;
+    }
+    sendChatMessage(chip.query);
   };
 
   const handleKeyDown = (e) => {
@@ -842,63 +865,63 @@ export default function FloatingRobotChat() {
             </div>
           </div>
 
+          {/* THẺ TÓM TẮT PHÂN TÍCH CHỦ ĐỘNG (PROACTIVE AI AGENT) - LUÔN HIỂN THỊ CỐ ĐỊNH PHÍA TRÊN DANH SÁCH TIN NHẮN */}
+          <div className="proactive-ai-card">
+            <div className="proactive-ai-header" onClick={() => setProactiveOpen((o) => !o)}>
+              <div className="proactive-ai-badge">
+                <Sparkles size={13} />
+                <span>PROACTIVE AI AGENT · PHÂN TÍCH CHỦ ĐỘNG</span>
+              </div>
+              <button type="button" className="proactive-toggle-btn" aria-label="Đóng/Mở tóm tắt">
+                {proactiveOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            </div>
+            {proactiveOpen && (
+              <div className="proactive-ai-body">
+                <div className="proactive-insight-item">
+                  <UsersRound size={14} className="proactive-item-icon primary" />
+                  <div className="proactive-item-content">
+                    <strong>Chân dung khách hàng &amp; lứa tuổi:</strong>
+                    <span>Chủ lực là Giới trẻ &amp; Dân văn phòng (18 - 35 tuổi), chiếm ~55% sức mua với hàng tiện lợi, đồ uống và snack.</span>
+                  </div>
+                </div>
+                <div className="proactive-insight-item">
+                  <Clock size={14} className="proactive-item-icon warning" />
+                  <div className="proactive-item-content">
+                    <strong>Khung giờ vàng &amp; Mùa vụ:</strong>
+                    <span>Cao điểm 11h-13h &amp; 17h-20h. Sức mua mùa vụ đang tăng 25 - 40% cho nhóm sản phẩm đóng gói.</span>
+                  </div>
+                </div>
+
+                {/* 2 Nút hành động AI Agent 1 chạm */}
+                <div className="proactive-quick-actions">
+                  <button
+                    type="button"
+                    className="proactive-action-pill primary"
+                    onClick={handleAutoReplenish}
+                    disabled={Boolean(actionBusy)}
+                    title="Tự động tính sản phẩm sắp hết và nạp vào phiếu nhập kho"
+                  >
+                    <PackagePlus size={13} />
+                    <span>{actionBusy === 'replenish' ? 'Đang tính toán...' : '📦 Tự động lập phiếu nhập kho'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="proactive-action-pill secondary"
+                    onClick={handleAnalyzeDemographics}
+                    disabled={loading}
+                    title="Xem phân tích chi tiết chân dung khách hàng và gợi ý danh mục"
+                  >
+                    <Zap size={13} />
+                    <span>⚡ Phân tích chân dung &amp; độ tuổi</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Vùng Tin Nhắn */}
           <div className="robot-chat-body">
-            {/* THẺ TÓM TẮT PHÂN TÍCH CHỦ ĐỘNG (PROACTIVE AI AGENT) */}
-            <div className="proactive-ai-card">
-              <div className="proactive-ai-header" onClick={() => setProactiveOpen((o) => !o)}>
-                <div className="proactive-ai-badge">
-                  <Sparkles size={13} />
-                  <span>PROACTIVE AI AGENT · PHÂN TÍCH CHỦ ĐỘNG</span>
-                </div>
-                <button type="button" className="proactive-toggle-btn" aria-label="Đóng/Mở tóm tắt">
-                  {proactiveOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
-              </div>
-              {proactiveOpen && (
-                <div className="proactive-ai-body">
-                  <div className="proactive-insight-item">
-                    <UsersRound size={14} className="proactive-item-icon primary" />
-                    <div className="proactive-item-content">
-                      <strong>Chân dung khách hàng &amp; lứa tuổi:</strong>
-                      <span>Chủ lực là Giới trẻ &amp; Dân văn phòng (18 - 35 tuổi), chiếm ~55% sức mua với hàng tiện lợi, đồ uống và snack.</span>
-                    </div>
-                  </div>
-                  <div className="proactive-insight-item">
-                    <Clock size={14} className="proactive-item-icon warning" />
-                    <div className="proactive-item-content">
-                      <strong>Khung giờ vàng &amp; Mùa vụ:</strong>
-                      <span>Cao điểm 11h-13h &amp; 17h-20h. Sức mua mùa vụ đang tăng 25 - 40% cho nhóm sản phẩm đóng gói.</span>
-                    </div>
-                  </div>
-
-                  {/* 2 Nút hành động AI Agent 1 chạm */}
-                  <div className="proactive-quick-actions">
-                    <button
-                      type="button"
-                      className="proactive-action-pill primary"
-                      onClick={handleAutoReplenish}
-                      disabled={Boolean(actionBusy)}
-                      title="Tự động tính sản phẩm sắp hết và nạp vào phiếu nhập kho"
-                    >
-                      <PackagePlus size={13} />
-                      <span>{actionBusy === 'replenish' ? 'Đang tính toán...' : 'Tự động lập phiếu nhập kho'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="proactive-action-pill secondary"
-                      onClick={handleAnalyzeDemographics}
-                      disabled={loading}
-                      title="Xem phân tích chi tiết chân dung khách hàng và gợi ý danh mục"
-                    >
-                      <Zap size={13} />
-                      <span>Phân tích chân dung &amp; độ tuổi</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
             <div className="robot-welcome-banner">
               <Sparkles size={16} className="welcome-banner-icon" />
               <span>Hỏi đáp thông minh về tồn kho, doanh thu POS và dự báo bán lẻ.</span>
@@ -942,7 +965,7 @@ export default function FloatingRobotChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Thanh Gợi Ý Nhanh (Phân hóa 4 nút theo từng vai trò) */}
+          {/* Thanh Gợi Ý Nhanh (Phân tích sâu theo gợi ý mới) */}
           <div className="robot-quick-suggestions">
             {getQuickChipsByRole(user?.role).map((chip, idx) => {
               const IconComp = chip.icon;
@@ -950,7 +973,7 @@ export default function FloatingRobotChat() {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setInputVal(chip.query)}
+                  onClick={() => handleQuickChipClick(chip)}
                   className="suggestion-chip"
                   title={chip.query}
                 >

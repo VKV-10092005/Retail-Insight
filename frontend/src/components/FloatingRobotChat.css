@@ -820,22 +820,23 @@
   }
 }
 
-/* ── PROACTIVE AI AGENT CARD & ACTION BUTTONS ───────────────── */
+/* ── PROACTIVE AI AGENT CARD & ACTION BUTTONS (CỐ ĐỊNH PHÍA TRÊN TIN NHẮN) ── */
 .proactive-ai-card {
-  margin: 0 0 12px 0;
+  margin: 10px 12px 0 12px;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border: 1px solid #bae6fd;
   border-radius: 12px;
   padding: 10px 12px;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.06);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
   flex-shrink: 0;
+  z-index: 10;
 }
 
 :root[data-theme="dark"] .proactive-ai-card,
 .dark .proactive-ai-card {
-  background: linear-gradient(135deg, rgba(14, 116, 144, 0.16) 0%, rgba(3, 105, 161, 0.22) 100%);
-  border-color: rgba(56, 189, 248, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.22) 0%, rgba(3, 105, 161, 0.28) 100%);
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .proactive-ai-header {
@@ -882,6 +883,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 190px;
+  overflow-y: auto;
 }
 
 .proactive-insight-item {
