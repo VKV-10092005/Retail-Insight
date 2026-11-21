@@ -7,7 +7,7 @@ import {Card,PageHeader} from '../components/ui/Elements';
 import {useResource,request,State,Table,Message,money,params,Filters,Pager,ProductPicker,vndNumber} from './shared';
 import {Button,Badge} from '../design-system';
 import './Receipts.css';
-import {ShoppingCart,FileText,Warehouse,PackagePlus,Printer,X,AlertCircle,RotateCcw,Plus,Trash2,ArrowRight,Pencil,Check} from 'lucide-react';
+import {ShoppingCart,FileText,Warehouse,PackagePlus,Printer,X,AlertCircle,RotateCcw,Plus,Trash2,ArrowRight,Pencil,Check,Sparkles} from 'lucide-react';
 import ReceiptImport from './ReceiptImport';
 import ImageUploadField from '../components/common/ImageUploadField';
 import PaymentSettingsModal from '../components/PaymentSettingsModal';
@@ -358,7 +358,13 @@ export default function Ledger({
         )}
       />
 
-      <Message error={error} success={success}/>
+      {error && <p className="auth-error" role="alert">{error}</p>}
+      {success && (
+        <p className="op-success" role="status" style={{display:'inline-flex',alignItems:'center',gap:7}}>
+          {success.includes('Retail Insight') && <Sparkles size={16} style={{flexShrink:0,color:'var(--ri-primary,#0284c7)'}}/>}
+          <span>{success}</span>
+        </p>
+      )}
       {activeMode==='receipts'&&success.startsWith('Đã mở bán')&&<Link className="btn btn-primary" to="/sales" style={{margin:'0 0 16px',display:'inline-flex',alignItems:'center',gap:6}}>Sang quầy Bán hàng POS <ArrowRight size={15}/></Link>}
 
       {/* Hiển thị lỗi bộ lọc ngày nếu Backend trả lỗi 400 */}

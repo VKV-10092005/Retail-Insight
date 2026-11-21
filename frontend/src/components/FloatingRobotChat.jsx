@@ -672,8 +672,8 @@ export default function FloatingRobotChat() {
           state: {
             items: draftItems,
             fromReplenishment: true,
-            note: `AI Proactive Agent: Lập phiếu nhập kho tối ưu (${draftItems.length} sản phẩm)`,
-            notice: `✨ AI Agent đã tự động nạp ${draftItems.length} mặt hàng cần nhập vào phiếu nhập kho!`,
+            note: `Retail Insight: Lập phiếu nhập kho tối ưu (${draftItems.length} sản phẩm)`,
+            notice: `Retail Insight đã tự động nạp ${draftItems.length} mặt hàng cần nhập vào phiếu nhập kho!`,
           },
         });
       } else {
@@ -870,7 +870,7 @@ export default function FloatingRobotChat() {
             <div className="proactive-ai-header" onClick={() => setProactiveOpen((o) => !o)}>
               <div className="proactive-ai-badge">
                 <Sparkles size={13} />
-                <span>PROACTIVE AI AGENT · PHÂN TÍCH CHỦ ĐỘNG</span>
+                <span>RETAIL INSIGHT · PHÂN TÍCH CHỦ ĐỘNG</span>
               </div>
               <button type="button" className="proactive-toggle-btn" aria-label="Đóng/Mở tóm tắt">
                 {proactiveOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -893,7 +893,7 @@ export default function FloatingRobotChat() {
                   </div>
                 </div>
 
-                {/* 2 Nút hành động AI Agent 1 chạm */}
+                {/* 2 Nút hành động Retail Insight 1 chạm */}
                 <div className="proactive-quick-actions">
                   <button
                     type="button"
@@ -903,7 +903,7 @@ export default function FloatingRobotChat() {
                     title="Tự động tính sản phẩm sắp hết và nạp vào phiếu nhập kho"
                   >
                     <PackagePlus size={13} />
-                    <span>{actionBusy === 'replenish' ? 'Đang tính toán...' : '📦 Tự động lập phiếu nhập kho'}</span>
+                    <span>{actionBusy === 'replenish' ? 'Đang tính toán...' : 'Tự động lập phiếu nhập kho'}</span>
                   </button>
                   <button
                     type="button"
@@ -913,7 +913,7 @@ export default function FloatingRobotChat() {
                     title="Xem phân tích chi tiết chân dung khách hàng và gợi ý danh mục"
                   >
                     <Zap size={13} />
-                    <span>⚡ Phân tích chân dung &amp; độ tuổi</span>
+                    <span>Phân tích chân dung &amp; độ tuổi</span>
                   </button>
                 </div>
               </div>
