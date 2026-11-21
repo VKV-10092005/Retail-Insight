@@ -5,3 +5,66 @@
 .market-intel-product-summary{position:relative;padding-right:48px!important}.market-intel-clear-product{position:absolute;top:10px;right:10px;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--mi-border);border-radius:6px;background:transparent;color:var(--mi-muted);cursor:pointer}.market-intel-clear-product:hover{border-color:var(--ri-danger,#dc2626);color:var(--ri-danger,#dc2626);background:color-mix(in srgb,#dc2626 7%,transparent)}
 .market-intel-quick-select{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}.market-intel-quick-select button{border:0;background:transparent;color:var(--mi-blue);padding:4px 0;font-size:10px;font-weight:700;cursor:pointer;text-align:left}.market-intel-quick-select button:disabled{opacity:.6;cursor:wait}.market-intel-quick-select span{color:var(--mi-muted);font-size:10px;white-space:nowrap}.market-intel-product-row{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;border-bottom:1px solid var(--mi-border);border-radius:4px}.market-intel-product-row:hover,.market-intel-product-row.selected{background:color-mix(in srgb,var(--mi-blue) 7%,var(--mi-surface))}.market-intel-product-row.selected{box-shadow:inset 2px 0 var(--mi-blue)}.market-intel-product-row .market-intel-product{border-bottom:0;padding-left:2px}.market-intel-product-row .market-intel-product:hover,.market-intel-product-row .market-intel-product.selected{background:transparent;box-shadow:none}.market-intel-product-check{display:grid;place-items:center;align-self:stretch;cursor:pointer}.market-intel-product-check input{width:14px;height:14px;margin:0;accent-color:var(--mi-blue);cursor:pointer}.market-intel-batch-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--mi-blue) 35%,var(--mi-border));border-radius:9px;background:color-mix(in srgb,var(--mi-blue) 6%,var(--mi-surface))}.market-intel-batch-toolbar>div:first-child{display:grid;gap:3px}.market-intel-batch-toolbar strong{font-size:13px}.market-intel-batch-toolbar span{color:var(--mi-muted);font-size:10px}.market-intel-batch-toolbar>div:last-child{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.market-intel-batch-toolbar button,.market-intel-batch-receipt{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:6px;background:var(--mi-blue);color:#fff;padding:8px 11px;font-size:11px;font-weight:700;cursor:pointer}.market-intel-batch-toolbar button.secondary{border:1px solid var(--mi-border);background:var(--mi-surface);color:var(--mi-muted)}.market-intel-batch-toolbar button:disabled{opacity:.6;cursor:wait}.market-intel-batch-table-wrap{overflow:auto;border:1px solid var(--mi-border);border-radius:7px}.market-intel-batch-table-wrap table{width:100%;border-collapse:collapse;min-width:980px;font-size:11px}.market-intel-batch-table-wrap th,.market-intel-batch-table-wrap td{padding:10px;text-align:left;border-bottom:1px solid var(--mi-border);vertical-align:middle}.market-intel-batch-table-wrap th{background:var(--mi-soft);color:var(--mi-muted);font-size:9px;letter-spacing:.02em;white-space:nowrap}.market-intel-batch-table-wrap tbody tr:last-child td{border-bottom:0}.market-intel-batch-table-wrap td>strong,.market-intel-batch-table-wrap td>small,.market-intel-batch-table-wrap a strong,.market-intel-batch-table-wrap a small{display:block}.market-intel-batch-table-wrap td small,.market-intel-batch-table-wrap a small{margin-top:3px;color:var(--mi-muted);font-size:9px}.market-intel-batch-table-wrap td.numeric{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.market-intel-batch-table-wrap td.suggested{color:var(--mi-teal);font-weight:750}.market-intel-batch-table-wrap a{display:grid;grid-template-columns:1fr auto;align-items:center;color:var(--mi-blue);text-decoration:none;min-width:130px}.market-intel-batch-table-wrap a small{grid-column:1}.market-intel-batch-table-wrap .muted{color:var(--mi-muted)}.market-intel-batch-note{margin:10px 0 0;color:var(--mi-muted);font-size:10px;line-height:1.5}
 @media(max-width:767px){.market-intel-batch-toolbar{align-items:stretch;flex-direction:column}.market-intel-batch-toolbar>div:last-child{justify-content:stretch}.market-intel-batch-toolbar button{flex:1}.market-intel-batch-card .market-intel-section-head{align-items:flex-start;flex-direction:column}.market-intel-batch-receipt{width:100%}}
+
+
+/* ==========================================================================
+   Dark Mode Overrides for Market Intelligence
+   ========================================================================== */
+:root[data-theme="dark"] .market-intel-page,
+.dark .market-intel-page {
+  --mi-ink: var(--ri-text, #f1f5f9);
+  --mi-muted: var(--ri-muted, #94a3b8);
+  --mi-border: var(--ri-border, #1e293b);
+  --mi-surface: var(--ri-surface, #111827);
+  --mi-soft: #0f172a;
+  --mi-blue: var(--ri-primary, #38bdf8);
+}
+
+:root[data-theme="dark"] .market-intel-market-values,
+.dark .market-intel-market-values {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .market-intel-market-values > div,
+.dark .market-intel-market-values > div,
+:root[data-theme="dark"] .market-intel-market-values > div.average,
+.dark .market-intel-market-values > div.average {
+  background: #0f172a !important;
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .market-intel-market-values small,
+.dark .market-intel-market-values small {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .market-intel-market-values strong,
+.dark .market-intel-market-values strong {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .market-intel-mode,
+.dark .market-intel-mode {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+}
+
+:root[data-theme="dark"] .market-intel-mode button,
+.dark .market-intel-mode button {
+  background: transparent !important;
+  color: #94a3b8 !important;
+}
+
+:root[data-theme="dark"] .market-intel-mode button:hover,
+.dark .market-intel-mode button:hover {
+  color: #e2e8f0 !important;
+}
+
+:root[data-theme="dark"] .market-intel-mode button.active,
+.dark .market-intel-mode button.active {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  font-weight: 650;
+}
