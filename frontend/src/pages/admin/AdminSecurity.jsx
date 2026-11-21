@@ -569,7 +569,6 @@ export default function AdminSecurity() {
                         )}
                         {shouldShowUnlock && (
                           <>
-                          <span className="badge" style={{display:'inline-flex',alignItems:'center',gap:4,marginRight:6,background:'#FEF2F2',border:'1px solid #FCA5A5',color:'#B91C1C',fontWeight:750}}>Đang khóa tạm thời</span>
                           <button
                             className="ri-btn ri-btn-primary ri-btn-sm"
                             style={{ background: '#16A34A', borderColor: '#16A34A' }}

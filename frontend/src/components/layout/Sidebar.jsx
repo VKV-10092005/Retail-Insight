@@ -2,7 +2,7 @@ import React,{useRef,useState} from 'react';
 import {Link,NavLink} from 'react-router-dom';
 import {createPortal} from 'react-dom';
 import {useAuth} from '../../auth/AuthContext';
-import {ROLE_LABELS,ROLES} from '../../config/roles';
+import {ADMIN_PATHS,ROLE_LABELS,ROLES} from '../../config/roles';
 import {
   Bot,
   LayoutDashboard,
@@ -80,10 +80,10 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
       {
         label:'QUẢN TRỊ NỀN TẢNG',
         items:[
-          ['/admin','Tổng quan nền tảng',Store],
-          ['/admin/tickets','Yêu cầu Thiết kế Website',LifeBuoy],
-          ['/admin/system','Giám sát Hệ thống',ShieldCheck],
-          ['/admin/security','Quản lý An ninh',ShieldAlert],
+          [ADMIN_PATHS.ROOT,'Tổng quan nền tảng',Store],
+          [ADMIN_PATHS.TICKETS,'Yêu cầu Thiết kế Website',LifeBuoy],
+          [ADMIN_PATHS.SYSTEM,'Giám sát Hệ thống',ShieldCheck],
+          [ADMIN_PATHS.SECURITY,'Quản lý An ninh',ShieldAlert],
           ['/research','Dataset nghiên cứu',BrainCircuit]
         ]
       },
@@ -240,7 +240,7 @@ export default function Sidebar({open,onClose,isCollapsed,onToggleCollapsed,widt
               {g.items.map(([path,label,Icon])=>(
                 <NavLink
                   to={path}
-                  end={['/','/forecast','/admin'].includes(path)}
+                  end={['/','/forecast',ADMIN_PATHS.ROOT].includes(path)}
                   key={path}
                   onClick={event=>{onNavItemClick?.(path);setMenuTooltip(null);onClose?.(event);}}
                   title={label}

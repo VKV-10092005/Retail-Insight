@@ -4,6 +4,7 @@ import {PageHeader,Card} from '../components/ui/Elements';
 import {useResource,State,Table,params,Pager,number} from './shared';
 import {Bars} from './Dashboard';
 import {useAuth} from '../auth/AuthContext';
+import {ADMIN_PATHS} from '../config/roles';
 
 export default function Research(){
  const navigate=useNavigate(),{user}=useAuth(),allowed=user?.role==='PLATFORM_ADMIN';
@@ -14,7 +15,7 @@ export default function Research(){
  const results=useResource(allowed&&dataset?`/research/${dataset}/forecasts?${params({run,q,page})}`:null);
  const mysqlRuns=useResource(allowed&&dataset?`/research/${dataset}/mysql-runs`:null);
  const inventory=useResource(allowed&&dataset?`/research/${dataset}/inventory?${params({page:inventoryPage,limit:100})}`:null);
- useEffect(()=>{if(allowed&&!access.loading&&(access.error||!access.data?.items?.length))navigate(access.error?'/forbidden':'/admin',{replace:true});},[allowed,access.loading,access.error,access.data,navigate]);
+ useEffect(()=>{if(allowed&&!access.loading&&(access.error||!access.data?.items?.length))navigate(access.error?'/forbidden':ADMIN_PATHS.ROOT,{replace:true});},[allowed,access.loading,access.error,access.data,navigate]);
  if(!allowed)return <Navigate to="/forbidden" replace/>;
  if(access.loading)return <div className="op-state" role="status">Đang kiểm tra quyền truy cập dataset nghiên cứu…</div>;
  if(access.error||!access.data?.items?.length)return null;

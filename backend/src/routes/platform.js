@@ -98,7 +98,7 @@ router.get('/tickets',asyncRoute(async(req,res)=>{
     COALESCE((SELECT m.content FROM support_messages m WHERE m.thread_id=t.id AND m.message_type='WEB_INTAKE_SUBMISSION' ORDER BY m.id DESC LIMIT 1), '') message,
     t.created_at,u.full_name user_name,u.email user_email,o.name org_name
     FROM support_threads t JOIN users u ON u.id=t.user_id JOIN organizations o ON o.id=t.organization_id
-    WHERE t.thread_type='ADMIN_SUPPORT' AND t.category='WEB_DESIGN' AND t.web_form_submitted=1 ORDER BY t.last_message_at DESC LIMIT 200`);
+    WHERE t.thread_type='ADMIN_SUPPORT' AND t.category='WEB_DESIGN' ORDER BY t.last_message_at DESC LIMIT 200`);
   const tickets=threads.map(row=>({...row,id:`thread:${row.id}`,legacy:false,category:'ONLINE_WEB_REQUEST',request_status:row.status||'NEW'}));
   res.json({tickets});
 }));

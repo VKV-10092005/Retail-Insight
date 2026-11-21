@@ -11,6 +11,17 @@ export const ROLES = {
   PLATFORM_ADMIN: 'PLATFORM_ADMIN'
 };
 
+export const ADMIN_PATHS = Object.freeze({
+  ROOT: '/sys-cp-9x7k',
+  TICKETS: '/sys-cp-9x7k/tickets',
+  SYSTEM: '/sys-cp-9x7k/infra',
+  SECURITY: '/sys-cp-9x7k/sec-guard'
+});
+
+export function isAdminPath(pathname='') {
+  return pathname === ADMIN_PATHS.ROOT || pathname.startsWith(`${ADMIN_PATHS.ROOT}/`);
+}
+
 export const ROLE_LABELS = {
   [ROLES.OWNER]: 'Chủ cửa hàng',
   [ROLES.MANAGER]: 'Quản lý chi nhánh',
@@ -27,7 +38,7 @@ export const DEFAULT_ROUTES = {
   [ROLES.MANAGER]: '/',
   [ROLES.INVENTORY]: '/inventory',
   [ROLES.CASHIER]: '/sales',
-  [ROLES.PLATFORM_ADMIN]: '/admin'
+  [ROLES.PLATFORM_ADMIN]: ADMIN_PATHS.ROOT
 };
 
 export function getDefaultRoute(role) {
@@ -115,10 +126,10 @@ export const ROLE_ALLOWED_ROUTES = {
     '/change-password'
   ],
   [ROLES.PLATFORM_ADMIN]: [
-    '/admin',
-    '/admin/tickets',
-    '/admin/system',
-    '/admin/security',
+    ADMIN_PATHS.ROOT,
+    ADMIN_PATHS.TICKETS,
+    ADMIN_PATHS.SYSTEM,
+    ADMIN_PATHS.SECURITY,
     '/research',
     '/support',
     '/agency-profile',

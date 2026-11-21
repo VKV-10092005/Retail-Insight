@@ -33,11 +33,12 @@ import {calendarMetadata} from './business/business-calendar.js';
 import settings from './business/settings.js';
 import {getPlatformSettings} from './services/appSettings.js';
 import {cacheReadResponses,invalidateReadCache} from './middleware/readCache.js';
+import {createNotFoundScannerGuard} from './middlewares/threatProtection.js';
 const app=express();
 const __filename=fileURLToPath(import.meta.url);
 const __dirname=dirname(__filename);
 const frontendDist=join(__dirname,'..','..','frontend','dist');
-const apiLimiter=rateLimit({windowMs:60_000,limit:120,standardHeaders:'draft-7',legacyHeaders:false,skip:req=>req.method==='OPTIONS',message:{message:'Quá nhiều yêu cầu. Vui lòng thử lại sau.'}});
+const apiLimiter=rateLimit({windowMs:60_000,limit:100,standardHeaders:'draft-7',legacyHeaders:false,skip:req=>req.method==='OPTIONS'||(req.method==='GET'&&req.path==='/auth/me'),message:{message:'Quá nhiều yêu cầu. Vui lòng thử lại sau.'}});
 const isPrivateDevelopmentOrigin=origin=>{
  if(!origin)return true;
  if(config.origins.includes(origin))return true;
@@ -56,7 +57,7 @@ const isPrivateDevelopmentOrigin=origin=>{
 const corsOptions={
  origin(origin,callback){
   const allowed=isPrivateDevelopmentOrigin(origin);
-  callback(allowed?null:new Error('Origin không được CORS cho phép'),allowed);
+  callback(allowed?null:new HttpError(403,'Origin không được CORS cho phép'),allowed);
  },
  credentials:true
 };
@@ -83,6 +84,7 @@ app.use('/api', (req,res,next)=>{
  }
  next();
 });
+app.use('/api',createNotFoundScannerGuard());
 app.use('/api/v1',apiLimiter);
 app.get('/api/health',asyncRoute(async(req,res)=>{await verifyDatabase();res.json({status:'ok',database:'retail_app'});}));
 app.use('/api/v1/auth',auth);
@@ -165,13 +167,16 @@ app.use((req,res)=>res.status(404).json({message:'Đường dẫn không tồn t
 app.use((err,req,res,next)=>{
  if(err instanceof ZodError){
   const dates=err.issues.filter(i=>['start','end'].includes(i.path[0]));
-  return res.status(400).json({message:dates.length?dates.map(i=>i.path[0]+': '+i.message).join('; '):'Dữ liệu không hợp lệ',issues:err.issues.map(i=>({path:i.path,message:i.message}))});
+  const message=dates.length?dates.map(i=>i.path[0]+': '+i.message).join('; '):'Dữ liệu không hợp lệ';
+  return res.status(400).json(config.production?{message}:{message,issues:err.issues.map(i=>({path:i.path,message:i.message}))});
  }
  if(err.code==='ER_DUP_ENTRY')return res.status(409).json({message:'Dữ liệu đã tồn tại'});
  if(err.code==='ER_NO_REFERENCED_ROW_2')return res.status(400).json({message:'Tham chiếu dữ liệu không hợp lệ'});
- const status=err.status||500;
+ const candidateStatus=Number(err.status);
+ const status=Number.isInteger(candidateStatus)&&candidateStatus>=400&&candidateStatus<=599?candidateStatus:500;
  if(status>=500) console.error('API error:',req.method,req.originalUrl,err.code||err.name,err.message,err.stack);
- res.status(status).json({message:status>=500?'Dịch vụ tạm thời không khả dụng':err.message});
+ const message=status>=500?'Dịch vụ tạm thời không khả dụng':String(err.message||'Yêu cầu không hợp lệ');
+ res.status(status).json({message});
 });
 export default app;
 

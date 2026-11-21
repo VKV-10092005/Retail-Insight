@@ -1,7 +1,7 @@
 import React from 'react';
 import {Navigate,Outlet,useLocation} from 'react-router-dom';
 import {useAuth} from './AuthContext';
-import {isRouteAllowed,getDefaultRoute,ROLES} from '../config/roles';
+import {isAdminPath,isRouteAllowed,getDefaultRoute,ROLES} from '../config/roles';
 
 export default function ProtectedRoute({allow, children}){
   const {user,loading,error}=useAuth();
@@ -16,6 +16,7 @@ export default function ProtectedRoute({allow, children}){
   }
 
   if(!user){
+    if(isAdminPath(location.pathname))return <Navigate to="/404" replace/>;
     // Nếu truy cập root "/" hoặc "/welcome" khi chưa đăng nhập -> chuyển về /welcome
     if(location.pathname==='/'||location.pathname==='/welcome'){
       return <Navigate to="/welcome" replace/>;
@@ -26,14 +27,15 @@ export default function ProtectedRoute({allow, children}){
 
   // Kiểm tra danh sách allow cụ thể nếu có truyền prop
   if(allow && !allow.includes(user.role)){
+    if(isAdminPath(location.pathname))return <Navigate to="/404" replace/>;
     return <Navigate to="/forbidden" replace/>;
   }
 
   // Kiểm tra cấu hình route cho Role hiện tại
   if(!isRouteAllowed(user.role, location.pathname)){
-    // PLATFORM_ADMIN bị chặn khỏi shop routes → redirect về /admin
+    // PLATFORM_ADMIN bị chặn khỏi shop routes → redirect về control panel.
     if(user.role===ROLES.PLATFORM_ADMIN){
-      return <Navigate to="/admin" replace/>;
+      return <Navigate to={getDefaultRoute(user.role)} replace/>;
     }
     return <Navigate to="/forbidden" replace/>;
   }

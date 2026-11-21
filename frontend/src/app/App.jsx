@@ -3,7 +3,7 @@ import {Routes,Route,Navigate} from 'react-router-dom';
 import {useAuth} from '../auth/AuthContext';
 import ProtectedRoute from '../auth/ProtectedRoute';
 import AppLayout from '../components/layout/AppLayout';
-import {ROLES} from '../config/roles';
+import {ADMIN_PATHS,ROLES} from '../config/roles';
 
 // Lazy load pages
 const Welcome = lazy(()=>import('../pages/WelcomePage'));
@@ -211,10 +211,10 @@ export default function App(){
 
         <Route element={<ProtectedRoute allow={[ROLES.PLATFORM_ADMIN]}/> }>
           <Route element={<AppLayout/>}>
-            <Route path="admin" element={<AdminDashboard/>}/>
-            <Route path="admin/tickets" element={<AdminTickets/>}/>
-            <Route path="admin/system" element={<AdminSystem/>}/>
-            <Route path="admin/security" element={<AdminSecurity/>}/>
+            <Route path={ADMIN_PATHS.ROOT} element={<AdminDashboard/>}/>
+            <Route path={ADMIN_PATHS.TICKETS} element={<AdminTickets/>}/>
+            <Route path={ADMIN_PATHS.SYSTEM} element={<AdminSystem/>}/>
+            <Route path={ADMIN_PATHS.SECURITY} element={<AdminSecurity/>}/>
             <Route path="research" element={<Research/>}/>
             <Route path="settings" element={<SettingsPage/>}/>
           </Route>

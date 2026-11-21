@@ -37,7 +37,11 @@ export function tenantScope(req,res,next) {
   if (req.user.role === 'PLATFORM_ADMIN') { next(); return; }
   const supplied = [req.headers['x-organization-id'], req.query.organization_id, req.body?.organization_id].filter(v=>v!==undefined);
   if (supplied.some(v=>String(v)!==String(req.user.organization_id))) return next(new HttpError(403,'Không được truy cập organization khác'));
-  req.organizationId=req.user.organization_id; next();
+  const organizationId=Number(req.user.organization_id);
+  if(!Number.isSafeInteger(organizationId)||organizationId<1)return next(new HttpError(403,'Phiên đăng nhập không có phạm vi cửa hàng hợp lệ'));
+  Object.defineProperty(req,'organizationId',{value:organizationId,writable:false,configurable:false,enumerable:true});
+  req.tenant=Object.freeze({organizationId,userId:Number(req.user.id)});
+  next();
 }
 
 export const branchScope = (...allowed) => asyncRoute(async (req,res,next) => {

@@ -3,7 +3,7 @@ import {Outlet,useLocation,useNavigate} from 'react-router-dom';
 import {ChevronRight,UserRound,LogOut,Store,Lock,User,UsersRound,Settings,Menu,PanelLeft,HelpCircle,PartyPopper} from 'lucide-react';
 import {useAuth} from '../../auth/AuthContext';
 import {useBranch} from '../../branches/BranchContext';
-import {ROLE_LABELS,ROLES} from '../../config/roles';
+import {ADMIN_PATHS,ROLE_LABELS,ROLES} from '../../config/roles';
 import Sidebar from './Sidebar';
 import FloatingRobotChat from '../FloatingRobotChat';
 import {ThemeToggle} from '../../design-system/ThemeProvider.jsx';
@@ -41,10 +41,10 @@ const titleMap = {
   '/change-password': 'Đổi mật khẩu',
   '/market': 'Giá & Thị trường',
   '/assistant': 'Trợ lý AI',
-  '/admin': 'Tổng quan nền tảng',
-  '/admin/tickets': 'Yêu cầu Thiết kế Website',
-  '/admin/system': 'Giám sát Hệ thống',
-  '/admin/security': 'Quản lý An ninh'
+  [ADMIN_PATHS.ROOT]: 'Tổng quan nền tảng',
+  [ADMIN_PATHS.TICKETS]: 'Yêu cầu Thiết kế Website',
+  [ADMIN_PATHS.SYSTEM]: 'Giám sát Hệ thống',
+  [ADMIN_PATHS.SECURITY]: 'Quản lý An ninh'
 };
 
 const SIDEBAR_WIDTH_KEY='ri_sidebar_width';

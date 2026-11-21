@@ -12,14 +12,18 @@ import { sendOtpEmail } from '../utils/mailer.js';
 import { canExposeDevOtp } from '../utils/otp-security.js';
 
 const router = Router();
-router.use(rateLimit({
-  windowMs: 60 * 1000,
-  limit: 5,
+const authThrottle = ({windowMs,limit,skipSuccessfulRequests=false}) => rateLimit({
+  windowMs,
+  limit,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  skip: req => req.method !== 'POST' || !['/login', '/request-unlock', '/register', '/google', '/forgot-password/send-otp', '/forgot-password/verify-otp', '/forgot-password/reset', '/send-register-otp', '/verify-register-otp'].includes(req.path),
+  skipSuccessfulRequests,
   message: { message: 'Quá nhiều yêu cầu xác thực. Vui lòng thử lại sau.' }
-}));
+});
+const loginLimiter=authThrottle({windowMs:15*60*1000,limit:10,skipSuccessfulRequests:true});
+const otpLimiter=authThrottle({windowMs:10*60*1000,limit:5});
+router.use(['/login','/google'],loginLimiter);
+router.use(['/request-unlock','/forgot-password/send-otp','/forgot-password/verify-otp','/forgot-password/reset','/send-register-otp','/verify-register-otp','/send-password-otp','/verify-password-otp'],otpLimiter);
 
 const emailSchema = z.string().trim().toLowerCase().email('Địa chỉ email không hợp lệ').max(254);
 
