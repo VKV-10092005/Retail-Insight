@@ -819,3 +819,193 @@
     max-width: 220px;
   }
 }
+
+/* ── PROACTIVE AI AGENT CARD & ACTION BUTTONS ───────────────── */
+.proactive-ai-card {
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.06);
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .proactive-ai-card,
+.dark .proactive-ai-card {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.16) 0%, rgba(3, 105, 161, 0.22) 100%);
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.proactive-ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.proactive-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #0369a1;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] .proactive-ai-badge,
+.dark .proactive-ai-badge {
+  color: #38bdf8;
+}
+
+.proactive-toggle-btn {
+  border: none;
+  background: transparent;
+  color: #0284c7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+:root[data-theme="dark"] .proactive-toggle-btn,
+.dark .proactive-toggle-btn {
+  color: #7dd3fc;
+}
+
+.proactive-ai-body {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proactive-insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .proactive-insight-item,
+.dark .proactive-insight-item {
+  color: #e2e8f0;
+}
+
+.proactive-item-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.proactive-item-icon.primary {
+  color: #0284c7;
+}
+
+.proactive-item-icon.warning {
+  color: #d97706;
+}
+
+:root[data-theme="dark"] .proactive-item-icon.primary,
+.dark .proactive-item-icon.primary {
+  color: #38bdf8;
+}
+
+:root[data-theme="dark"] .proactive-item-icon.warning,
+.dark .proactive-item-icon.warning {
+  color: #fbbf24;
+}
+
+.proactive-item-content strong {
+  display: inline;
+  margin-right: 4px;
+  color: #0369a1;
+}
+
+:root[data-theme="dark"] .proactive-item-content strong,
+.dark .proactive-item-content strong {
+  color: #7dd3fc;
+}
+
+.proactive-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(2, 132, 199, 0.22);
+}
+
+:root[data-theme="dark"] .proactive-quick-actions,
+.dark .proactive-quick-actions {
+  border-top-color: rgba(56, 189, 248, 0.2);
+}
+
+.proactive-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.proactive-action-pill.primary {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25);
+}
+
+.proactive-action-pill.primary:hover:not(:disabled) {
+  background: #0369a1;
+  border-color: #0369a1;
+  transform: translateY(-1px);
+}
+
+.proactive-action-pill.secondary {
+  background: #ffffff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
+.proactive-action-pill.secondary:hover:not(:disabled) {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  transform: translateY(-1px);
+}
+
+:root[data-theme="dark"] .proactive-action-pill.primary,
+.dark .proactive-action-pill.primary {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .proactive-action-pill.secondary,
+.dark .proactive-action-pill.secondary {
+  background: rgba(15, 23, 42, 0.6);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+:root[data-theme="dark"] .proactive-action-pill.secondary:hover:not(:disabled),
+.dark .proactive-action-pill.secondary:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: #38bdf8;
+}
+
+.proactive-action-pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

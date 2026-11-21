@@ -130,6 +130,28 @@ export default function Ledger({
   },[activeMode,branch,products.loading,products.data,location.search,navigate]);
 
   useEffect(()=>{
+    if(activeMode!=='receipts'||!location.state?.items?.length)return;
+    const incomingItems=location.state.items;
+    const mappedLines=incomingItems.map(item=>({
+      product_id:String(item.product_id||item.id||''),
+      product_search:item.sku&&item.name?`${item.sku} · ${item.name}`:(item.name||item.sku||''),
+      quantity:Math.max(1,Number(item.quantity)||Number(item.recommended_quantity)||1),
+      unit_price:item.cost_price!=null?String(item.cost_price):(item.unit_cost!=null?String(item.unit_cost):''),
+      sale_price:item.sale_price!=null?String(item.sale_price):'',
+      new_product:false,
+      sku:item.sku||'',
+      name:item.name||'',
+      category_name:item.category_name||'',
+      image_url:item.image_url||''
+    }));
+    setReceiptTab('single');
+    setLines(mappedLines);
+    if(location.state.note)setNote(location.state.note);
+    if(location.state.notice)setSuccess(location.state.notice);
+    navigate(location.pathname,{replace:true,state:{}});
+  },[activeMode,location.state,navigate]);
+
+  useEffect(()=>{
     if(!invoice)return undefined;
     const onKeyDown=event=>{if(event.key==='Escape')setInvoice(null);};
     window.addEventListener('keydown',onKeyDown);

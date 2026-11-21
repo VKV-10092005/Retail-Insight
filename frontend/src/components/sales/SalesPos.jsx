@@ -190,8 +190,18 @@ function VietQrImage({receipt}){
 export function ReceiptPreview({receipt}){
  const {user}=useAuth();const settings=useAppSettings(user?.id,user?.role);
  const {document:doc,items,payment_qr_url,payment_reference}=receipt;
+ const isNonEmpty=val=>Boolean(val&&String(val).trim()&&String(val).trim().toLowerCase()!=='trống'&&String(val).trim().toLowerCase()!=='null');
+ const displayAddress=isNonEmpty(doc.store_address)?String(doc.store_address).trim():(isNonEmpty(doc.branch_address)?String(doc.branch_address).trim():'');
+ const displayPhone=isNonEmpty(doc.store_phone)?String(doc.store_phone).trim():(isNonEmpty(doc.branch_phone)?String(doc.branch_phone).trim():'');
+ const displayWifi=isNonEmpty(doc.wifi_password)?String(doc.wifi_password).trim():'';
  return <div className="pos-receipt" id="pos-receipt">
-  <header><h2>{doc.organization_name}</h2><p>{doc.branch_name}</p><p>{doc.branch_address||''} {doc.branch_phone?`· ${doc.branch_phone}`:''}</p></header>
+  <header>
+   <h2>{doc.organization_name}</h2>
+   <p style={{fontWeight:600}}>{doc.branch_name}</p>
+   {displayAddress&&<p className="pos-receipt-address">{displayAddress}</p>}
+   {displayPhone&&<p className="pos-receipt-phone">SĐT: {displayPhone}</p>}
+   {displayWifi&&<p className="pos-receipt-wifi">Wi-Fi: {displayWifi}</p>}
+  </header>
   <div className="pos-receipt-meta"><span>Hóa đơn #{doc.id}</span><span>{new Date(doc.created_at).toLocaleString('vi-VN')}</span><span>Thu ngân: {doc.performed_by_name}</span><span>Khách hàng: {doc.customer_name||'Khách lẻ'}</span></div>
   <table><thead><tr><th>Sản phẩm</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>{items.map(item=><tr key={item.product_id}><td>{item.product_name}<small>{item.sku} · {money(item.unit_price)}{Number(item.discount_amount)>0?` · Giảm ${money(item.discount_amount)}`:''}</small></td><td>{item.quantity}</td><td>{money(item.line_total)}</td></tr>)}</tbody></table>
   <dl><div><dt>Tiền hàng</dt><dd>{money(doc.subtotal)}</dd></div><div><dt>Giảm sản phẩm</dt><dd>-{money(doc.item_discount_total)}</dd></div><div><dt>Giảm toàn đơn</dt><dd>-{money(doc.order_discount)}</dd></div><div className="total"><dt>TỔNG THANH TOÁN</dt><dd>{money(doc.total)}</dd></div><div><dt>Phương thức</dt><dd>{doc.payment_method==='CASH'?'Tiền mặt':'Chuyển khoản'}</dd></div>{doc.payment_method==='CASH'&&<><div><dt>Khách đưa</dt><dd>{money(doc.cash_received)}</dd></div><div><dt>Tiền thừa</dt><dd>{money(doc.change_due)}</dd></div></>}</dl>

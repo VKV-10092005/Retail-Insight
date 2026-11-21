@@ -17,7 +17,7 @@ const safePage=z.preprocess(value=>value===''||value==null?1:value,z.coerce.numb
 const safeLimit=z.preprocess(value=>Math.min(Number(value)||50,500),z.number().int().min(1).default(50));
 export const period=z.object({start:optionalQuery(calendarDate('Ngày bắt đầu')),end:optionalQuery(calendarDate('Ngày kết thúc')),branch_id:optionalQuery(positiveId),branchId:optionalQuery(positiveId),category_id:optionalQuery(positiveId),product_id:optionalQuery(positiveId),status:optionalQuery(z.string().trim().max(30)),all:z.preprocess(value=>value===''||value===null?undefined:value,z.union([z.boolean(),z.coerce.number()]).optional()),q:optionalQuery(z.string().trim().max(100)),search:optionalQuery(z.string().trim().max(100)),page:safePage,limit:safeLimit}).refine(q=>!q.start||!q.end||q.start<=q.end,{path:['end'],message:'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc (start <= end)'});
 export async function assertBranch(user,id,allowed=[],connection=pool){
- const [branches]=await connection.execute("SELECT id,name,address,phone,bank_bin,bank_code,bank_account_number,bank_account_name,static_qr_url FROM branches WHERE organization_id=? AND id=? AND status='ACTIVE'",[user.organization_id,id]);
+ const [branches]=await connection.execute("SELECT id,name,address,phone,store_phone,store_address,wifi_password,bank_bin,bank_code,bank_account_number,bank_account_name,static_qr_url FROM branches WHERE organization_id=? AND id=? AND status='ACTIVE'",[user.organization_id,id]);
  if(!branches.length)throw new HttpError(404,'Không tìm thấy chi nhánh');
  if(user.role!=='OWNER'){
   const [r]=await connection.execute('SELECT role FROM user_branch_roles WHERE organization_id=? AND user_id=? AND branch_id=?',[user.organization_id,user.id,id]);

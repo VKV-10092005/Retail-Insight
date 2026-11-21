@@ -90,22 +90,34 @@ router.get('/branches/:id/pos-settings',requireRoles('OWNER','MANAGER','CASHIER'
  res.json({branch_id:id,branch_name:branch.name,pos_layout_mode:settings.pos_layout_mode,can_change:['OWNER','MANAGER'].includes(req.user.role)});
 }));
 
+const textField=max=>z.preprocess(value=>value==null?'':value,z.string().trim().max(max));
+
 router.get('/branches/:id/payment-settings',requireRoles('OWNER','MANAGER','CASHIER'),asyncRoute(async(req,res)=>{
  const id=positiveId.parse(req.params.id);await assertBranch(req.user,id);
- const [[settings]]=await pool.execute('SELECT bank_bin,bank_code,bank_account_number,bank_account_name,static_qr_url FROM branches WHERE id=? AND organization_id=?',[id,req.organizationId]);
+ const [[settings]]=await pool.execute('SELECT bank_bin,bank_code,bank_account_number,bank_account_name,static_qr_url,store_phone,store_address,wifi_password FROM branches WHERE id=? AND organization_id=?',[id,req.organizationId]);
  res.json({branch_id:id,configured:Boolean(settings.bank_bin&&settings.bank_account_number),...settings});
 }));
 router.put('/branches/:id/payment-settings',requireRoles('OWNER','MANAGER'),asyncRoute(async(req,res)=>{
  const id=positiveId.parse(req.params.id);await assertBranch(req.user,id,['MANAGER']);
- const textField=max=>z.preprocess(value=>value==null?'':value,z.string().trim().max(max));
- const parsed=z.object({bank_bin:textField(12),bank_code:textField(20),bank_account_number:textField(40),bank_account_name:textField(120),static_qr_url:textField(3000000)}).strict().safeParse(req.body);
+ const parsed=z.object({bank_bin:textField(12),bank_code:textField(20),bank_account_number:textField(40),bank_account_name:textField(120),static_qr_url:textField(3000000),store_phone:textField(50),store_address:textField(500),wifi_password:textField(120)}).strict().safeParse(req.body);
  if(!parsed.success){const fieldErrors={};for(const issue of parsed.error.issues){const field=String(issue.path[0]||'request');fieldErrors[field]=issue.message;}return res.status(400).json({message:'Invalid payment configuration',fieldErrors});}
  const data=parsed.data,hasBank=Boolean(data.bank_bin||data.bank_account_number),fieldErrors={};
  if(hasBank){if(!/^[0-9]{6}$/.test(data.bank_bin))fieldErrors.bank_bin='BIN must contain exactly 6 digits';if(!data.bank_account_number)fieldErrors.bank_account_number='Enter the bank account number';}
  if(data.static_qr_url&&!/^https:\/\//i.test(data.static_qr_url)&&!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(data.static_qr_url))fieldErrors.static_qr_url='QR image must be PNG/JPG/WEBP or an HTTPS URL';
  if(Object.keys(fieldErrors).length)return res.status(400).json({message:'Please check the payment configuration fields',fieldErrors});
- await pool.execute('UPDATE branches SET bank_bin=?,bank_code=?,bank_account_number=?,bank_account_name=?,static_qr_url=? WHERE id=? AND organization_id=?',[data.bank_bin||null,data.bank_code||null,data.bank_account_number||null,data.bank_account_name||null,data.static_qr_url||null,id,req.organizationId]);
+ await pool.execute('UPDATE branches SET bank_bin=?,bank_code=?,bank_account_number=?,bank_account_name=?,static_qr_url=?,store_phone=?,store_address=?,wifi_password=? WHERE id=? AND organization_id=?',[data.bank_bin||null,data.bank_code||null,data.bank_account_number||null,data.bank_account_name||null,data.static_qr_url||null,data.store_phone||null,data.store_address||null,data.wifi_password||null,id,req.organizationId]);
  res.json({branch_id:id,configured:Boolean(data.bank_bin&&data.bank_account_number),...data});
+}));
+router.get('/branches/:id/receipt-settings',requireRoles('OWNER','MANAGER','INVENTORY','CASHIER'),asyncRoute(async(req,res)=>{
+ const id=positiveId.parse(req.params.id);await assertBranch(req.user,id);
+ const [[settings]]=await pool.execute('SELECT store_phone,store_address,wifi_password FROM branches WHERE id=? AND organization_id=?',[id,req.organizationId]);
+ res.json({branch_id:id,...settings});
+}));
+router.put('/branches/:id/receipt-settings',requireRoles('OWNER','MANAGER'),asyncRoute(async(req,res)=>{
+ const id=positiveId.parse(req.params.id);await assertBranch(req.user,id);
+ const data=z.object({store_phone:textField(50),store_address:textField(500),wifi_password:textField(120)}).strict().parse(req.body);
+ await pool.execute('UPDATE branches SET store_phone=?,store_address=?,wifi_password=? WHERE id=? AND organization_id=?',[data.store_phone||null,data.store_address||null,data.wifi_password||null,id,req.organizationId]);
+ res.json({branch_id:id,...data});
 }));
 
 const updatePosSettings=asyncRoute(async(req,res)=>{

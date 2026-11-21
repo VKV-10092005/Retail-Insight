@@ -1,9 +1,10 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {Check,Music,Printer,Settings as SettingsIcon,Monitor,ShieldCheck,Volume2,Sparkles,BellRing,Bot} from 'lucide-react';
+import {Check,Music,Printer,Settings as SettingsIcon,Monitor,ShieldCheck,Volume2,Sparkles,BellRing,Bot,Receipt,Phone,MapPin,Wifi} from 'lucide-react';
 import {PageHeader,Card} from '../components/ui/Elements';
 import {useTheme} from '../design-system';
 import {request} from '../operations/shared';
 import {useAuth} from '../auth/AuthContext';
+import {useBranch} from '../branches/BranchContext';
 import {cacheAppSettings,DEFAULT_SETTINGS,readAppSettings} from '../services/appSettings';
 import {NOTIFICATION_SOUND_TONES,playNotificationSound} from '../utils/notificationSound';
 import './Settings.css';
@@ -11,9 +12,14 @@ import './Settings.css';
 const defaults={...DEFAULT_SETTINGS.general,...DEFAULT_SETTINGS.operations,...DEFAULT_SETTINGS.ai,...DEFAULT_SETTINGS.platform};
 export default function Settings(){
  const {user}=useAuth();const {preference,setTheme}=useTheme();const platform=user?.role==='PLATFORM_ADMIN';
+ const {activeBranchId,activeBranch}=useBranch();
  const canSell=['OWNER','MANAGER','CASHIER'].includes(user?.role),canOperate=['OWNER','MANAGER','INVENTORY'].includes(user?.role);
  const [form,setForm]=useState({...defaults,theme:preference});const [initial,setInitial]=useState(null);const [error,setError]=useState('');const [saveState,setSaveState]=useState('');
+ const [receiptForm,setReceiptForm]=useState({store_phone:'',store_address:'',wifi_password:''});
+ const [receiptSaveState,setReceiptSaveState]=useState('');
+ const receiptTimer=useRef(null);
  const formRef=useRef(form),debounceRef=useRef(null),saveStateTimer=useRef(null),writeQueue=useRef(Promise.resolve()),writeVersion=useRef(0);
+
  useEffect(()=>{formRef.current=form;},[form]);
  useEffect(()=>{setForm(current=>({...current,theme:preference}));},[preference]);
  useEffect(()=>{let live=true;const path=platform?'/platform/settings':'/settings';request(path).then(data=>{
@@ -21,6 +27,28 @@ export default function Settings(){
   formRef.current=next;cacheAppSettings(user?.id,platform?{...cached,platform:data,general:{...cached.general,...data.general}}:{...cached,...data,general:{...cached.general,...data.general},operations:{...cached.operations,...data.operations}},user?.role);
   if(data.general?.theme)setTheme(data.general.theme);setForm(next);setInitial(next);
  }).catch(reason=>{if(!live)return;setError(reason.message||'Không tải được cài đặt.');const cached=readAppSettings(user?.id);const next={...defaults,...cached.general,...cached.operations,...cached.ai,...cached.platform,theme:preference};formRef.current=next;setForm(next);setInitial(next);});return()=>{live=false;clearTimeout(debounceRef.current);clearTimeout(saveStateTimer.current);};},[user?.id,platform]);
+
+ useEffect(()=>{
+  if(!activeBranchId||platform)return;
+  request(`/branches/${activeBranchId}/receipt-settings`).then(data=>{
+    if(data) setReceiptForm({store_phone:data.store_phone||'',store_address:data.store_address||'',wifi_password:data.wifi_password||''});
+  }).catch(()=>{});
+ },[activeBranchId,platform]);
+
+ function updateReceipt(field,val){
+  const next={...receiptForm,[field]:val};
+  setReceiptForm(next);
+  setReceiptSaveState('saving');
+  clearTimeout(receiptTimer.current);
+  receiptTimer.current=setTimeout(()=>{
+    request(`/branches/${activeBranchId}/receipt-settings`,{method:'PUT',body:next})
+      .then(()=>{
+        setReceiptSaveState('saved');
+        setTimeout(()=>setReceiptSaveState(''),2000);
+      })
+      .catch(()=>setReceiptSaveState('error'));
+  },600);
+ }
 
  function persist(snapshot){
   if(!initial)return;clearTimeout(debounceRef.current);clearTimeout(saveStateTimer.current);setError('');setSaveState('saving');
@@ -58,10 +86,19 @@ export default function Settings(){
     {form.sound&&<SoundTonePicker value={form.soundTone||'ting-tong'} onChange={selectSoundTone}/>}
     <div className="settings-general-pair"><label className="setting-field">Định dạng số<select className="ri-control" value={form.numberFormat} onChange={e=>update('numberFormat',e.target.value,true)}><option value="vi-VN">Việt Nam (1.234,56)</option><option value="en-US">Quốc tế (1,234.56)</option></select></label><label className="setting-field">Múi giờ<select className="ri-control" value={form.timezone} onChange={e=>update('timezone',e.target.value,true)}><option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh</option></select></label></div>
    </Card>
+
    {canSell&&<Card><div className="feature-heading"><Printer size={20}/><div><h2>Cài đặt Bán hàng &amp; Hóa đơn</h2><p>Tùy chỉnh thao tác sau thanh toán và nội dung hóa đơn.</p></div></div>
     <SettingToggle title="Tự động mở hộp thoại in hóa đơn" description="In tự động sau khi thanh toán hoàn tất." checked={form.autoPrint} onChange={v=>update('autoPrint',v,true)}/>
     <label className="setting-field">Lời chào chân trang hóa đơn<textarea className="ri-control" rows="2" maxLength="180" value={form.receiptFooter||''} onChange={e=>update('receiptFooter',e.target.value)} onBlur={flush}/></label>
    </Card>}
+
+   {canSell&&activeBranchId&&<Card><div className="feature-heading"><Receipt size={20}/><div><h2>Nội dung hiển thị trên hóa đơn</h2><p>Thông tin in trên hóa đơn của chi nhánh {activeBranch?.name?`(${activeBranch.name})`:''}. Các ô để trống sẽ được ẩn hoàn toàn (không in chữ &quot;Trống&quot;).</p></div></div>
+    <label className="setting-field">Số điện thoại cửa hàng (in trên hóa đơn)<input className="ri-control" type="text" placeholder="VD: 0912 345 678 (tùy chọn)" value={receiptForm.store_phone} onChange={e=>updateReceipt('store_phone',e.target.value)}/></label>
+    <label className="setting-field">Địa chỉ cửa hàng (in trên hóa đơn)<textarea className="ri-control" rows="2" placeholder="VD: 123 Đường Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh" value={receiptForm.store_address} onChange={e=>updateReceipt('store_address',e.target.value)}/></label>
+    <label className="setting-field">Mật khẩu Wi-Fi (in trên hóa đơn)<input className="ri-control" type="text" placeholder="VD: cafe@2026 (để trống nếu không in Wi-Fi)" value={receiptForm.wifi_password} onChange={e=>updateReceipt('wifi_password',e.target.value)}/></label>
+    {receiptSaveState&&<small style={{display:'block',marginTop:6,color:receiptSaveState==='error'?'var(--ri-danger)':'var(--ri-success)',fontWeight:600}}>{receiptSaveState==='saving'?'Đang lưu thông tin hóa đơn…':receiptSaveState==='saved'?'✓ Đã tự động lưu thông tin hóa đơn':'Chưa lưu được thông tin hóa đơn'}</small>}
+   </Card>}
+
    {canOperate&&<Card><div className="feature-heading"><SettingsIcon size={20}/><div><h2>Cài đặt Kho &amp; Cảnh báo tự động</h2><p>Thiết lập ngưỡng tồn kho và lịch nhận Digest.</p></div></div>
     <label className="setting-field">Ngưỡng cảnh báo tồn kho thấp mặc định<input className="ri-control" type="number" min="0" max="100000" value={form.lowStockThreshold} onChange={e=>update('lowStockThreshold',e.target.value)} onBlur={flush}/></label>
     <SettingToggle title="Báo cáo tổng kết cuối ngày" description="Daily Digest" checked={form.dailyDigest} onChange={v=>update('dailyDigest',v,true)}/>
