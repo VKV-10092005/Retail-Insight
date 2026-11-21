@@ -287,6 +287,27 @@ export function sanitizeOutput(reply) {
     '[Lỗi cơ sở dữ liệu nội bộ đã được che giấu vì lý do an ninh]'
   );
 
+  // Mask/Clean internal technical route paths to friendly Vietnamese names
+  cleaned = cleaned.replace(/\/ai\/replenishment\b/g, 'tính năng Gợi ý nhập hàng');
+  cleaned = cleaned.replace(/\/ai\/forecast-(?:sku|multi)\b/g, 'tính năng Dự báo sản phẩm');
+  cleaned = cleaned.replace(/\/ai\/forecast-total\b/g, 'tính năng Dự báo tổng nhu cầu');
+  cleaned = cleaned.replace(/\/ai\/stockout\b/g, 'mục Cảnh báo thiếu hàng');
+  cleaned = cleaned.replace(/\/sales\/history\b/g, 'mục Lịch sử bán hàng');
+  cleaned = cleaned.replace(/\/sales\b/g, 'màn hình Bán hàng POS');
+  cleaned = cleaned.replace(/\/receipts\b/g, 'mục Phiếu nhập hàng');
+  cleaned = cleaned.replace(/\/inventory\b/g, 'mục Quản lý tồn kho');
+  cleaned = cleaned.replace(/\/stock-operations\b/g, 'mục Kiểm kê & Điều chuyển kho');
+  cleaned = cleaned.replace(/\/products\/new\b/g, 'mục Thêm sản phẩm mới');
+  cleaned = cleaned.replace(/\/products\b/g, 'mục Quản lý sản phẩm');
+  cleaned = cleaned.replace(/\/dashboard\b/g, 'trang Tổng quan');
+  cleaned = cleaned.replace(/\/bi\b/g, 'mục Báo cáo phân tích');
+  cleaned = cleaned.replace(/\/market\b/g, 'mục Giá thị trường');
+  cleaned = cleaned.replace(/\/admin\/security\b/g, 'mục Giám sát An ninh');
+  cleaned = cleaned.replace(/\/admin\b/g, 'trang Quản trị nền tảng');
+  cleaned = cleaned.replace(/\/profile\b/g, 'mục Hồ sơ cá nhân');
+  cleaned = cleaned.replace(/\/(?:users|staff)\b/g, 'mục Quản lý nhân sự');
+  cleaned = cleaned.replace(/\/api\/[a-zA-Z0-9_\-\/]+/g, 'hệ thống nội bộ');
+
   return cleaned;
 }
 
