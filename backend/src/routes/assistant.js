@@ -674,7 +674,7 @@ function generateLocalRAG(message, context, user, apiError) {
   }
 
   // 3. TÁC GIẢ & NGUỒN GỐC HỆ THỐNG
-  if (/ai tạo ra|ai phát triển|tác giả|nguồn gốc|anh vương|võ kế vương|năm anh em|nhóm nào|do ai|người viết|cha đẻ|author|developer|creator/i.test(norm)) {
+  if (/ai tạo ra|ai phát triển|tác giả|nguồn gốc|anh vương|võ kế vương|vổ kế vương|năm anh em|nhóm nào|do ai|người viết|cha đẻ|author|developer|creator/i.test(norm)) {
     return (
       `🤖✨ **Giới thiệu Tác giả & Đội ngũ Nghiên cứu Phát triển**\n\n` +
       `Tôi là **Trợ lý AI Retail Insight**, được nghiên cứu và phát triển bởi anh **Võ Kế Vương** cùng **Nhóm Năm Anh Em**.\n\n` +
