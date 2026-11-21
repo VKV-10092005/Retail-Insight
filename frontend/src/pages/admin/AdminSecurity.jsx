@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {apiUrl} from '../../services/apiUrl';
+import './AdminSecurity.css';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -50,11 +51,37 @@ const SEVERITY_COLORS = {
 };
 
 const STATUS_LABELS = {
-  BLOCKED: 'Đã từ chối',
-  TEMPORARILY_LOCKED: 'Đã khóa tạm thời',
+  SUCCESS: 'Thành công',
+  BLOCKED: 'Đã chặn',
+  TEMPORARILY_LOCKED: 'Tạm khóa',
   DETECTED: 'Phát hiện',
   RESOLVED: 'Đã xử lý / Mở khóa',
 };
+
+const SEVERITY_LABELS = {
+  LOW: 'Thấp',
+  MEDIUM: 'Trung bình',
+  HIGH: 'Cao',
+  CRITICAL: 'Nghiêm trọng',
+};
+
+const EVENT_TYPE_LABELS = {
+  LOGIN_CONFIRMED: 'Xác nhận đăng nhập',
+  AI_PROMPT_INJECTION_BLOCKED: 'Chặn tiêm nhiễm lệnh AI',
+  AI_INPUT_TOO_LONG: 'Nội dung gửi AI quá dài',
+  AI_SENSITIVE_DATA_REQUEST: 'Yêu cầu dữ liệu nhạy cảm',
+  AI_PRIVILEGE_ESCALATION_BLOCKED: 'Chặn leo thang đặc quyền',
+  AI_UNAUTHORIZED_CROSS_TENANT_ACCESS: 'Chặn truy cập trái phép giữa các tổ chức',
+  AI_MALICIOUS_SQL_BLOCKED: 'Chặn câu lệnh SQL nguy hiểm',
+  AI_RATE_LIMIT_EXCEEDED: 'Vượt giới hạn yêu cầu AI',
+  ADMIN_UNLOCKED_USER: 'Quản trị viên mở khóa tài khoản',
+  IMPERSONATE_STAFF: 'Đăng nhập thay nhân viên',
+  SALE_RETURN: 'Hoàn trả đơn bán hàng',
+  BANK_PAYMENT_WEBHOOK: 'Thông báo thanh toán ngân hàng',
+  SALE_PAYMENT_CONFIRMED: 'Xác nhận thanh toán đơn hàng',
+};
+
+const eventTypeLabel = (value) => EVENT_TYPE_LABELS[value] || value || '—';
 
 export default function AdminSecurity() {
   const [stats, setStats] = useState(null);
@@ -252,20 +279,19 @@ export default function AdminSecurity() {
           </div>
 
           <div
-            className="card"
+            className={`card security-locked-kpi${stats.lockedUsersCount > 0 ? ' has-locks' : ''}`}
             style={{
               padding: '18px 20px',
               borderLeft: stats.lockedUsersCount > 0 ? '4px solid #DC2626' : '4px solid var(--ri-border)',
-              background: stats.lockedUsersCount > 0 ? '#FEF2F2' : 'var(--ri-surface)',
             }}
           >
-            <div style={{ color: stats.lockedUsersCount > 0 ? '#991B1B' : 'var(--ri-text-muted)', fontSize: '0.8125rem', fontWeight: 600 }}>
+            <div className="security-locked-kpi-title" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
               Tài khoản đang bị tạm khóa
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: stats.lockedUsersCount > 0 ? '#B91C1C' : 'var(--ri-text)', marginTop: '4px' }}>
+            <div className="security-locked-kpi-value" style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '4px' }}>
               {stats.lockedUsersCount}
             </div>
-            <div style={{ fontSize: '0.75rem', color: stats.lockedUsersCount > 0 ? '#B91C1C' : 'var(--ri-text-muted)', marginTop: '4px' }}>
+            <div className="security-locked-kpi-note" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
               {stats.lockedUsersCount > 0 ? 'Cần xem xét hoặc mở khóa thủ công' : 'Không có tài khoản nào bị khóa'}
             </div>
           </div>
@@ -298,12 +324,12 @@ export default function AdminSecurity() {
 
       {/* 3. DANH SÁCH TÀI KHOẢN ĐANG BỊ KHÓA TẠM THỜI (NẾU CÓ) */}
       {stats?.lockedUsers && stats.lockedUsers.length > 0 && (
-        <div className="card" style={{ marginBottom: '24px', padding: '20px 24px', border: '1px solid #FECACA' }}>
+        <div className="card security-locked-list" style={{ marginBottom: '24px', padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <h3 style={{ margin: 0, color: '#991B1B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.05rem' }}>
+            <h3 className="security-locked-list-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.05rem' }}>
               <Lock size={18} /> Danh sách tài khoản đang bị tạm khóa ({stats.lockedUsers.length})
             </h3>
-            <span style={{ fontSize: '0.8125rem', color: '#B91C1C' }}>
+            <span className="security-locked-list-note" style={{ fontSize: '0.8125rem' }}>
               Tài khoản tự động mở sau khi hết thời gian khóa hoặc được Admin mở thủ công
             </span>
           </div>
@@ -331,13 +357,13 @@ export default function AdminSecurity() {
                     <td>
                       <span className="badge" style={{ fontSize: '0.75rem' }}>{u.role}</span>
                     </td>
-                    <td style={{ color: '#B91C1C', maxWidth: '250px' }}>
+                    <td className="security-lock-reason">
                       {u.lock_reason || 'Vi phạm an ninh nhiều lần'}
-                      {u.unlock_requested_at && <div style={{marginTop:6,color:'#92400E',fontSize:12}}><strong>Yêu cầu mở khóa mới:</strong> {u.unlock_request_note}</div>}
+                      {u.unlock_requested_at && <div className="security-unlock-request" style={{marginTop:6,fontSize:12}}><strong>Yêu cầu mở khóa mới:</strong> {u.unlock_request_note}</div>}
                     </td>
                     <td>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#991B1B', fontWeight: 600 }}>
-                        <Clock size={14} /> {formatDate(u.locked_at||u.locked_until)}
+                      <span className="security-lock-time" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
+                        <Clock size={14} /> {u.locked_until ? formatDate(u.locked_until) : 'Không thời hạn'}
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
@@ -487,7 +513,7 @@ export default function AdminSecurity() {
                       </td>
                       <td>
                         <code style={{ fontSize: '0.75rem', background: 'var(--ri-elevated)', padding: '2px 6px', borderRadius: '4px' }}>
-                          {log.event_type}
+                          {eventTypeLabel(log.event_type)}
                         </code>
                       </td>
                       <td style={{ maxWidth: '260px' }}>
@@ -517,7 +543,7 @@ export default function AdminSecurity() {
                             color: sevStyle.text,
                           }}
                         >
-                          {log.severity}
+                          {SEVERITY_LABELS[log.severity] || log.severity}
                         </span>
                       </td>
                       <td>
@@ -681,7 +707,7 @@ export default function AdminSecurity() {
 
             {/* Bảng lịch sử */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
-              <table className="data-table" style={{ width: '100%' }}>
+              <table className="data-table security-history-table">
                 <thead>
                   <tr>
                     <th>Thời gian</th>
@@ -698,11 +724,12 @@ export default function AdminSecurity() {
                       <tr key={h.id}>
                         <td style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{formatDate(h.created_at)}</td>
                         <td>
-                          <code style={{ fontSize: '0.75rem' }}>{h.event_type}</code>
+                          <code style={{ fontSize: '0.75rem' }}>{eventTypeLabel(h.event_type)}</code>
                         </td>
-                        <td style={{ maxWidth: '240px', fontSize: '0.8125rem' }}>{h.request_snippet || '—'}</td>
-                        <td>
+                        <td className="security-history-snippet">{h.request_snippet || '—'}</td>
+                        <td className="security-history-nowrap">
                           <span
+                            className="security-severity-badge"
                             style={{
                               padding: '2px 6px',
                               borderRadius: '4px',
@@ -712,10 +739,10 @@ export default function AdminSecurity() {
                               color: sev.text,
                             }}
                           >
-                            {h.severity}
+                            {SEVERITY_LABELS[h.severity] || h.severity}
                           </span>
                         </td>
-                        <td>{STATUS_LABELS[h.status] || h.status}</td>
+                        <td className="security-history-nowrap">{STATUS_LABELS[h.status] || h.status}</td>
                       </tr>
                     );
                   })}

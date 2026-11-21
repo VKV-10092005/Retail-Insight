@@ -1,0 +1,135 @@
+.security-locked-kpi {
+  background: var(--ri-surface);
+}
+
+.security-locked-kpi.has-locks {
+  background: #fef2f2;
+}
+
+.security-locked-kpi-title,
+.security-locked-kpi-note {
+  color: var(--ri-text-muted);
+}
+
+.security-locked-kpi-value {
+  color: var(--ri-text);
+}
+
+.security-locked-kpi.has-locks .security-locked-kpi-title,
+.security-locked-kpi.has-locks .security-locked-kpi-value,
+.security-locked-kpi.has-locks .security-locked-kpi-note,
+.security-locked-list-title,
+.security-locked-list-note,
+.security-lock-reason,
+.security-lock-time {
+  color: #b91c1c;
+}
+
+.security-locked-list {
+  border: 1px solid #fecaca;
+}
+
+.security-unlock-request {
+  color: #92400e;
+}
+
+.security-lock-reason {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.security-lock-time,
+.security-history-nowrap {
+  white-space: nowrap;
+}
+
+.security-history-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.security-history-table th:nth-child(1) { width: 18%; }
+.security-history-table th:nth-child(2) { width: 22%; }
+.security-history-table th:nth-child(3) { width: 32%; }
+.security-history-table th:nth-child(4) { width: 13%; }
+.security-history-table th:nth-child(5) { width: 15%; }
+
+.security-history-table td,
+.security-history-table code {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.security-history-snippet {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .security-history-table {
+    min-width: 760px;
+  }
+}
+
+:root[data-theme="dark"] .security-locked-kpi,
+:root.dark .security-locked-kpi,
+.dark .security-locked-kpi {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+:root[data-theme="dark"] .security-locked-kpi.has-locks,
+:root.dark .security-locked-kpi.has-locks,
+.dark .security-locked-kpi.has-locks {
+  background: rgba(69, 10, 10, 0.3);
+  border-color: rgba(153, 27, 27, 0.5);
+}
+
+:root[data-theme="dark"] .security-locked-kpi.has-locks .security-locked-kpi-title,
+:root[data-theme="dark"] .security-locked-kpi.has-locks .security-locked-kpi-value,
+:root[data-theme="dark"] .security-locked-kpi.has-locks .security-locked-kpi-note,
+:root[data-theme="dark"] .security-locked-list-title,
+:root[data-theme="dark"] .security-locked-list-note,
+:root[data-theme="dark"] .security-lock-reason,
+:root.dark .security-locked-kpi.has-locks .security-locked-kpi-title,
+:root.dark .security-locked-kpi.has-locks .security-locked-kpi-value,
+:root.dark .security-locked-kpi.has-locks .security-locked-kpi-note,
+:root.dark .security-locked-list-title,
+:root.dark .security-locked-list-note,
+:root.dark .security-lock-reason,
+.dark .security-locked-kpi.has-locks .security-locked-kpi-title,
+.dark .security-locked-kpi.has-locks .security-locked-kpi-value,
+.dark .security-locked-kpi.has-locks .security-locked-kpi-note,
+.dark .security-locked-list-title,
+.dark .security-locked-list-note,
+.dark .security-lock-reason {
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .security-locked-list,
+:root.dark .security-locked-list,
+.dark .security-locked-list {
+  border-color: rgba(153, 27, 27, 0.5);
+}
+
+:root[data-theme="dark"] .security-lock-time,
+:root.dark .security-lock-time,
+.dark .security-lock-time {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .security-unlock-request,
+:root.dark .security-unlock-request,
+.dark .security-unlock-request {
+  color: #fda4af;
+}
+
+:root[data-theme="dark"] .security-severity-badge,
+:root.dark .security-severity-badge,
+.dark .security-severity-badge {
+  background: rgba(127, 29, 29, 0.35) !important;
+  color: #fecaca !important;
+}
