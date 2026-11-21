@@ -224,14 +224,12 @@ export default function AdminSecurity() {
             <Bell size={16} /> Cảnh báo an ninh
             {stats?.unreadAlertsCount > 0 && (
               <span
+                className="security-alert-count"
                 style={{
                   position: 'absolute',
                   top: '-5px',
                   right: '-5px',
-                  background: 'var(--ri-danger)',
-                  color: '#fff',
                   fontSize: '11px',
-                  fontWeight: 700,
                   borderRadius: '10px',
                   padding: '1px 6px',
                 }}
@@ -491,6 +489,7 @@ export default function AdminSecurity() {
                 {logs.map((log) => {
                   const sevStyle = SEVERITY_COLORS[log.severity] || SEVERITY_COLORS.MEDIUM;
                   const isUserLocked = (Number(log.is_locked)===1 && (!log.locked_until || new Date(log.locked_until)>new Date())) || (log.locked_until && new Date(log.locked_until)>new Date());
+                  const shouldShowUnlock = Boolean(log.user_id) && (log.status === 'TEMPORARILY_LOCKED' || isUserLocked);
 
                   return (
                     <tr key={log.id}>
@@ -568,7 +567,7 @@ export default function AdminSecurity() {
                             <Eye size={13} /> Lịch sử
                           </button>
                         )}
-                        {isUserLocked && (
+                        {shouldShowUnlock && (
                           <>
                           <span className="badge" style={{display:'inline-flex',alignItems:'center',gap:4,marginRight:6,background:'#FEF2F2',border:'1px solid #FCA5A5',color:'#B91C1C',fontWeight:750}}>Đang khóa tạm thời</span>
                           <button
@@ -587,7 +586,7 @@ export default function AdminSecurity() {
                           </button>
                           </>
                         )}
-                        {log.user_id && log.role!=='PLATFORM_ADMIN' && !isUserLocked && <button className="ri-btn ri-btn-secondary ri-btn-sm" onClick={()=>handleManualLock(log.user_id)}><Lock size={13}/> Khóa tạm thời</button>}
+                        {log.user_id && log.role!=='PLATFORM_ADMIN' && !shouldShowUnlock && <button className="ri-btn ri-btn-secondary ri-btn-sm" onClick={()=>handleManualLock(log.user_id)}><Lock size={13}/> Khóa tạm thời</button>}
                       </td>
                     </tr>
                   );
@@ -882,27 +881,29 @@ export default function AdminSecurity() {
                 </div>
               ) : (
                 notifications.map((n) => {
-                  const sev = SEVERITY_COLORS[n.severity] || SEVERITY_COLORS.HIGH;
+                  const isAutoLock = String(n.title || '').includes('TỰ ĐỘNG KHÓA');
+                  const notificationClass = n.is_read
+                    ? 'is-read'
+                    : isAutoLock ? 'is-unread is-auto-lock' : 'is-unread is-warning';
                   return (
                     <div
                       key={n.id}
+                      className={`security-notification-card ${notificationClass}`}
                       style={{
                         padding: '12px 14px',
                         borderRadius: '8px',
-                        border: `1px solid ${sev.border}`,
-                        background: n.is_read ? 'var(--ri-surface)' : sev.bg,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '4px',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ fontSize: '0.875rem', color: sev.text }}>{n.title}</strong>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--ri-text-muted)' }}>
+                        <strong className="security-notification-title" style={{ fontSize: '0.875rem' }}>{n.title}</strong>
+                        <span className="security-notification-time" style={{ fontSize: '0.75rem' }}>
                           {formatDate(n.created_at)}
                         </span>
                       </div>
-                      <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--ri-text)' }}>{n.message}</p>
+                      <p className="security-notification-message" style={{ margin: 0, fontSize: '0.8125rem' }}>{n.message}</p>
                     </div>
                   );
                 })

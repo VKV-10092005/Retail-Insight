@@ -69,6 +69,50 @@
   line-height: 1.6;
 }
 
+.security-alert-count {
+  background: #dc2626;
+  color: #ffffff;
+  font-weight: 800;
+  border: 1px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(127, 29, 29, 0.45);
+}
+
+.security-notification-card {
+  border: 1px solid var(--ri-border);
+  background: var(--ri-surface);
+}
+
+.security-notification-card.is-warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.security-notification-card.is-auto-lock {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.security-notification-title {
+  color: var(--ri-text);
+}
+
+.security-notification-card.is-warning .security-notification-title {
+  color: #92400e;
+}
+
+.security-notification-card.is-auto-lock .security-notification-title {
+  color: #b91c1c;
+}
+
+.security-notification-message {
+  color: var(--ri-text);
+}
+
+.security-notification-time {
+  color: var(--ri-text-muted);
+  white-space: nowrap;
+}
+
 @media (max-width: 760px) {
   .security-history-table {
     min-width: 760px;
@@ -132,4 +176,48 @@
 .dark .security-severity-badge {
   background: rgba(127, 29, 29, 0.35) !important;
   color: #fecaca !important;
+}
+
+:root[data-theme="dark"] .security-alert-count,
+:root.dark .security-alert-count,
+.dark .security-alert-count {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #fecaca;
+}
+
+:root[data-theme="dark"] .security-notification-card,
+:root.dark .security-notification-card,
+.dark .security-notification-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .security-notification-card.is-warning,
+:root.dark .security-notification-card.is-warning,
+.dark .security-notification-card.is-warning {
+  background: rgba(69, 26, 3, 0.45);
+  border-color: rgba(180, 83, 9, 0.6);
+}
+
+:root[data-theme="dark"] .security-notification-card.is-auto-lock,
+:root.dark .security-notification-card.is-auto-lock,
+.dark .security-notification-card.is-auto-lock {
+  background: rgba(69, 10, 10, 0.45);
+  border-color: rgba(185, 28, 28, 0.6);
+}
+
+:root[data-theme="dark"] .security-notification-title,
+:root[data-theme="dark"] .security-notification-message,
+:root.dark .security-notification-title,
+:root.dark .security-notification-message,
+.dark .security-notification-title,
+.dark .security-notification-message {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .security-notification-time,
+:root.dark .security-notification-time,
+.dark .security-notification-time {
+  color: #94a3b8;
 }
