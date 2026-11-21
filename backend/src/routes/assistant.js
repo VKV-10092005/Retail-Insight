@@ -1,4 +1,4 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { pool } from '../db/pool.js';

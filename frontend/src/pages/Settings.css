@@ -1,4 +1,450 @@
-.settings-general-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.settings-general-pair .setting-field{min-width:0}
-.settings-ai-card .setting-field small{display:block;margin-top:5px;color:var(--ri-muted);font-size:11px}
-@media(max-width:520px){.settings-general-pair{grid-template-columns:1fr}}
+/* ==========================================================================
+   Cài đặt Hệ thống (Settings) — Phong cách Accordion 1 Cột Tinh tế
+   Hỗ trợ hoàn hảo Light Mode & Dark Mode, tương thích Mobile / Tablet / Desktop
+   ========================================================================== */
+
+.settings-container {
+  max-width: 896px; /* max-w-4xl */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.settings-save-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.settings-save-pill.saving {
+  color: var(--ri-primary, #0284c7);
+  background: color-mix(in srgb, var(--ri-primary, #0284c7) 10%, transparent);
+}
+
+.settings-save-pill.saved {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.settings-save-pill.error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.settings-error-alert {
+  max-width: 896px;
+  margin: 0 auto 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+:root[data-theme="dark"] .settings-error-alert,
+.dark .settings-error-alert {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* ── Thanh Công Cụ (Search & Expand/Collapse) ─────────────────────── */
+.settings-toolbar-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.settings-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+}
+
+.settings-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--ri-muted, #64748b);
+  pointer-events: none;
+}
+
+.settings-search-input {
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  padding: 0 32px 0 36px;
+  border: 1px solid var(--ri-border, #cbd5e1);
+  background: var(--ri-surface, #ffffff);
+  color: var(--ri-text, #0f172a);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.settings-search-input:focus {
+  border-color: var(--ri-primary, #0284c7);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ri-primary, #0284c7) 14%, transparent);
+}
+
+:root[data-theme="dark"] .settings-search-input,
+.dark .settings-search-input {
+  background: #111827;
+  border-color: #1f2937;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .settings-search-input:focus,
+.dark .settings-search-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.settings-search-clear {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: var(--ri-muted, #94a3b8);
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.settings-search-clear:hover {
+  color: #ef4444;
+}
+
+.settings-toggle-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  height: 38px;
+  padding: 0 13px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Danh Sách Accordion ─────────────────────────────────────────── */
+.settings-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-accordion-card {
+  background: var(--ri-surface, #ffffff);
+  border: 1px solid var(--ri-border, #e2e8f0);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.settings-accordion-card:hover {
+  border-color: color-mix(in srgb, var(--ri-primary, #0284c7) 30%, var(--ri-border, #cbd5e1));
+}
+
+.settings-accordion-card.is-open {
+  border-color: color-mix(in srgb, var(--ri-primary, #0284c7) 50%, var(--ri-border, #cbd5e1));
+  box-shadow: 0 4px 18px -3px rgba(2, 132, 199, 0.1);
+}
+
+:root[data-theme="dark"] .settings-accordion-card,
+.dark .settings-accordion-card {
+  background: #111827;
+  border-color: #1f2937;
+}
+
+:root[data-theme="dark"] .settings-accordion-card:hover,
+.dark .settings-accordion-card:hover {
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .settings-accordion-card.is-open,
+.dark .settings-accordion-card.is-open {
+  border-color: rgba(56, 189, 248, 0.38);
+  box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.55);
+}
+
+/* ── Accordion Header ────────────────────────────────────────────── */
+.settings-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.settings-accordion-header:hover {
+  background: color-mix(in srgb, var(--ri-primary, #0284c7) 3%, transparent);
+}
+
+:root[data-theme="dark"] .settings-accordion-header:hover,
+.dark .settings-accordion-header:hover {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.settings-accordion-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-accordion-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--ri-primary, #0284c7) 10%, var(--ri-surface, #ffffff));
+  color: var(--ri-primary, #0284c7);
+  border: 1px solid color-mix(in srgb, var(--ri-primary, #0284c7) 18%, transparent);
+}
+
+:root[data-theme="dark"] .settings-accordion-icon-box,
+.dark .settings-accordion-icon-box {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.22);
+}
+
+.settings-accordion-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.settings-accordion-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ri-text, #0f172a);
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.settings-accordion-desc {
+  font-size: 12px;
+  color: var(--ri-muted, #64748b);
+  margin: 2px 0 0;
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .settings-accordion-title,
+.dark .settings-accordion-title {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .settings-accordion-desc,
+.dark .settings-accordion-desc {
+  color: #94a3b8;
+}
+
+.settings-accordion-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.settings-accordion-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  background: color-mix(in srgb, var(--ri-primary, #0284c7) 8%, var(--ri-surface, #ffffff));
+  color: var(--ri-primary, #0284c7);
+  border: 1px solid color-mix(in srgb, var(--ri-primary, #0284c7) 22%, transparent);
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .settings-accordion-badge,
+.dark .settings-accordion-badge {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.settings-accordion-chevron {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--ri-muted, #64748b);
+  transition: transform 0.26s cubic-bezier(0.2, 0, 0, 1), color 0.15s;
+}
+
+.settings-accordion-chevron.is-open {
+  transform: rotate(180deg);
+  color: var(--ri-primary, #0284c7);
+}
+
+:root[data-theme="dark"] .settings-accordion-chevron,
+.dark .settings-accordion-chevron {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .settings-accordion-chevron.is-open,
+.dark .settings-accordion-chevron.is-open {
+  color: #38bdf8;
+}
+
+/* ── Accordion Body ──────────────────────────────────────────────── */
+.settings-accordion-body {
+  padding: 16px 20px 22px 20px;
+  border-top: 1px solid var(--ri-border, #e2e8f0);
+  background: transparent;
+  animation: settingsFadeDown 0.2s ease-out;
+}
+
+:root[data-theme="dark"] .settings-accordion-body,
+.dark .settings-accordion-body {
+  border-top-color: #1f2937;
+}
+
+@keyframes settingsFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-general-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.settings-general-pair .setting-field {
+  min-width: 0;
+}
+
+.settings-receipt-status {
+  display: block;
+  margin-top: 8px;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+/* ── Empty Search Message ────────────────────────────────────────── */
+.settings-empty-search {
+  padding: 36px 16px;
+  text-align: center;
+  border: 1px dashed var(--ri-border, #cbd5e1);
+  border-radius: 14px;
+  background: var(--ri-surface, #ffffff);
+  color: var(--ri-muted, #64748b);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-empty-search p {
+  margin: 0;
+  font-size: 13px;
+}
+
+:root[data-theme="dark"] .settings-empty-search,
+.dark .settings-empty-search {
+  background: #111827;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+/* ── Responsive Mobile & Tablet ──────────────────────────────────── */
+@media (max-width: 680px) {
+  .settings-toolbar-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .settings-search-box {
+    max-width: 100%;
+  }
+
+  .settings-toggle-all-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .settings-accordion-header {
+    padding: 13px 14px;
+    gap: 10px;
+  }
+
+  .settings-accordion-header-left {
+    gap: 11px;
+  }
+
+  .settings-accordion-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .settings-accordion-icon-box svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .settings-accordion-title {
+    font-size: 13.5px;
+  }
+
+  .settings-accordion-desc {
+    font-size: 11px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .settings-accordion-badge {
+    display: none; /* Ẩn badge trên mobile nhỏ để nhường không gian tiêu đề */
+  }
+
+  .settings-accordion-body {
+    padding: 14px 14px 18px 14px;
+  }
+
+  .settings-general-pair {
+    grid-template-columns: 1fr;
+  }
+}
