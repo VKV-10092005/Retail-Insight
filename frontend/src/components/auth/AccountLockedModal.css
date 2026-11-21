@@ -12,23 +12,34 @@
 .account-lock-submit,.account-lock-logout{width:100%;border-radius:10px;padding:12px;margin-top:12px;font-weight:700;display:flex;justify-content:center;align-items:center;gap:8px;cursor:pointer}
 .account-lock-submit{border:0;background:#dc2626;color:#fff}
 .account-lock-submit:disabled{opacity:.55;cursor:not-allowed}
-.account-lock-logout{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+.account-lock-logout{background:#dc2626;color:#fff;border:1px solid #dc2626;font-weight:700;transition:background-color .16s ease,border-color .16s ease,transform .16s ease}
+.account-lock-logout:hover{background:#b91c1c;border-color:#b91c1c}
+.account-lock-logout:active{transform:translateY(1px)}
 .account-lock-success{display:flex;align-items:flex-start;gap:10px;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:11px;padding:13px 14px;margin:16px 0 0;line-height:1.5}
 .account-lock-success svg{flex:0 0 auto;margin-top:2px}
 .account-lock-error{color:#b91c1c;font-size:13px;min-height:16px;margin-top:6px}
 
 :root[data-theme="dark"] .account-lock-card,
 :root.dark .account-lock-card,
-.dark .account-lock-card{background:#0f172a;border-color:#334155;color:#e2e8f0}
+.dark .account-lock-card{background:#0f172a;border-color:rgba(51,65,85,.8);color:#e2e8f0;box-shadow:0 25px 50px -12px rgba(0,0,0,.72),0 0 0 1px rgba(148,163,184,.05)}
 :root[data-theme="dark"] .account-lock-icon,
 :root.dark .account-lock-icon,
 .dark .account-lock-icon{background:rgba(69,10,10,.5);color:#f87171}
 :root[data-theme="dark"] .account-lock-reason,
 :root.dark .account-lock-reason,
-.dark .account-lock-reason{background:rgba(69,26,3,.4);border-color:rgba(146,64,14,.6);color:#fde68a}
+.dark .account-lock-reason{background:rgba(30,41,59,.9);border:1px solid #334155;border-left:4px solid #f59e0b;color:#f1f5f9}
+:root[data-theme="dark"] .account-lock-reason strong,
+:root.dark .account-lock-reason strong,
+.dark .account-lock-reason strong{color:#fbbf24}
+:root[data-theme="dark"] .account-lock-reason span,
+:root.dark .account-lock-reason span,
+.dark .account-lock-reason span{color:#f1f5f9}
 :root[data-theme="dark"] .account-lock-success,
 :root.dark .account-lock-success,
-.dark .account-lock-success{background:rgba(2,44,34,.4);border-color:rgba(6,95,70,.6);color:#a7f3d0}
+.dark .account-lock-success{background:rgba(2,44,34,.6);border-color:rgba(16,185,129,.4);color:#a7f3d0}
+:root[data-theme="dark"] .account-lock-success svg,
+:root.dark .account-lock-success svg,
+.dark .account-lock-success svg{color:#34d399}
 :root[data-theme="dark"] .account-lock-time,
 :root.dark .account-lock-time,
 .dark .account-lock-time{color:#94a3b8}
@@ -37,4 +48,7 @@
 .dark .account-lock-card textarea{background:#111827;border-color:#475569;color:#e2e8f0}
 :root[data-theme="dark"] .account-lock-logout,
 :root.dark .account-lock-logout,
-.dark .account-lock-logout{background:#1e293b;border-color:#475569;color:#e2e8f0}
+.dark .account-lock-logout{background:#dc2626;border-color:#dc2626;color:#fff}
+:root[data-theme="dark"] .account-lock-logout:hover,
+:root.dark .account-lock-logout:hover,
+.dark .account-lock-logout:hover{background:#b91c1c;border-color:#b91c1c}
