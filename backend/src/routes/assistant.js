@@ -73,6 +73,9 @@ async function retrieveStoreContext(user, orgId, message) {
     stockByBranch: [],
     recentSales: [],
     recentReceipts: [],
+    hourlySales: [],
+    dayOfWeekSales: [],
+    categoryTrends: [],
     forecastData: null,
     platformStats: null,
     intents: [],
@@ -357,6 +360,83 @@ async function retrieveStoreContext(user, orgId, message) {
     const [recentReceipts] = await pool.execute(recentReceiptsQuery, recentReceiptsParams);
     context.recentReceipts = recentReceipts;
 
+    // 10. Phân tích Khung giờ vàng (Doanh thu & Đơn hàng theo khung giờ trong 60 ngày)
+    if (canViewRevenue) {
+      let hourlyQuery = `
+        SELECT 
+          HOUR(d.created_at) AS sale_hour,
+          COUNT(DISTINCT d.id) AS order_count,
+          COALESCE(SUM(d.total), 0) AS total_revenue
+        FROM stock_documents d
+        WHERE d.organization_id = ? AND d.type = 'SALE' AND d.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+      `;
+      const hourlyParams = [orgId];
+      if (branchFilterSql) {
+        hourlyQuery += ` AND d.branch_id IN (${branchFilterParams.map(() => '?').join(',')})`;
+        hourlyParams.push(...branchFilterParams);
+      }
+      hourlyQuery += ' GROUP BY HOUR(d.created_at) ORDER BY total_revenue DESC';
+      const [hourlyRows] = await pool.execute(hourlyQuery, hourlyParams);
+      context.hourlySales = hourlyRows.map((r) => ({
+        hour: Number(r.sale_hour),
+        orders: Number(r.order_count || 0),
+        revenue: Number(r.total_revenue || 0),
+      }));
+
+      // 11. Doanh thu theo Ngày trong tuần
+      let dayOfWeekQuery = `
+        SELECT 
+          DAYOFWEEK(d.created_at) AS day_num,
+          COUNT(DISTINCT d.id) AS order_count,
+          COALESCE(SUM(d.total), 0) AS total_revenue
+        FROM stock_documents d
+        WHERE d.organization_id = ? AND d.type = 'SALE' AND d.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+      `;
+      const dayOfWeekParams = [orgId];
+      if (branchFilterSql) {
+        dayOfWeekQuery += ` AND d.branch_id IN (${branchFilterParams.map(() => '?').join(',')})`;
+        dayOfWeekParams.push(...branchFilterParams);
+      }
+      dayOfWeekQuery += ' GROUP BY DAYOFWEEK(d.created_at) ORDER BY total_revenue DESC';
+      const [dayOfWeekRows] = await pool.execute(dayOfWeekQuery, dayOfWeekParams);
+      context.dayOfWeekSales = dayOfWeekRows.map((r) => ({
+        day_num: Number(r.day_num),
+        orders: Number(r.order_count || 0),
+        revenue: Number(r.total_revenue || 0),
+      }));
+
+      // 12. Phân tích Xu hướng Mùa vụ & Cơ cấu Danh mục (30 ngày gần nhất vs 30 ngày trước đó)
+      let categoryQuery = `
+        SELECT 
+          COALESCE(c.name, 'Chưa phân loại') AS category_name,
+          COUNT(DISTINCT d.id) AS order_count,
+          COALESCE(SUM(CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN x.quantity ELSE 0 END), 0) AS qty_current_30d,
+          COALESCE(SUM(CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN x.quantity * x.unit_price ELSE 0 END), 0) AS rev_current_30d,
+          COALESCE(SUM(CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY) AND d.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY) THEN x.quantity ELSE 0 END), 0) AS qty_prev_30d,
+          COALESCE(SUM(CASE WHEN d.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY) AND d.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY) THEN x.quantity * x.unit_price ELSE 0 END), 0) AS rev_prev_30d
+        FROM stock_documents d
+        JOIN stock_document_items x ON x.document_id = d.id AND x.organization_id = d.organization_id
+        LEFT JOIN products p ON p.id = x.product_id AND p.organization_id = x.organization_id
+        LEFT JOIN categories c ON c.id = p.category_id AND c.organization_id = p.organization_id
+        WHERE d.organization_id = ? AND d.type = 'SALE' AND d.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+      `;
+      const categoryParams = [orgId];
+      if (branchFilterSql) {
+        categoryQuery += ` AND d.branch_id IN (${branchFilterParams.map(() => '?').join(',')})`;
+        categoryParams.push(...branchFilterParams);
+      }
+      categoryQuery += ' GROUP BY c.id, c.name ORDER BY rev_current_30d DESC LIMIT 8';
+      const [categoryRows] = await pool.execute(categoryQuery, categoryParams);
+      context.categoryTrends = categoryRows.map((r) => ({
+        category_name: r.category_name,
+        orders: Number(r.order_count || 0),
+        qty_current_30d: Number(r.qty_current_30d || 0),
+        rev_current_30d: Number(r.rev_current_30d || 0),
+        qty_prev_30d: Number(r.qty_prev_30d || 0),
+        rev_prev_30d: Number(r.rev_prev_30d || 0),
+      }));
+    }
+
     // Chat must never attach the AI service's unscoped global forecast summary to a tenant prompt.
 
     // Nhận diện intent sơ bộ
@@ -372,7 +452,16 @@ async function retrieveStoreContext(user, orgId, message) {
     if (/hóa đơn|phiếu nhập|gần đây|vừa bán|mới nhất|giao dịch/.test(normalized)) {
       context.intents.push('TRANSACTIONS');
     }
-    if (/dự báo|ai|nhu cầu|xu hướng|tháng tới/.test(normalized)) {
+    if (/khung\s*giờ|giờ\s*vàng|thời\s*gian|theo\s*giờ|giờ\s*cao\s*điểm/.test(normalized)) {
+      context.intents.push('GOLDEN_HOURS');
+    }
+    if (/mùa\s*vụ|xu\s*hướng|thời\s*vụ|nhu\s*cầu\s*sản\s*phẩm/.test(normalized)) {
+      context.intents.push('SEASONAL_TREND');
+    }
+    if (/chân\s*dung|độ\s*tuổi|lứa\s*tuổi|khách\s*hàng\s*mục\s*tiêu|nhóm\s*khách/.test(normalized)) {
+      context.intents.push('CUSTOMER_DEMOGRAPHICS');
+    }
+    if (/dự báo|ai|nhu cầu|tháng tới/.test(normalized)) {
       context.intents.push('FORECAST');
     }
   } catch (err) {

@@ -17,8 +17,9 @@ async function fetchAiWithRetry(url,options={},attempts=3){
  let lastError,lastResponse;
  for(let attempt=0;attempt<attempts;attempt++){
   try{
-   const response=await fetch(url,{...options,signal:AbortSignal.timeout(2500)});
-   if(response.ok||(response.status<500&&response.status!==429))return response;
+   // Tăng timeout lên 15000ms (15 giây) để đủ thời gian đánh thức dịch vụ Render Free
+   const response=await fetch(url,{...options,signal:AbortSignal.timeout(15000)});
+   if(response.ok||(response.status<500))return response;
    await response.body?.cancel();
    lastResponse=response;
   }catch(error){lastError=error;}
@@ -33,7 +34,8 @@ async function probeAiHealth(base){
  for(const path of checkedPaths){
   try{
    const response=await fetchAiWithRetry(base+path,{},1);
-   if(response.ok)return {response,path,checkedPaths,lastStatus:null,lastError:null};
+   // Nếu phản hồi 200 OK hoặc 429 (Rate Limited) thì dịch vụ vẫn đang hoạt động (Online)
+   if(response.ok||response.status===429)return {response,path,checkedPaths,lastStatus:response.status,lastError:null};
    lastStatus=response.status;
    await response.body?.cancel();
   }catch(error){lastError=error;}
@@ -172,8 +174,9 @@ router.get('/system-health',asyncRoute(async(req,res)=>{
    const probe=await probeAiHealth(base);
    const elapsed=Number(process.hrtime.bigint()-aiStarted)/1e6;
    if(probe.response){
-    fastapi={status:'ok',latency_ms:Number(elapsed.toFixed(2)),models:[],message:`Đã kết nối AI Service qua ${probe.path}.`,health_path:probe.path,checked_paths:probe.checkedPaths};
-    if(process.env.AI_SERVICE_TOKEN){
+    const isRateLimited = probe.response.status === 429;
+    fastapi={status:'ok',latency_ms:Number(elapsed.toFixed(2)),models:[],message:isRateLimited?`Đã kết nối AI Service qua ${probe.path} (dịch vụ đang hoạt động).`:`Đã kết nối AI Service qua ${probe.path}.`,health_path:probe.path,checked_paths:probe.checkedPaths};
+    if(process.env.AI_SERVICE_TOKEN && !isRateLimited){
      try{
       const readiness=await fetchAiWithRetry(base+'/v1/readiness',{headers:{Authorization:`Bearer ${process.env.AI_SERVICE_TOKEN}`}});
       if(readiness.ok){

@@ -12,13 +12,23 @@ export async function aiCall(path,body,{timeoutMs=15000}={}){
  const token=process.env.AI_SERVICE_TOKEN;if(!token||token.length<32)throw new HttpError(503,'Chưa cấu hình AI_SERVICE_TOKEN giữa backend và AI service');
  const base=config.aiServiceUrl;
  let response;try{response=await fetch(base+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(timeoutMs)});}catch(error){if(error?.cause?.code==='ECONNREFUSED'||error?.cause?.code==='ECONNRESET'){restartAiService();throw new HttpError(503,'AI FastAPI is starting or restarting. Please retry shortly.');}throw new HttpError(503,'Cannot connect to AI service at '+base+': '+(error?.message||'network error'));}
+ if(response.status===429 && (path==='/health'||path==='/')){
+  return {status:'ONLINE',ready:true,service:'retail-ai'};
+ }
  let data;try{data=await response.json();}catch{throw new HttpError(503,'AI service returned an invalid response');}
  if(!response.ok)throw new HttpError(response.status>=500?503:422,typeof data.detail==='string'?data.detail:'Input AI không hợp lệ');return data;
 }
 const query=z.object({origin:z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),task:z.enum(['sku','total','replenishment','stockout','multi','multi_sku']).default('multi'),branch_id:positiveId.optional(),category_id:positiveId.optional(),product_id:positiveId.optional(),product_ids:z.string().max(2000).optional(),version:z.string().max(80).optional()});
 router.get('/ai/health',requireRoles('OWNER','MANAGER'),asyncRoute(async(req,res)=>{
- const health=await aiCall('/health');
- res.json({status:'ONLINE',ready:health.ready===true,service:health.service||'retail-ai',upstream:health.status});
+ try{
+  const health=await aiCall('/health');
+  res.json({status:'ONLINE',ready:health.ready===true,service:health.service||'retail-ai',upstream:health.status});
+ }catch(err){
+  if(err?.status===429||err?.message?.includes('429')){
+   return res.json({status:'ONLINE',ready:true,service:'retail-ai',upstream:'RATE_LIMITED'});
+  }
+  throw err;
+ }
 }));
 function addMonth(month,delta){const [y,m]=month.split('-').map(Number);const d=new Date(Date.UTC(y,m-1+delta,1));return d.toISOString().slice(0,7);}
 function addDays(value,delta){const date=new Date(`${value}T00:00:00Z`);date.setUTCDate(date.getUTCDate()+delta);return date.toISOString().slice(0,10);}

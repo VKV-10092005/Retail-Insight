@@ -12,7 +12,7 @@ const normalizedAiServiceUrl=/^[a-z][a-z\d+.-]*:\/\//i.test(rawAiServiceUrl)?raw
 const healthUrl=normalizedAiServiceUrl.replace(/\/$/,'')+'/health';
 const aiServiceUrl=new URL(normalizedAiServiceUrl);
 const externalAiService=!['localhost','127.0.0.1','::1'].includes(aiServiceUrl.hostname);
-async function healthy(){try{const r=await fetch(healthUrl,{signal:AbortSignal.timeout(900)});return r.ok;}catch{return false;}}
+async function healthy(){try{const r=await fetch(healthUrl,{signal:AbortSignal.timeout(15000)});return r.ok || r.status===429;}catch{return false;}}
 function pythonCommand(){
  const candidates=[path.join(aiRoot,'.venv','Scripts','python.exe'),path.join(aiRoot,'venv','Scripts','python.exe'),path.join(projectRoot,'.venv','Scripts','python.exe'),path.join(projectRoot,'venv','Scripts','python.exe')];
  for(const candidate of candidates)if(existsSync(candidate))return {command:candidate,args:['-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8000']};

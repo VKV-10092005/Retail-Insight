@@ -1,4 +1,4 @@
-﻿import os,secrets,logging,time
+import os,secrets,logging,time
 from datetime import date
 from typing import Annotated
 from fastapi import FastAPI,Depends,Header,HTTPException,Request
@@ -14,11 +14,34 @@ def protect(authorization:str=Header(default='')):
     token=os.getenv('AI_SERVICE_TOKEN','')
     if len(token)<32:raise HTTPException(503,'AI service token chưa được cấu hình')
     if not secrets.compare_digest(authorization,'Bearer '+token):raise HTTPException(401,'Unauthorized')
+# Sliding window rate limiter for internal requests
+_ip_request_timestamps = {}
+RATE_LIMIT_PER_MINUTE = 120
+
 @app.middleware('http')
 async def limits(request:Request,call_next):
     from starlette.responses import JSONResponse
+    path = request.url.path
+    # Miễn trừ hoàn toàn giới hạn tần suất cho các endpoint kiểm tra trạng thái /health và /
+    if path in ('/health', '/', '/health/'):
+        started=time.monotonic()
+        response=await call_next(request)
+        logger.info('%s %s status=%s elapsed_ms=%s',request.method,path,response.status_code,round((time.monotonic()-started)*1000))
+        return response
+
     body=await request.body()
     if len(body)>2_000_000:return JSONResponse({'detail':'Request too large'},413)
+
+    # Nới lỏng giới hạn request nội bộ từ Backend (120 requests/phút)
+    client_ip = request.client.host if request.client else '127.0.0.1'
+    now = time.time()
+    recent = [t for t in _ip_request_timestamps.get(client_ip, []) if now - t < 60.0]
+    if len(recent) >= RATE_LIMIT_PER_MINUTE:
+        logger.warning('Rate limit exceeded for %s: %s reqs in last 60s', client_ip, len(recent))
+        return JSONResponse({'detail':'Rate limit exceeded. Vượt quá 120 requests/phút.'}, 429)
+    recent.append(now)
+    _ip_request_timestamps[client_ip] = recent
+
     started=time.monotonic();response=await call_next(request)
     logger.info('%s %s status=%s elapsed_ms=%s',request.method,request.url.path,response.status_code,round((time.monotonic()-started)*1000))
     return response
